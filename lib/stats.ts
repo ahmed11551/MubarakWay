@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { fetchBotApiStats } from "@/lib/bot-api"
 
 export type PlatformStats = {
   totalCollected: number
@@ -8,6 +9,13 @@ export type PlatformStats = {
 }
 
 export async function getPlatformStats(): Promise<PlatformStats> {
+  // Try to fetch from bot.e-replika.ru API first
+  const botApiStats = await fetchBotApiStats()
+  if (botApiStats) {
+    return botApiStats
+  }
+
+  // Fallback to Supabase if Bot API is not available
   const supabase = createAdminClient()
 
   const [activeDonorsRes, activeCampaignsRes, avgCheckRes] = await Promise.all([
