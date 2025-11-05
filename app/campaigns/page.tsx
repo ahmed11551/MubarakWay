@@ -51,33 +51,33 @@ export default function CampaignsPage() {
     <div className="min-h-screen pb-20">
       <AppHeader />
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Кампании</h1>
-            <p className="text-sm text-muted-foreground">Поддержите общественные инициативы</p>
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold leading-tight">Кампании</h1>
+            <p className="text-sm text-muted-foreground mt-1">Поддержите общественные инициативы</p>
           </div>
-          <Button asChild>
+          <Button asChild size="sm" className="shrink-0">
             <Link href="/campaigns/new">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-1.5" />
               Создать
             </Link>
           </Button>
         </div>
 
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active" className="flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              <span className="text-xs">Активные</span>
+          <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+            <TabsTrigger value="active" className="flex items-center justify-center gap-1.5 py-2.5 text-xs">
+              <TrendingUp className="h-3.5 w-3.5 shrink-0" />
+              <span>Активные</span>
             </TabsTrigger>
-            <TabsTrigger value="ending" className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              <span className="text-xs">Скоро завершатся</span>
+            <TabsTrigger value="ending" className="flex items-center justify-center gap-1.5 py-2.5 text-xs">
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              <span>Скоро завершатся</span>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-1">
-              <CheckCircle className="h-3 w-3" />
-              <span className="text-xs">Завершённые</span>
+            <TabsTrigger value="completed" className="flex items-center justify-center gap-1.5 py-2.5 text-xs">
+              <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>Завершённые</span>
             </TabsTrigger>
           </TabsList>
 
