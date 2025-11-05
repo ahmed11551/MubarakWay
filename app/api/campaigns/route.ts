@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCampaigns } from "@/lib/actions/campaigns"
+import { fetchBotApiCampaigns } from "@/lib/bot-api"
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
@@ -7,6 +8,13 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "10")
 
   try {
+    // Try to fetch from bot.e-replika.ru API first
+    const botApiCampaigns = await fetchBotApiCampaigns(status, limit)
+    if (botApiCampaigns && Array.isArray(botApiCampaigns) && botApiCampaigns.length > 0) {
+      return NextResponse.json({ campaigns: botApiCampaigns })
+    }
+
+    // Fallback to Supabase
     const result = await getCampaigns(status)
     
     if (result.error) {

@@ -44,3 +44,44 @@ export async function fetchBotApi(endpoint: string, options: RequestInit = {}) {
   })
 }
 
+export async function fetchBotApiFunds(category?: string) {
+  try {
+    const endpoint = category && category !== "all" 
+      ? `/api/funds?category=${category}` 
+      : `/api/funds`
+    
+    const response = await fetchBotApi(endpoint)
+    
+    if (!response.ok) {
+      throw new Error(`Bot API returned ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data.funds || data.organizations || data || []
+  } catch (error) {
+    console.error("[Bot API] Error fetching funds:", error)
+    return null
+  }
+}
+
+export async function fetchBotApiCampaigns(status?: string, limit?: number) {
+  try {
+    const params = new URLSearchParams()
+    if (status) params.append("status", status)
+    if (limit) params.append("limit", String(limit))
+    
+    const endpoint = `/api/campaigns${params.toString() ? `?${params.toString()}` : ""}`
+    const response = await fetchBotApi(endpoint)
+    
+    if (!response.ok) {
+      throw new Error(`Bot API returned ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data.campaigns || data || []
+  } catch (error) {
+    console.error("[Bot API] Error fetching campaigns:", error)
+    return null
+  }
+}
+

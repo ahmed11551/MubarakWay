@@ -1,8 +1,16 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { fetchBotApiFunds } from "@/lib/bot-api"
 
 export async function getFunds(category?: string) {
+  // Try to fetch from bot.e-replika.ru API first
+  const botApiFunds = await fetchBotApiFunds(category)
+  if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
+    return { funds: botApiFunds }
+  }
+
+  // Fallback to Supabase if Bot API is not available
   const supabase = await createClient()
 
   let query = supabase.from("funds").select("*").eq("is_active", true).order("total_raised", { ascending: false })
@@ -18,7 +26,7 @@ export async function getFunds(category?: string) {
     return { error: "Failed to fetch funds" }
   }
 
-  return { funds }
+  return { funds: funds || [] }
 }
 
 export async function getFundById(id: string) {

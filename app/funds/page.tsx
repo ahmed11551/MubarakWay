@@ -6,77 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, CheckCircle, Users, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { getFunds } from "@/lib/actions/funds"
 
-export default function FundsPage() {
-  // TODO: Fetch funds from database
-  const funds = [
-    {
-      id: "1",
-      name: "Islamic Relief",
-      nameAr: "الإغاثة الإسلامية",
-      description: "Providing humanitarian aid worldwide",
-      category: "general",
-      logoUrl: "/placeholder.svg?key=relief",
-      isVerified: true,
-      totalRaised: 1250000,
-      donorCount: 5420,
-    },
-    {
-      id: "2",
-      name: "Orphan Care Foundation",
-      nameAr: "مؤسسة رعاية الأيتام",
-      description: "Supporting orphans and vulnerable children",
-      category: "orphans",
-      logoUrl: "/placeholder.svg?key=orphan",
-      isVerified: true,
-      totalRaised: 850000,
-      donorCount: 3210,
-    },
-    {
-      id: "3",
-      name: "Water for Life",
-      nameAr: "الماء للحياة",
-      description: "Building wells and water systems in need",
-      category: "water",
-      logoUrl: "/placeholder.svg?key=water",
-      isVerified: true,
-      totalRaised: 620000,
-      donorCount: 2890,
-    },
-    {
-      id: "4",
-      name: "Education First",
-      nameAr: "التعليم أولاً",
-      description: "Providing education to underprivileged communities",
-      category: "education",
-      logoUrl: "/placeholder.svg?key=edu",
-      isVerified: true,
-      totalRaised: 540000,
-      donorCount: 2150,
-    },
-    {
-      id: "5",
-      name: "Medical Aid Network",
-      nameAr: "شبكة المساعدات الطبية",
-      description: "Healthcare services for those in need",
-      category: "healthcare",
-      logoUrl: "/placeholder.svg?key=med",
-      isVerified: true,
-      totalRaised: 780000,
-      donorCount: 3450,
-    },
-    {
-      id: "6",
-      name: "Emergency Relief Fund",
-      nameAr: "صندوق الإغاثة الطارئة",
-      description: "Rapid response to disasters and emergencies",
-      category: "emergency",
-      logoUrl: "/placeholder.svg?key=emer",
-      isVerified: true,
-      totalRaised: 920000,
-      donorCount: 4120,
-    },
-  ]
+export default async function FundsPage() {
+  // Fetch funds from API (bot.e-replika.ru) or Supabase fallback
+  const result = await getFunds()
+  const funds = result.funds || []
 
   const categories = [
     { value: "all", label: "Все фонды" },
@@ -138,28 +73,38 @@ export default function FundsPage() {
 }
 
 function FundCard({ fund }: { fund: any }) {
+  // Support both API format and Supabase format
+  const name = fund.name || fund.name_ru || ""
+  const nameAr = fund.name_ar || fund.nameAr || ""
+  const description = fund.description || fund.description_ru || ""
+  const logoUrl = fund.logo_url || fund.logoUrl || "/placeholder.svg"
+  const isVerified = fund.is_verified !== undefined ? fund.is_verified : fund.isVerified || false
+  const totalRaised = Number(fund.total_raised || fund.totalRaised || 0)
+  const donorCount = Number(fund.donor_count || fund.donorCount || 0)
+  const category = fund.category || "general"
+
   return (
     <Link href={`/funds/${fund.id}`}>
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-              <img src={fund.logoUrl || "/placeholder.svg"} alt={fund.name} className="h-full w-full object-cover" />
+              <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-base line-clamp-1 flex items-center gap-2">
-                    {fund.name}
-                    {fund.isVerified && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
+                    {name}
+                    {isVerified && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{fund.nameAr}</p>
+                  {nameAr && <p className="text-xs text-muted-foreground line-clamp-1">{nameAr}</p>}
                 </div>
                 <Badge variant="secondary" className="capitalize text-xs flex-shrink-0">
-                  {fund.category}
+                  {category}
                 </Badge>
               </div>
-              <CardDescription className="text-xs mt-2 line-clamp-2">{fund.description}</CardDescription>
+              {description && <CardDescription className="text-xs mt-2 line-clamp-2">{description}</CardDescription>}
             </div>
           </div>
         </CardHeader>
@@ -167,11 +112,11 @@ function FundCard({ fund }: { fund: any }) {
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1 text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
-              <span>{(fund.totalRaised / 1000).toFixed(0)}k ₽ собрано</span>
+              <span>{totalRaised > 0 ? `${(totalRaised / 1000).toFixed(0)}k ₽ собрано` : "Новый фонд"}</span>
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Users className="h-3 w-3" />
-              <span>{fund.donorCount.toLocaleString()} доноров</span>
+              <span>{donorCount > 0 ? `${donorCount.toLocaleString()} доноров` : "Пока нет доноров"}</span>
             </div>
           </div>
         </CardContent>
