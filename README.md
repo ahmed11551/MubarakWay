@@ -1,30 +1,67 @@
-# Crowd-sadaqa platform
+# SadakaPass - Платформа благотворительности
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+Next.js приложение для управления благотворительными кампаниями с интеграцией Telegram бота.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/ahmed11551s-projects/v0-crowd-sadaqa-platform)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/fIzl5jgRmi0)
+## 🚀 Быстрый старт
 
-## Overview
+### API Endpoints
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+- **GET `/api/stats`** - Статистика платформы (требует Bearer токен)
+  ```bash
+  curl -H "Authorization: Bearer test_token_123" https://your-domain.com/api/stats
+  ```
 
-## Deployment
+- **POST `/api/telegram/webhook`** - Webhook для Telegram бота
+  - Проверяет секретный токен из заголовка `X-Telegram-Bot-Api-Secret-Token`
+  - Команды: `/start`, `/stats`
 
-Your project is live at:
+### Переменные окружения
 
-**[https://vercel.com/ahmed11551s-projects/v0-crowd-sadaqa-platform](https://vercel.com/ahmed11551s-projects/v0-crowd-sadaqa-platform)**
+Создайте `.env.local`:
 
-## Build your app
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+API_AUTH_TOKEN=test_token_123
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_SECRET_TOKEN=your_telegram_secret_token
+NEXT_PUBLIC_BASE_URL=https://your-domain.com
+```
 
-Continue building your app on:
+### Деплой на Vercel
 
-**[https://v0.app/chat/fIzl5jgRmi0](https://v0.app/chat/fIzl5jgRmi0)**
+1. Добавьте секреты в GitHub: https://github.com/ahmed11551/SadakaPass/settings/secrets/actions
+2. См. `DEPLOY_SETUP.md` для детальных инструкций
 
-## How It Works
+**Ссылка на деплой**: https://sadaka-pass.vercel.app
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## 📚 Документация
+
+- [Инструкция по деплою](./DEPLOY_SETUP.md)
+
+## 🤖 Telegram Bot
+
+После деплоя установите webhook:
+
+```powershell
+$body = @{
+  url = "https://sadaka-pass.vercel.app/api/telegram/webhook"
+  secret_token = "your_secret_token"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post `
+  -Uri "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+## 🛠️ Разработка
+
+```bash
+pnpm install
+pnpm dev
+```
+
+## 📝 Лицензия
+
+MIT
