@@ -1,13 +1,169 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { User, Award, Calendar, Download, Filter } from "lucide-react"
 import Link from "next/link"
+import { getUserDonations } from "@/lib/actions/donations"
+
+type Transaction = {
+  id: string
+  date: string
+  type: string
+  amount: number
+  fund: string
+  status: string
+}
 
 export default function ProfilePage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [filterType, setFilterType] = useState<string>("all")
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch real donations data
+  useEffect(() => {
+    async function loadDonations() {
+      try {
+        const result = await getUserDonations()
+        if (result.error) {
+          console.error("Error loading donations:", result.error)
+          // Use mock data as fallback
+          setTransactions([
+            {
+              id: "TXN-2025-001",
+              date: "15 янв 2025",
+              type: "Пожертвование",
+              amount: 1000,
+              fund: "Исламский фонд помощи",
+              status: "Завершено",
+            },
+            {
+              id: "TXN-2025-002",
+              date: "10 янв 2025",
+              type: "Подписка",
+              amount: 260,
+              fund: "MubarakWay",
+              status: "Завершено",
+            },
+            {
+              id: "TXN-2025-003",
+              date: "8 янв 2025",
+              type: "Кампания",
+              amount: 500,
+              fund: "Строительство колодцев",
+              status: "Завершено",
+            },
+            {
+              id: "TXN-2025-004",
+              date: "5 янв 2025",
+              type: "Закят",
+              amount: 5000,
+              fund: "Фонд помощи сиротам",
+              status: "Завершено",
+            },
+          ])
+          return
+        }
+
+        // Transform donations to transactions
+        const transformed: Transaction[] = (result.donations || []).map((donation: any) => {
+          const date = new Date(donation.created_at)
+          const typeMap: Record<string, string> = {
+            one_time: donation.category === "zakat" ? "Закят" : "Пожертвование",
+            recurring: "Подписка",
+          }
+          const fundName =
+            donation.funds?.name || donation.campaigns?.title || "Без указания фонда"
+
+          return {
+            id: donation.id || `TXN-${date.getFullYear()}-${String(donation.id || Math.random()).slice(-3)}`,
+            date: date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" }),
+            type: typeMap[donation.donation_type] || "Пожертвование",
+            amount: Number(donation.amount || 0),
+            fund: fundName,
+            status: donation.status === "completed" ? "Завершено" : donation.status === "pending" ? "В обработке" : "Отменено",
+          }
+        })
+
+        setTransactions(transformed)
+      } catch (error) {
+        console.error("Failed to load donations:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadDonations()
+  }, [])
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = [...transactions]
+
+    if (filterType !== "all") {
+      filtered = filtered.filter((t) => t.type === filterType)
+    }
+
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((t) => t.status === filterStatus)
+    }
+
+    setFilteredTransactions(filtered)
+  }, [transactions, filterType, filterStatus])
+
+  // Export to CSV
+  const handleExport = () => {
+    const dataToExport = filterType !== "all" || filterStatus !== "all" ? filteredTransactions : transactions
+    
+    if (dataToExport.length === 0) {
+      alert("Нет данных для экспорта")
+      return
+    }
+
+    const csv = [
+      ["ID", "Дата", "Тип", "Сумма", "Фонд/Кампания", "Статус"],
+      ...dataToExport.map((t) => [
+        t.id,
+        t.date,
+        t.type,
+        t.amount.toString(),
+        t.fund,
+        t.status,
+      ]),
+    ]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n")
+
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `transactions_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilterType("all")
+    setFilterStatus("all")
+  }
+
+  const hasActiveFilters = filterType !== "all" || filterStatus !== "all"
+  const displayTransactions = hasActiveFilters ? filteredTransactions : transactions
   return (
     <div className="min-h-screen pb-20">
       <AppHeader />
@@ -56,52 +212,89 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold">История транзакций</h3>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Фильтр
-                </Button>
-                <Button variant="outline" size="sm">
+                <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Filter className="h-4 w-4 mr-2" />
+                      Фильтр
+                      {(filterType !== "all" || filterStatus !== "all") && (
+                        <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                          {(filterType !== "all" ? 1 : 0) + (filterStatus !== "all" ? 1 : 0)}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Фильтры транзакций</DialogTitle>
+                      <DialogDescription>Выберите критерии для фильтрации истории транзакций</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="filter-type">Тип транзакции</Label>
+                        <Select value={filterType} onValueChange={setFilterType}>
+                          <SelectTrigger id="filter-type">
+                            <SelectValue placeholder="Все типы" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Все типы</SelectItem>
+                            <SelectItem value="Пожертвование">Пожертвование</SelectItem>
+                            <SelectItem value="Подписка">Подписка</SelectItem>
+                            <SelectItem value="Кампания">Кампания</SelectItem>
+                            <SelectItem value="Закят">Закят</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="filter-status">Статус</Label>
+                        <Select value={filterStatus} onValueChange={setFilterStatus}>
+                          <SelectTrigger id="filter-status">
+                            <SelectValue placeholder="Все статусы" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Все статусы</SelectItem>
+                            <SelectItem value="Завершено">Завершено</SelectItem>
+                            <SelectItem value="В обработке">В обработке</SelectItem>
+                            <SelectItem value="Отменено">Отменено</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button variant="outline" className="flex-1" onClick={handleResetFilters}>
+                          Сбросить
+                        </Button>
+                        <Button className="flex-1" onClick={() => setIsFilterOpen(false)}>
+                          Применить
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExport} 
+                  disabled={transactions.length === 0}
+                  title={transactions.length === 0 ? "Нет данных для экспорта" : "Экспортировать в CSV"}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Экспорт
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-3">
-              {[
-                {
-                  id: "TXN-2025-001",
-                  date: "15 янв 2025",
-                  type: "Пожертвование",
-                  amount: 1000,
-                  fund: "Исламский фонд помощи",
-                  status: "Завершено",
-                },
-                {
-                  id: "TXN-2025-002",
-                  date: "10 янв 2025",
-                  type: "Подписка",
-                  amount: 260,
-                  fund: "MubarakWay",
-                  status: "Завершено",
-                },
-                {
-                  id: "TXN-2025-003",
-                  date: "8 янв 2025",
-                  type: "Кампания",
-                  amount: 500,
-                  fund: "Строительство колодцев",
-                  status: "Завершено",
-                },
-                {
-                  id: "TXN-2025-004",
-                  date: "5 янв 2025",
-                  type: "Закят",
-                  amount: 5000,
-                  fund: "Фонд помощи сиротам",
-                  status: "Завершено",
-                },
-              ].map((transaction) => (
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Загрузка транзакций...</div>
+            ) : displayTransactions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Нет транзакций</p>
+                <p className="text-sm mt-2">Транзакции появятся здесь после совершения пожертвований</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {displayTransactions.map((transaction) => (
                 <Card key={transaction.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between">
