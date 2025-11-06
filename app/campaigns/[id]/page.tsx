@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Share2, Heart, Calendar, Users, TrendingUp } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCampaignById } from "@/lib/actions/campaigns"
@@ -107,10 +108,13 @@ export default async function CampaignDetailPage({
       <main className="max-w-lg mx-auto">
         {/* Campaign Image */}
         <div className="aspect-video bg-muted relative">
-          <img
+          <Image
             src={campaign.imageUrl || "/placeholder.svg"}
             alt={campaign.title}
-            className="object-cover w-full h-full"
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
           />
           <Badge className="absolute top-4 left-4 capitalize">{campaign.category}</Badge>
         </div>
@@ -216,11 +220,13 @@ export default async function CampaignDetailPage({
                   <CardContent className="space-y-3">
                     <p className="text-sm leading-relaxed">{update.content}</p>
                     {update.imageUrl && (
-                      <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                        <img
+                      <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
+                        <Image
                           src={update.imageUrl || "/placeholder.svg"}
                           alt={update.title}
-                          className="object-cover w-full h-full"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 768px"
                         />
                       </div>
                     )}

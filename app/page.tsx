@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Heart, Calculator, Sparkles, HandHeart, Users, ChevronLeft, ChevronRight, Target } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { QuickDonation } from "@/components/quick-donation"
 import { QuickDonationBlock } from "@/components/quick-donation-block"
 
@@ -241,10 +242,12 @@ export default function HomePage() {
                   <Card className="border bg-gradient-to-br from-red-500/5 to-orange-500/5 overflow-hidden">
                     {/* Reduce banner height from 16/9 to slimmer 16/7 */}
                     <div className="aspect-[16/7] relative overflow-hidden">
-                      <img
+                      <Image
                         src={campaign.image || "/placeholder.svg"}
                         alt={campaign.title}
-                        className="object-cover w-full h-full"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                       <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
                         {campaign.daysLeft} дней
@@ -328,10 +331,12 @@ export default function HomePage() {
                   >
                     <Link href={`/campaigns/${campaign.id}`}>
                       <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative overflow-hidden">
-                        <img
+                        <Image
                           src={campaign.image_url || "/placeholder.svg"}
                           alt={campaign.title}
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       </div>
                       <CardHeader className="pb-3">

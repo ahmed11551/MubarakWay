@@ -70,13 +70,70 @@ export function CampaignCreationForm() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Пожалуйста, выберите изображение")
+      return
     }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      toast.error("Размер изображения не должен превышать 5 МБ")
+      return
+    }
+
+    // Compress and preview image
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const img = new Image()
+      img.onload = () => {
+        // Create canvas for compression
+        const canvas = document.createElement("canvas")
+        const MAX_WIDTH = 1920
+        const MAX_HEIGHT = 1080
+        let width = img.width
+        let height = img.height
+
+        // Calculate new dimensions
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = (height * MAX_WIDTH) / width
+            width = MAX_WIDTH
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = (width * MAX_HEIGHT) / height
+            height = MAX_HEIGHT
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // Draw and compress
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height)
+          // Convert to base64 with quality 0.8
+          const compressed = canvas.toDataURL("image/jpeg", 0.8)
+          setImagePreview(compressed)
+        } else {
+          // Fallback if canvas not available
+          setImagePreview(reader.result as string)
+        }
+      }
+      img.onerror = () => {
+        toast.error("Ошибка при загрузке изображения")
+      }
+      img.src = reader.result as string
+    }
+    reader.onerror = () => {
+      toast.error("Ошибка при чтении файла")
+    }
+    reader.readAsDataURL(file)
   }
 
   const validateForm = () => {
@@ -395,10 +452,12 @@ export function CampaignCreationForm() {
         <CardContent>
           {imagePreview ? (
             <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
-              <img
+              <Image
                 src={imagePreview || "/placeholder.svg"}
                 alt="Превью кампании"
-                className="object-cover w-full h-full"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 768px"
               />
               <Button
                 type="button"

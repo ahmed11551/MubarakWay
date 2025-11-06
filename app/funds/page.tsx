@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, CheckCircle, Users, TrendingUp } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { getFunds } from "@/lib/actions/funds"
 
@@ -88,8 +89,8 @@ function FundCard({ fund }: { fund: any }) {
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-              <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
+            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+              <Image src={logoUrl} alt={name} fill className="object-cover" sizes="48px" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">

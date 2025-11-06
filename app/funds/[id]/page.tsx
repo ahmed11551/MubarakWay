@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getFundById } from "@/lib/actions/funds"
@@ -96,8 +97,8 @@ export default async function FundDetailPage({
         {/* Fund Header */}
         <div className="px-4 py-6 space-y-4 border-b">
           <div className="flex items-start gap-4">
-            <div className="h-20 w-20 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-              <img src={fund.logoUrl || "/placeholder.svg"} alt={fund.name} className="h-full w-full object-cover" />
+            <div className="h-20 w-20 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+              <Image src={fund.logoUrl || "/placeholder.svg"} alt={fund.name} fill className="object-cover" sizes="80px" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-2 mb-1">
@@ -233,10 +234,12 @@ export default async function FundDetailPage({
               {fund.projects.map((project) => (
                 <Card key={project.id}>
                   <div className="aspect-video bg-muted relative overflow-hidden">
-                    <img
+                    <Image
                       src={project.imageUrl || "/placeholder.svg"}
                       alt={project.title}
-                      className="object-cover w-full h-full"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                   <CardHeader>
