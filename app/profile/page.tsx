@@ -190,7 +190,7 @@ export default function ProfilePage() {
                 <div className="text-[11px] text-muted-foreground mt-1">Пожертвований</div>
               </div>
               <div className="flex flex-col items-center justify-center rounded-xl border-2 border-accent/20 bg-card/90 p-4 shadow-sm">
-                <div className="text-3xl font-extrabold text-accent tracking-tight">45 600 ₽</div>
+                <div className="text-3xl font-extrabold text-accent tracking-tight">45 600 RUB</div>
                 <div className="text-[11px] text-muted-foreground mt-1">Всего отдано</div>
               </div>
               <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/15 bg-card/90 p-4 shadow-sm">
@@ -310,7 +310,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <p className="text-xl font-bold text-primary">{transaction.amount} ₽</p>
+                        <p className="text-xl font-bold text-primary">{transaction.amount} RUB</p>
                         <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
                           {transaction.status}
                         </Badge>
@@ -380,11 +380,11 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Собрано</p>
-                        <p className="font-bold text-primary">{report.collected.toLocaleString("ru-RU")} ₽</p>
+                        <p className="font-bold text-primary">{report.collected.toLocaleString("ru-RU")} RUB</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Распределено</p>
-                        <p className="font-bold text-accent">{report.distributed.toLocaleString("ru-RU")} ₽</p>
+                        <p className="font-bold text-accent">{report.distributed.toLocaleString("ru-RU")} RUB</p>
                       </div>
                     </div>
                     {report.reportUrl && (
