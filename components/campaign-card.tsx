@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 import Link from "next/link"
 import { CheckCircle } from "lucide-react"
 
@@ -24,10 +25,12 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
     <Link href={`/campaigns/${campaign.id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow">
         <div className="aspect-video bg-muted relative">
-          <img
+          <Image
             src={campaign.imageUrl || "/placeholder.svg"}
             alt={campaign.title}
-            className="object-cover w-full h-full"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           {isCompleted && (
             <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium">
