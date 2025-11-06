@@ -29,6 +29,11 @@ declare global {
 
 export function loadCloudPaymentsWidget(): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      reject(new Error("CloudPayments widget can only be loaded in browser"))
+      return
+    }
+
     if (window.cp) {
       resolve()
       return

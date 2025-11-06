@@ -28,15 +28,24 @@ export default function HomePage() {
         if (response.ok) {
           const data = await response.json()
           setActiveCampaigns(data.campaigns || [])
+        } else {
+          console.error("Failed to fetch campaigns:", response.status, response.statusText)
         }
       } catch (error) {
         console.error("Failed to fetch active campaigns:", error)
-        toast.error("Не удалось загрузить активные кампании")
+        // Don't show toast on initial load errors to prevent client-side exceptions
+        if (typeof window !== "undefined") {
+          toast.error("Не удалось загрузить активные кампании")
+        }
       } finally {
         setIsLoadingCampaigns(false)
       }
     }
-    fetchActiveCampaigns()
+    
+    // Only fetch on client side
+    if (typeof window !== "undefined") {
+      fetchActiveCampaigns()
+    }
   }, [])
 
   const urgentCampaigns = [
