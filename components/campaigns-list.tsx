@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CampaignCard } from "@/components/campaign-card"
 import { CampaignsSearch } from "@/components/campaigns-search"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -31,32 +31,19 @@ export function CampaignsList({ activeCampaigns, endingCampaigns, completedCampa
   const [filteredCompleted, setFilteredCompleted] = useState(completedCampaigns)
   const [activeTab, setActiveTab] = useState("active")
 
-  const getCurrentCampaigns = () => {
-    switch (activeTab) {
-      case "active":
-        return filteredActive
-      case "ending":
-        return filteredEnding
-      case "completed":
-        return filteredCompleted
-      default:
-        return filteredActive
-    }
-  }
+  // Reset filtered campaigns when source campaigns change
+  useEffect(() => {
+    setFilteredActive(activeCampaigns)
+  }, [activeCampaigns])
 
-  const handleFilteredChange = (filtered: Campaign[]) => {
-    switch (activeTab) {
-      case "active":
-        setFilteredActive(filtered)
-        break
-      case "ending":
-        setFilteredEnding(filtered)
-        break
-      case "completed":
-        setFilteredCompleted(filtered)
-        break
-    }
-  }
+  useEffect(() => {
+    setFilteredEnding(endingCampaigns)
+  }, [endingCampaigns])
+
+  useEffect(() => {
+    setFilteredCompleted(completedCampaigns)
+  }, [completedCampaigns])
+
 
   return (
     <div className="space-y-4">
@@ -88,7 +75,7 @@ export function CampaignsList({ activeCampaigns, endingCampaigns, completedCampa
         <TabsContent value="active" className="space-y-4 mt-4">
           <CampaignsSearch 
             campaigns={activeCampaigns} 
-            onFilteredChange={handleFilteredChange}
+            onFilteredChange={(filtered) => setFilteredActive(filtered)}
           />
           {filteredActive.length > 0 ? (
             filteredActive.map((campaign) => (
@@ -105,7 +92,7 @@ export function CampaignsList({ activeCampaigns, endingCampaigns, completedCampa
         <TabsContent value="ending" className="space-y-4 mt-4">
           <CampaignsSearch 
             campaigns={endingCampaigns} 
-            onFilteredChange={handleFilteredChange}
+            onFilteredChange={(filtered) => setFilteredEnding(filtered)}
           />
           {filteredEnding.length > 0 ? (
             filteredEnding.map((campaign) => (
@@ -121,7 +108,7 @@ export function CampaignsList({ activeCampaigns, endingCampaigns, completedCampa
         <TabsContent value="completed" className="space-y-4 mt-4">
           <CampaignsSearch 
             campaigns={completedCampaigns} 
-            onFilteredChange={handleFilteredChange}
+            onFilteredChange={(filtered) => setFilteredCompleted(filtered)}
           />
           {filteredCompleted.length > 0 ? (
             filteredCompleted.map((campaign) => (
