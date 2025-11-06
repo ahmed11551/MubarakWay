@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { QuickDonation } from "@/components/quick-donation"
 import { QuickDonationBlock } from "@/components/quick-donation-block"
+import { toast } from "sonner"
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
