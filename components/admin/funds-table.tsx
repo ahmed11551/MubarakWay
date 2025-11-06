@@ -1,11 +1,27 @@
 "use client"
 
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Edit, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 export function AdminFundsTable() {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [fundToDelete, setFundToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   // TODO: Fetch real funds from database
   const funds = [
     {
@@ -33,6 +49,30 @@ export function AdminFundsTable() {
       donorCount: 567,
     },
   ]
+
+  const handleDeleteClick = (fundId: string) => {
+    setFundToDelete(fundId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!fundToDelete) return
+
+    setIsDeleting(true)
+    try {
+      // TODO: Implement actual delete API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      toast.success("Фонд удалён")
+      setDeleteDialogOpen(false)
+      setFundToDelete(null)
+    } catch (error) {
+      toast.error("Не удалось удалить фонд")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const fundToDeleteData = funds.find((f) => f.id === fundToDelete)
 
   return (
     <div className="space-y-4">
@@ -70,7 +110,12 @@ export function AdminFundsTable() {
                   <Button size="sm" variant="ghost">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="text-red-600">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-red-600"
+                    onClick={() => handleDeleteClick(fund.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -79,6 +124,28 @@ export function AdminFundsTable() {
           ))}
         </TableBody>
       </Table>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить фонд?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить фонд "{fundToDeleteData?.name}"?
+              Это действие нельзя отменить. Все данные фонда будут удалены.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Удаление..." : "Удалить"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

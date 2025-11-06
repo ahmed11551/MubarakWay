@@ -1,11 +1,27 @@
 "use client"
 
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Check, X, Eye } from "lucide-react"
+import { toast } from "sonner"
 
 export function AdminCampaignsTable() {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   // TODO: Fetch real campaigns from database
   const campaigns = [
     {
@@ -37,6 +53,38 @@ export function AdminCampaignsTable() {
     },
   ]
 
+  const handleRejectClick = (campaignId: string) => {
+    setCampaignToDelete(campaignId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!campaignToDelete) return
+
+    setIsDeleting(true)
+    try {
+      // TODO: Implement actual rejection API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      toast.success("Кампания отклонена")
+      setDeleteDialogOpen(false)
+      setCampaignToDelete(null)
+    } catch (error) {
+      toast.error("Не удалось отклонить кампанию")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleApprove = async (campaignId: string) => {
+    try {
+      // TODO: Implement actual approval API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      toast.success("Кампания одобрена")
+    } catch (error) {
+      toast.error("Не удалось одобрить кампанию")
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
@@ -49,6 +97,8 @@ export function AdminCampaignsTable() {
         return <Badge variant="outline">{status}</Badge>
     }
   }
+
+  const campaignToReject = campaigns.find((c) => c.id === campaignToDelete)
 
   return (
     <div className="space-y-4">
@@ -80,10 +130,20 @@ export function AdminCampaignsTable() {
                   </Button>
                   {campaign.status === "pending" && (
                     <>
-                      <Button size="sm" variant="ghost" className="text-green-600">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-green-600"
+                        onClick={() => handleApprove(campaign.id)}
+                      >
                         <Check className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-red-600">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-red-600"
+                        onClick={() => handleRejectClick(campaign.id)}
+                      >
                         <X className="h-4 w-4" />
                       </Button>
                     </>
@@ -94,6 +154,28 @@ export function AdminCampaignsTable() {
           ))}
         </TableBody>
       </Table>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Отклонить кампанию?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите отклонить кампанию "{campaignToReject?.title}"?
+              Это действие нельзя отменить. Кампания будет удалена и не будет опубликована.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRejectConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Отклонение..." : "Отклонить"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
