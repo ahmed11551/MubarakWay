@@ -261,6 +261,7 @@ export function CampaignCreationForm() {
                 )}
               </SelectContent>
             </Select>
+            {errors.fundId && <p className="text-xs text-destructive">{errors.fundId}</p>}
             <p className="text-xs text-muted-foreground">
               Не нашли нужный фонд?{" "}
               <Link href="/funds" className="text-primary hover:underline">
