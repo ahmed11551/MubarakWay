@@ -92,6 +92,43 @@ export async function getCampaigns(status?: string) {
   }
 }
 
+export async function searchCampaigns(query: string, category?: string, status?: string) {
+  try {
+    const supabase = await createClient()
+
+    let supabaseQuery = supabase
+      .from("campaigns")
+      .select(`
+        *,
+        profiles:creator_id (display_name, avatar_url)
+      `)
+      .or(`title.ilike.%${query}%,description.ilike.%${query}%,story.ilike.%${query}%`)
+      .order("created_at", { ascending: false })
+
+    if (status) {
+      supabaseQuery = supabaseQuery.eq("status", status)
+    } else {
+      supabaseQuery = supabaseQuery.eq("status", "active")
+    }
+
+    if (category && category !== "all") {
+      supabaseQuery = supabaseQuery.eq("category", category)
+    }
+
+    const { data: campaigns, error } = await supabaseQuery
+
+    if (error) {
+      console.error("[v0] Search campaigns error:", error)
+      return { campaigns: [], error: "Failed to search campaigns" }
+    }
+
+    return { campaigns: campaigns || [] }
+  } catch (error) {
+    console.error("[v0] Search campaigns exception:", error)
+    return { campaigns: [], error: "Failed to search campaigns" }
+  }
+}
+
 export async function getCampaignById(id: string) {
   const supabase = await createClient()
 

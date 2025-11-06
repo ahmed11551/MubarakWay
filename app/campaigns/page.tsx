@@ -2,9 +2,9 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, TrendingUp, Clock, CheckCircle } from "lucide-react"
+import { Plus } from "lucide-react"
 import Link from "next/link"
-import { CampaignCard } from "@/components/campaign-card"
+import { CampaignsList } from "@/components/campaigns-list"
 import { getCampaigns } from "@/lib/actions/campaigns"
 
 export default async function CampaignsPage() {
@@ -82,68 +82,11 @@ export default async function CampaignsPage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="active" className="w-full">
-          <TabsList className="flex w-full h-auto p-1 gap-1">
-            <TabsTrigger 
-              value="active" 
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs min-w-0"
-            >
-              <TrendingUp className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Активные</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="ending" 
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs min-w-0"
-            >
-              <Clock className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Скоро завершатся</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="completed" 
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs min-w-0"
-            >
-              <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Завершённые</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="active" className="space-y-4 mt-4">
-            {trulyActiveCampaigns.length > 0 ? (
-              trulyActiveCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Нет активных кампаний</p>
-                <p className="text-sm mt-2">Создайте первую кампанию, чтобы начать сбор средств</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="ending" className="space-y-4 mt-4">
-            {endingCampaigns.length > 0 ? (
-              endingCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Нет кампаний, которые скоро завершаются</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="completed" className="space-y-4 mt-4">
-            {completedCampaigns.length > 0 ? (
-              completedCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Нет завершённых кампаний</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        <CampaignsList
+          activeCampaigns={trulyActiveCampaigns}
+          endingCampaigns={endingCampaigns}
+          completedCampaigns={completedCampaigns}
+        />
       </main>
 
       <BottomNav />
