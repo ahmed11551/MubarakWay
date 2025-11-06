@@ -72,10 +72,10 @@ export async function getCampaigns(status?: string) {
       `)
       .order("created_at", { ascending: false })
 
-    if (status) {
+    // Only filter by status if explicitly provided
+    // If status is undefined, return all campaigns
+    if (status !== undefined) {
       query = query.eq("status", status)
-    } else {
-      query = query.eq("status", "active")
     }
 
     const { data: campaigns, error } = await query
@@ -151,4 +151,80 @@ export async function createCampaignUpdate(campaignId: string, title: string, co
   revalidatePath(`/campaigns/${campaignId}`)
 
   return { success: true, update }
+}
+
+export async function approveCampaign(campaignId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "You must be logged in to approve campaigns" }
+  }
+
+  // TODO: Check if user is admin
+  // For now, allow any logged-in user to approve
+
+  try {
+    const { data: campaign, error: campaignError } = await supabase
+      .from("campaigns")
+      .update({ status: "active" })
+      .eq("id", campaignId)
+      .select()
+      .single()
+
+    if (campaignError) {
+      console.error("[v0] Campaign approval error:", campaignError)
+      return { error: "Failed to approve campaign" }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/campaigns")
+
+    return { success: true, campaign }
+  } catch (error) {
+    console.error("[v0] Unexpected approval error:", error)
+    return { error: "An unexpected error occurred" }
+  }
+}
+
+export async function rejectCampaign(campaignId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "You must be logged in to reject campaigns" }
+  }
+
+  // TODO: Check if user is admin
+  // For now, allow any logged-in user to reject
+
+  try {
+    const { data: campaign, error: campaignError } = await supabase
+      .from("campaigns")
+      .update({ status: "rejected" })
+      .eq("id", campaignId)
+      .select()
+      .single()
+
+    if (campaignError) {
+      console.error("[v0] Campaign rejection error:", campaignError)
+      return { error: "Failed to reject campaign" }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/campaigns")
+
+    return { success: true, campaign }
+  } catch (error) {
+    console.error("[v0] Unexpected rejection error:", error)
+    return { error: "An unexpected error occurred" }
+  }
 }

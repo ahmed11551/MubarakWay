@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -14,44 +14,55 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Check, X, Eye } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Check, X, Eye, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { getCampaigns } from "@/lib/actions/campaigns"
+import { approveCampaign, rejectCampaign } from "@/lib/actions/campaigns"
+import Link from "next/link"
 
 export function AdminCampaignsTable() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isApproving, setIsApproving] = useState<string | null>(null)
+  const [campaigns, setCampaigns] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("pending")
 
-  // TODO: Fetch real campaigns from database
-  const campaigns = [
-    {
-      id: "1",
-      title: "Строительство водяной скважины",
-      creator: "Ахмед Исмаилов",
-      status: "pending",
-      goal: 500000,
-      raised: 0,
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      title: "Помощь детям-сиротам",
-      creator: "Фатима Алиева",
-      status: "active",
-      goal: 300000,
-      raised: 125000,
-      createdAt: "2024-01-10",
-    },
-    {
-      id: "3",
-      title: "Лечение тяжелобольного ребёнка",
-      creator: "Марьям Хасанова",
-      status: "pending",
-      goal: 1000000,
-      raised: 0,
-      createdAt: "2024-01-14",
-    },
-  ]
+  useEffect(() => {
+    fetchCampaigns()
+  }, [activeTab])
+
+  async function fetchCampaigns() {
+    setIsLoading(true)
+    try {
+      const status = activeTab === "all" ? undefined : activeTab
+      const result = await getCampaigns(status)
+      if (result.error) {
+        toast.error("Не удалось загрузить кампании")
+        setCampaigns([])
+      } else {
+        // Transform campaigns to match table format
+        const transformedCampaigns = (result.campaigns || []).map((campaign: any) => ({
+          id: campaign.id,
+          title: campaign.title,
+          creator: campaign.profiles?.display_name || "Неизвестный",
+          status: campaign.status,
+          goal: Number(campaign.goal_amount || 0),
+          raised: Number(campaign.current_amount || 0),
+          createdAt: campaign.created_at,
+        }))
+        setCampaigns(transformedCampaigns)
+      }
+    } catch (error) {
+      console.error("Failed to fetch campaigns:", error)
+      toast.error("Ошибка при загрузке кампаний")
+      setCampaigns([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleRejectClick = (campaignId: string) => {
     setCampaignToDelete(campaignId)
@@ -63,12 +74,17 @@ export function AdminCampaignsTable() {
 
     setIsDeleting(true)
     try {
-      // TODO: Implement actual rejection API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      toast.success("Кампания отклонена")
-      setDeleteDialogOpen(false)
-      setCampaignToDelete(null)
+      const result = await rejectCampaign(campaignToDelete)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Кампания отклонена")
+        setDeleteDialogOpen(false)
+        setCampaignToDelete(null)
+        fetchCampaigns() // Refresh the list
+      }
     } catch (error) {
+      console.error("Rejection error:", error)
       toast.error("Не удалось отклонить кампанию")
     } finally {
       setIsDeleting(false)
@@ -76,12 +92,20 @@ export function AdminCampaignsTable() {
   }
 
   const handleApprove = async (campaignId: string) => {
+    setIsApproving(campaignId)
     try {
-      // TODO: Implement actual approval API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      toast.success("Кампания одобрена")
+      const result = await approveCampaign(campaignId)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Кампания одобрена")
+        fetchCampaigns() // Refresh the list
+      }
     } catch (error) {
+      console.error("Approval error:", error)
       toast.error("Не удалось одобрить кампанию")
+    } finally {
+      setIsApproving(null)
     }
   }
 
@@ -102,7 +126,26 @@ export function AdminCampaignsTable() {
 
   return (
     <div className="space-y-4">
-      <Table>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="pending">На модерации</TabsTrigger>
+          <TabsTrigger value="active">Активные</TabsTrigger>
+          <TabsTrigger value="completed">Завершённые</TabsTrigger>
+          <TabsTrigger value="all">Все</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Загрузка кампаний...</span>
+        </div>
+      ) : campaigns.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Нет кампаний для отображения</p>
+        </div>
+      ) : (
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Название</TableHead>
@@ -125,8 +168,10 @@ export function AdminCampaignsTable() {
               <TableCell>{new Date(campaign.createdAt).toLocaleDateString("ru-RU")}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="ghost">
-                    <Eye className="h-4 w-4" />
+                  <Button size="sm" variant="ghost" asChild>
+                    <Link href={`/campaigns/${campaign.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </Link>
                   </Button>
                   {campaign.status === "pending" && (
                     <>
@@ -135,14 +180,20 @@ export function AdminCampaignsTable() {
                         variant="ghost" 
                         className="text-green-600"
                         onClick={() => handleApprove(campaign.id)}
+                        disabled={isApproving === campaign.id}
                       >
-                        <Check className="h-4 w-4" />
+                        {isApproving === campaign.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
                       </Button>
                       <Button 
                         size="sm" 
                         variant="ghost" 
                         className="text-red-600"
                         onClick={() => handleRejectClick(campaign.id)}
+                        disabled={isDeleting}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -154,6 +205,7 @@ export function AdminCampaignsTable() {
           ))}
         </TableBody>
       </Table>
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
