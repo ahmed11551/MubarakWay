@@ -23,20 +23,22 @@ export default function NewCampaignPage() {
           {/* Important Information Block */}
           <Alert className="bg-primary/10 border-primary/30 border-2">
             <Info className="h-5 w-5 text-primary" />
-            <AlertDescription className="text-sm leading-relaxed">
-              <p className="font-semibold text-primary mb-2">Важная информация</p>
-              <p className="text-foreground mb-3">
-                Платформа MubarakWay предоставляет пользователям техническую возможность создавать кампании по сбору средств в пользу зарегистрированных благотворительных фондов партнеров, имеющих заключённый договор с Платформой. Все переводы совершаются напрямую на реквизиты фонда.
-              </p>
+            <AlertDescription className="text-sm leading-relaxed space-y-3">
+              <div>
+                <p className="font-semibold text-primary mb-2">Важная информация</p>
+                <p className="text-foreground">
+                  Платформа MubarakWay предоставляет пользователям техническую возможность создавать кампании по сбору средств в пользу зарегистрированных благотворительных фондов партнеров, имеющих заключённый договор с Платформой. Все переводы совершаются напрямую на реквизиты фонда.
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full sm:w-auto"
+                className="w-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                 asChild
               >
-                <Link href="/funds" className="flex items-center gap-2">
-                  Посмотреть фонды-партнёры в вашей стране
-                  <ExternalLink className="h-4 w-4" />
+                <Link href="/funds" className="flex items-center justify-center gap-2 whitespace-normal text-center">
+                  <span>Посмотреть фонды-партнёры в вашей стране</span>
+                  <ExternalLink className="h-4 w-4 shrink-0" />
                 </Link>
               </Button>
             </AlertDescription>
