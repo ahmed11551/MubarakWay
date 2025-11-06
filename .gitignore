@@ -27,3 +27,12 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Scripts with secrets - should not be committed
+add-all-github-secrets.ps1
+setup-secrets.ps1
+setup-database.ps1
+setup-supabase.ps1
+test-bot.ps1
+add-github-secrets.ps1
+add-secrets.ps1
