@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { sendEmail, getCampaignApprovalEmail } from "@/lib/email"
+import { sendTelegramMessage, getCampaignModerationNotificationMessage } from "@/lib/telegram"
 
 export type CampaignInput = {
   title: string
@@ -230,20 +231,37 @@ export async function approveCampaign(campaignId: string) {
       return { error: "Failed to approve campaign" }
     }
 
-    // Send email notification to creator
-    if (campaignBefore?.profiles?.email) {
-      try {
-        await sendEmail({
-          to: campaignBefore.profiles.email,
-          subject: `Кампания "${campaignBefore.title}" одобрена`,
-          html: getCampaignApprovalEmail({
-            title: campaignBefore.title,
-            approved: true,
-          }),
-        })
-      } catch (emailError) {
-        console.error("[v0] Failed to send approval email:", emailError)
-        // Don't fail the approval if email fails
+    // Send notifications to creator
+    if (campaignBefore?.profiles) {
+      // Send email notification
+      if (campaignBefore.profiles.email) {
+        try {
+          await sendEmail({
+            to: campaignBefore.profiles.email,
+            subject: `Кампания "${campaignBefore.title}" одобрена`,
+            html: getCampaignApprovalEmail({
+              title: campaignBefore.title,
+              approved: true,
+            }),
+          })
+        } catch (emailError) {
+          console.error("[v0] Failed to send approval email:", emailError)
+        }
+      }
+
+      // Send Telegram notification
+      if (campaignBefore.profiles.telegram_id) {
+        try {
+          await sendTelegramMessage(
+            campaignBefore.profiles.telegram_id,
+            getCampaignModerationNotificationMessage({
+              title: campaignBefore.title,
+              approved: true,
+            })
+          )
+        } catch (telegramError) {
+          console.error("[v0] Failed to send approval telegram:", telegramError)
+        }
       }
     }
 
@@ -296,20 +314,37 @@ export async function rejectCampaign(campaignId: string) {
       return { error: "Failed to reject campaign" }
     }
 
-    // Send email notification to creator
-    if (campaignBefore?.profiles?.email) {
-      try {
-        await sendEmail({
-          to: campaignBefore.profiles.email,
-          subject: `Кампания "${campaignBefore.title}" отклонена`,
-          html: getCampaignApprovalEmail({
-            title: campaignBefore.title,
-            approved: false,
-          }),
-        })
-      } catch (emailError) {
-        console.error("[v0] Failed to send rejection email:", emailError)
-        // Don't fail the rejection if email fails
+    // Send notifications to creator
+    if (campaignBefore?.profiles) {
+      // Send email notification
+      if (campaignBefore.profiles.email) {
+        try {
+          await sendEmail({
+            to: campaignBefore.profiles.email,
+            subject: `Кампания "${campaignBefore.title}" отклонена`,
+            html: getCampaignApprovalEmail({
+              title: campaignBefore.title,
+              approved: false,
+            }),
+          })
+        } catch (emailError) {
+          console.error("[v0] Failed to send rejection email:", emailError)
+        }
+      }
+
+      // Send Telegram notification
+      if (campaignBefore.profiles.telegram_id) {
+        try {
+          await sendTelegramMessage(
+            campaignBefore.profiles.telegram_id,
+            getCampaignModerationNotificationMessage({
+              title: campaignBefore.title,
+              approved: false,
+            })
+          )
+        } catch (telegramError) {
+          console.error("[v0] Failed to send rejection telegram:", telegramError)
+        }
       }
     }
 

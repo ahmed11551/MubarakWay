@@ -85,24 +85,51 @@ export async function createDonation(input: DonationInput) {
             .eq("id", input.campaignId)
             .single()
 
-          if (campaign?.profiles?.email) {
+          if (campaign?.profiles) {
             const { data: donorProfile } = await supabase
               .from("profiles")
               .select("display_name")
               .eq("id", user.id)
               .single()
 
-            await sendEmail({
-              to: campaign.profiles.email,
-              subject: `Новое пожертвование в вашу кампанию "${campaign.title}"`,
-              html: getCampaignDonationNotificationEmail({
-                title: campaign.title,
-                donorName: donorProfile?.display_name || "Пользователь",
-                amount: input.amount,
-                currency: input.currency,
-                isAnonymous: input.isAnonymous,
-              }),
-            })
+            const donorName = donorProfile?.display_name || "Пользователь"
+
+            // Send email notification
+            if (campaign.profiles.email) {
+              try {
+                await sendEmail({
+                  to: campaign.profiles.email,
+                  subject: `Новое пожертвование в вашу кампанию "${campaign.title}"`,
+                  html: getCampaignDonationNotificationEmail({
+                    title: campaign.title,
+                    donorName,
+                    amount: input.amount,
+                    currency: input.currency,
+                    isAnonymous: input.isAnonymous,
+                  }),
+                })
+              } catch (emailError) {
+                console.error("[v0] Failed to send campaign notification email:", emailError)
+              }
+            }
+
+            // Send Telegram notification if user has telegram_id
+            if (campaign.profiles.telegram_id) {
+              try {
+                await sendTelegramMessage(
+                  campaign.profiles.telegram_id,
+                  getCampaignDonationNotificationMessage({
+                    title: campaign.title,
+                    donorName,
+                    amount: input.amount,
+                    currency: input.currency,
+                    isAnonymous: input.isAnonymous,
+                  })
+                )
+              } catch (telegramError) {
+                console.error("[v0] Failed to send campaign notification telegram:", telegramError)
+              }
+            }
           }
         } catch (emailError) {
           console.error("[v0] Failed to send campaign notification email:", emailError)
