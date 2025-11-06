@@ -125,3 +125,42 @@ export async function getUserDonations() {
 
   return { donations }
 }
+
+export async function getAllDonations() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "You must be logged in to view all donations" }
+  }
+
+  // TODO: Check if user is admin
+  // For now, allow any logged-in user to view all donations
+
+  try {
+    const { data: donations, error } = await supabase
+      .from("donations")
+      .select(`
+        *,
+        profiles:donor_id (display_name, email),
+        funds:fund_id (name),
+        campaigns:campaign_id (title)
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100) // Limit to last 100 donations
+
+    if (error) {
+      console.error("[v0] Get all donations error:", error)
+      return { donations: [], error: "Failed to fetch donations" }
+    }
+
+    return { donations: donations || [] }
+  } catch (error) {
+    console.error("[v0] Get all donations exception:", error)
+    return { donations: [], error: "Failed to fetch donations" }
+  }
+}
