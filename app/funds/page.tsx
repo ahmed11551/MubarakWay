@@ -9,6 +9,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { getFunds } from "@/lib/actions/funds"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function FundsPage() {
   // Fetch funds from API (bot.e-replika.ru) or Supabase fallback
   const result = await getFunds()

@@ -297,32 +297,35 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {displayTransactions.map((transaction) => (
-                <Card key={transaction.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{transaction.type}</Badge>
-                          <span className="text-xs text-muted-foreground">{transaction.id}</span>
+                {displayTransactions.map((transaction) => {
+                  return (
+                    <Card key={transaction.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{transaction.type}</Badge>
+                              <span className="text-xs text-muted-foreground">{transaction.id}</span>
+                            </div>
+                            <p className="font-semibold">{transaction.fund}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{transaction.date}</span>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <p className="text-xl font-bold text-primary">{transaction.amount} RUB</p>
+                            <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                              {transaction.status}
+                            </Badge>
+                          </div>
                         </div>
-                        <p className="font-semibold">{transaction.fund}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          <span>{transaction.date}</span>
-                        </div>
-                      </div>
-                      <div className="text-right space-y-1">
-                        <p className="text-xl font-bold text-primary">{transaction.amount} RUB</p>
-                        <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-                          {transaction.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">

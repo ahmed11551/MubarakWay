@@ -5,8 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin", "cyrillic"] })
-const _geistMono = Geist_Mono({ subsets: ["latin", "cyrillic"] })
+const _geist = Geist({ subsets: ["latin", "latin-ext"] })
+const _geistMono = Geist_Mono({ subsets: ["latin", "latin-ext"] })
 
 export const metadata: Metadata = {
   title: "MubarakWay - Садака-Пасс",
