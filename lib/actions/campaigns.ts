@@ -297,7 +297,7 @@ export async function rejectCampaign(campaignId: string) {
       .select(`
         title,
         creator_id,
-        profiles:creator_id (email)
+        profiles!campaigns_creator_id_fkey (email, telegram_id)
       `)
       .eq("id", campaignId)
       .single()
