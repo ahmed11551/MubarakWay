@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { sendEmail, getCampaignApprovalEmail } from "@/lib/email"
 
 export type CampaignInput = {
   title: string
@@ -206,6 +207,17 @@ export async function approveCampaign(campaignId: string) {
   // For now, allow any logged-in user to approve
 
   try {
+    // Get campaign with creator info before updating
+    const { data: campaignBefore } = await supabase
+      .from("campaigns")
+      .select(`
+        title,
+        creator_id,
+        profiles:creator_id (email)
+      `)
+      .eq("id", campaignId)
+      .single()
+
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
       .update({ status: "active" })
@@ -216,6 +228,23 @@ export async function approveCampaign(campaignId: string) {
     if (campaignError) {
       console.error("[v0] Campaign approval error:", campaignError)
       return { error: "Failed to approve campaign" }
+    }
+
+    // Send email notification to creator
+    if (campaignBefore?.profiles?.email) {
+      try {
+        await sendEmail({
+          to: campaignBefore.profiles.email,
+          subject: `Кампания "${campaignBefore.title}" одобрена`,
+          html: getCampaignApprovalEmail({
+            title: campaignBefore.title,
+            approved: true,
+          }),
+        })
+      } catch (emailError) {
+        console.error("[v0] Failed to send approval email:", emailError)
+        // Don't fail the approval if email fails
+      }
     }
 
     revalidatePath("/admin")
@@ -244,6 +273,17 @@ export async function rejectCampaign(campaignId: string) {
   // For now, allow any logged-in user to reject
 
   try {
+    // Get campaign with creator info before updating
+    const { data: campaignBefore } = await supabase
+      .from("campaigns")
+      .select(`
+        title,
+        creator_id,
+        profiles:creator_id (email)
+      `)
+      .eq("id", campaignId)
+      .single()
+
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
       .update({ status: "rejected" })
@@ -254,6 +294,23 @@ export async function rejectCampaign(campaignId: string) {
     if (campaignError) {
       console.error("[v0] Campaign rejection error:", campaignError)
       return { error: "Failed to reject campaign" }
+    }
+
+    // Send email notification to creator
+    if (campaignBefore?.profiles?.email) {
+      try {
+        await sendEmail({
+          to: campaignBefore.profiles.email,
+          subject: `Кампания "${campaignBefore.title}" отклонена`,
+          html: getCampaignApprovalEmail({
+            title: campaignBefore.title,
+            approved: false,
+          }),
+        })
+      } catch (emailError) {
+        console.error("[v0] Failed to send rejection email:", emailError)
+        // Don't fail the rejection if email fails
+      }
     }
 
     revalidatePath("/admin")

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { sendEmail, getDonationConfirmationEmail, getCampaignDonationNotificationEmail } from "@/lib/email"
 
 export type DonationInput = {
   amount: number
@@ -71,6 +72,42 @@ export async function createDonation(input: DonationInput) {
 
       if (campaignError) {
         console.error("[v0] Campaign update error:", campaignError)
+      } else {
+        // Send notification to campaign creator
+        try {
+          const { data: campaign } = await supabase
+            .from("campaigns")
+            .select(`
+              title,
+              creator_id,
+              profiles:creator_id (email, display_name)
+            `)
+            .eq("id", input.campaignId)
+            .single()
+
+          if (campaign?.profiles?.email) {
+            const { data: donorProfile } = await supabase
+              .from("profiles")
+              .select("display_name")
+              .eq("id", user.id)
+              .single()
+
+            await sendEmail({
+              to: campaign.profiles.email,
+              subject: `Новое пожертвование в вашу кампанию "${campaign.title}"`,
+              html: getCampaignDonationNotificationEmail({
+                title: campaign.title,
+                donorName: donorProfile?.display_name || "Пользователь",
+                amount: input.amount,
+                currency: input.currency,
+                isAnonymous: input.isAnonymous,
+              }),
+            })
+          }
+        } catch (emailError) {
+          console.error("[v0] Failed to send campaign notification email:", emailError)
+          // Don't fail the donation if email fails
+        }
       }
     }
 
@@ -88,6 +125,54 @@ export async function createDonation(input: DonationInput) {
 
     revalidatePath("/")
     revalidatePath("/profile")
+
+    // Send confirmation email to donor
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", user.id)
+        .single()
+
+      if (profile?.email) {
+        // Get fund or campaign name
+        let fundName: string | undefined
+        let campaignName: string | undefined
+
+        if (input.fundId) {
+          const { data: fund } = await supabase
+            .from("funds")
+            .select("name, name_ru")
+            .eq("id", input.fundId)
+            .single()
+          fundName = fund?.name_ru || fund?.name
+        }
+
+        if (input.campaignId) {
+          const { data: campaign } = await supabase
+            .from("campaigns")
+            .select("title")
+            .eq("id", input.campaignId)
+            .single()
+          campaignName = campaign?.title
+        }
+
+        await sendEmail({
+          to: profile.email,
+          subject: "Подтверждение пожертвования",
+          html: getDonationConfirmationEmail({
+            amount: input.amount,
+            currency: input.currency,
+            fundName,
+            campaignName,
+            isAnonymous: input.isAnonymous,
+          }),
+        })
+      }
+    } catch (emailError) {
+      console.error("[v0] Failed to send confirmation email:", emailError)
+      // Don't fail the donation if email fails
+    }
 
     return { success: true, donation }
   } catch (error) {
