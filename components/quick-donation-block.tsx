@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { CloudPaymentsButton } from "@/components/cloudpayments-button"
 import { createDonation } from "@/lib/actions/donations"
 import { useRouter } from "next/navigation"
-import { Heart } from "lucide-react"
+import { Heart, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 const PRESET_AMOUNTS = [100, 250, 500, 1000, 2500, 5000]
 
@@ -36,11 +37,13 @@ export function QuickDonationBlock() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [funds, setFunds] = useState<any[]>([])
+  const [isLoadingFunds, setIsLoadingFunds] = useState(false)
 
   // Fetch funds when target donation is selected
   useEffect(() => {
     if (donationType === "target") {
       async function loadFunds() {
+        setIsLoadingFunds(true)
         try {
           const response = await fetch("/api/funds")
           if (response.ok) {
@@ -51,9 +54,13 @@ export function QuickDonationBlock() {
           }
         } catch (error) {
           console.error("Failed to load funds:", error)
+        } finally {
+          setIsLoadingFunds(false)
         }
       }
       loadFunds()
+    } else {
+      setFunds([])
     }
   }, [donationType])
 
@@ -79,7 +86,7 @@ export function QuickDonationBlock() {
       })
 
       if (result.error) {
-        alert(`Ошибка: ${result.error}`)
+        toast.error(`Ошибка: ${result.error}`)
         setIsProcessing(false)
         return
       }
@@ -93,7 +100,7 @@ export function QuickDonationBlock() {
   }
 
   const handlePaymentFail = (reason: string) => {
-    alert(`Платёж не прошёл: ${reason}`)
+    toast.error(`Платёж не прошёл: ${reason}`)
     setIsProcessing(false)
   }
 
@@ -129,17 +136,26 @@ export function QuickDonationBlock() {
           {donationType === "target" && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Выберите фонд:</label>
-              <Select value={selectedFund} onValueChange={setSelectedFund}>
+              <Select value={selectedFund} onValueChange={setSelectedFund} disabled={isLoadingFunds}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите фонд" />
+                  <SelectValue placeholder={isLoadingFunds ? "Загрузка фондов..." : "Выберите фонд"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Общий фонд</SelectItem>
-                  {funds.map((fund) => (
-                    <SelectItem key={fund.id} value={fund.id.toString()}>
-                      {fund.name || fund.name_ru || `Фонд ${fund.id}`}
+                  {isLoadingFunds ? (
+                    <SelectItem value="" disabled>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Загрузка...
+                      </div>
                     </SelectItem>
-                  ))}
+                  ) : (
+                    funds.map((fund) => (
+                      <SelectItem key={fund.id} value={fund.id.toString()}>
+                        {fund.name || fund.name_ru || `Фонд ${fund.id}`}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

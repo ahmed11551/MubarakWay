@@ -15,10 +15,12 @@ export default function HomePage() {
   const autoplayRef = useRef<NodeJS.Timeout | null>(null)
   const touchStartX = useRef<number | null>(null)
   const [activeCampaigns, setActiveCampaigns] = useState<any[]>([])
+  const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true)
 
   // Fetch active campaigns from database
   useEffect(() => {
     async function fetchActiveCampaigns() {
+      setIsLoadingCampaigns(true)
       try {
         const response = await fetch("/api/campaigns?status=active&limit=3")
         if (response.ok) {
@@ -27,6 +29,8 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error("Failed to fetch active campaigns:", error)
+      } finally {
+        setIsLoadingCampaigns(false)
       }
     }
     fetchActiveCampaigns()
@@ -307,7 +311,12 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-3">
-            {activeCampaigns.length > 0 ? (
+            {isLoadingCampaigns ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <p className="mt-2 text-sm">Загрузка кампаний...</p>
+              </div>
+            ) : activeCampaigns.length > 0 ? (
               activeCampaigns.map((campaign) => {
                 const progress = campaign.goal_amount > 0 ? (campaign.current_amount / campaign.goal_amount) * 100 : 0
                 return (

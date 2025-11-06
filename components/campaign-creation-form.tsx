@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Upload, X } from "lucide-react"
+import { CalendarIcon, Upload, X, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -44,10 +44,12 @@ export function CampaignCreationForm() {
   const [selectedFundId, setSelectedFundId] = useState<string>("")
   const [funds, setFunds] = useState<any[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLoadingFunds, setIsLoadingFunds] = useState(true)
 
   // Fetch funds on component mount
   useEffect(() => {
     async function loadFunds() {
+      setIsLoadingFunds(true)
       try {
         const response = await fetch("/api/funds")
         if (response.ok) {
@@ -58,6 +60,9 @@ export function CampaignCreationForm() {
         }
       } catch (error) {
         console.error("Failed to load funds:", error)
+        toast.error("Не удалось загрузить список фондов")
+      } finally {
+        setIsLoadingFunds(false)
       }
     }
     loadFunds()
@@ -243,12 +248,20 @@ export function CampaignCreationForm() {
                 if (errors.fundId) setErrors({ ...errors, fundId: "" })
               }} 
               required
+              disabled={isLoadingFunds}
             >
               <SelectTrigger className={errors.fundId ? "border-destructive" : ""}>
-                <SelectValue placeholder="Выберите фонд из списка партнёров" />
+                <SelectValue placeholder={isLoadingFunds ? "Загрузка фондов..." : "Выберите фонд из списка партнёров"} />
               </SelectTrigger>
               <SelectContent>
-                {funds.length > 0 ? (
+                {isLoadingFunds ? (
+                  <SelectItem value="" disabled>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Загрузка...
+                    </div>
+                  </SelectItem>
+                ) : funds.length > 0 ? (
                   funds.map((fund) => (
                     <SelectItem key={fund.id} value={fund.id.toString()}>
                       {fund.name || fund.name_ru || `Фонд ${fund.id}`}
@@ -256,7 +269,7 @@ export function CampaignCreationForm() {
                   ))
                 ) : (
                   <SelectItem value="" disabled>
-                    Загрузка фондов...
+                    Фонды не найдены
                   </SelectItem>
                 )}
               </SelectContent>
