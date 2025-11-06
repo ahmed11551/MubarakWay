@@ -317,7 +317,7 @@ export function CampaignCreationForm() {
               </SelectTrigger>
               <SelectContent>
                 {isLoadingFunds ? (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="loading" disabled>
                     <div className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Загрузка...
@@ -330,7 +330,7 @@ export function CampaignCreationForm() {
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="not-found" disabled>
                     Фонды не найдены
                   </SelectItem>
                 )}

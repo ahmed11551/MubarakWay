@@ -80,7 +80,7 @@ export function QuickDonationBlock() {
         currency: "RUB",
         donationType: "one_time",
         category: donationType === "project" ? "general" : (selectedCategory as any),
-        fundId: donationType === "target" && selectedFund ? selectedFund : undefined,
+        fundId: donationType === "target" && selectedFund && selectedFund !== "general" ? selectedFund : undefined,
         campaignId: undefined,
         isAnonymous: false,
       })
@@ -143,9 +143,9 @@ export function QuickDonationBlock() {
                   <SelectValue placeholder={isLoadingFunds ? "Загрузка фондов..." : "Выберите фонд"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Общий фонд</SelectItem>
+                  <SelectItem value="general">Общий фонд</SelectItem>
                   {isLoadingFunds ? (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="loading" disabled>
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Загрузка...
