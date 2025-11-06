@@ -33,12 +33,12 @@ export default function NewCampaignPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
+                className="w-full !whitespace-normal border-primary/30 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors py-2 min-h-[2.5rem]"
                 asChild
               >
-                <Link href="/funds" className="flex items-center justify-center gap-2 whitespace-normal text-center">
-                  <span>Посмотреть фонды-партнёры в вашей стране</span>
-                  <ExternalLink className="h-4 w-4 shrink-0" />
+                <Link href="/funds" className="flex items-center justify-center gap-2 text-center break-words">
+                  <span className="break-words">Посмотреть фонды-партнёры в вашей стране</span>
+                  <ExternalLink className="h-4 w-4 shrink-0 flex-shrink-0" />
                 </Link>
               </Button>
             </AlertDescription>
