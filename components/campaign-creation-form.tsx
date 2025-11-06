@@ -468,11 +468,19 @@ export function CampaignCreationForm() {
                 type="button"
                 variant="destructive"
                 size="icon"
-                className="absolute top-2 right-2"
-                onClick={() => setImagePreview(null)}
+                className="absolute top-2 right-2 z-10"
+                onClick={() => {
+                  setImagePreview(null)
+                  setImageFile(null)
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
+              {imageFile && (
+                <div className="absolute bottom-2 left-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                  {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} МБ)
+                </div>
+              )}
             </div>
           ) : (
             <label className="flex flex-col items-center justify-center aspect-video border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
