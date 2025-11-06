@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { User, Award, Calendar, Download, Filter } from "lucide-react"
 import Link from "next/link"
 import { getUserDonations } from "@/lib/actions/donations"
+import { SubscriptionsManager } from "@/components/subscriptions-manager"
 import { toast } from "sonner"
 
 type Transaction = {
@@ -206,8 +207,9 @@ export default function ProfilePage() {
 
         {/* История и отчёты */}
         <Tabs defaultValue="history" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="history">История транзакций</TabsTrigger>
+            <TabsTrigger value="subscriptions">Подписки</TabsTrigger>
             <TabsTrigger value="reports">Отчёты фондов</TabsTrigger>
           </TabsList>
 
@@ -326,6 +328,13 @@ export default function ProfilePage() {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="subscriptions" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">Мои подписки</h3>
+            </div>
+            <SubscriptionsManager />
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
