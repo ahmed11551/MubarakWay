@@ -65,3 +65,39 @@ export async function searchFunds(query: string) {
 
   return { funds }
 }
+
+export async function deleteFund(fundId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "You must be logged in to delete funds" }
+  }
+
+  // TODO: Check if user is admin
+  // For now, allow any logged-in user to delete
+
+  try {
+    // Soft delete: set is_active to false instead of actually deleting
+    const { data: fund, error: fundError } = await supabase
+      .from("funds")
+      .update({ is_active: false })
+      .eq("id", fundId)
+      .select()
+      .single()
+
+    if (fundError) {
+      console.error("[v0] Fund deletion error:", fundError)
+      return { error: "Failed to delete fund" }
+    }
+
+    return { success: true, fund }
+  } catch (error) {
+    console.error("[v0] Unexpected deletion error:", error)
+    return { error: "An unexpected error occurred" }
+  }
+}

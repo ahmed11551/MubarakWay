@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -14,41 +14,49 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { getFunds } from "@/lib/actions/funds"
+import { deleteFund } from "@/lib/actions/funds"
 
 export function AdminFundsTable() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [fundToDelete, setFundToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [funds, setFunds] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // TODO: Fetch real funds from database
-  const funds = [
-    {
-      id: "1",
-      name: "Исламская помощь",
-      category: "general",
-      verified: true,
-      totalRaised: 5000000,
-      donorCount: 1234,
-    },
-    {
-      id: "2",
-      name: "Помощь сиротам",
-      category: "orphans",
-      verified: true,
-      totalRaised: 3500000,
-      donorCount: 890,
-    },
-    {
-      id: "3",
-      name: "Вода для жизни",
-      category: "water",
-      verified: true,
-      totalRaised: 2800000,
-      donorCount: 567,
-    },
-  ]
+  useEffect(() => {
+    fetchFunds()
+  }, [])
+
+  async function fetchFunds() {
+    setIsLoading(true)
+    try {
+      const result = await getFunds()
+      if (result.error) {
+        toast.error("Не удалось загрузить фонды")
+        setFunds([])
+      } else {
+        // Transform funds to match table format
+        const transformedFunds = (result.funds || []).map((fund: any) => ({
+          id: fund.id,
+          name: fund.name || fund.name_ru || "Без названия",
+          category: fund.category || "general",
+          verified: fund.is_verified !== undefined ? fund.is_verified : fund.isVerified || false,
+          totalRaised: Number(fund.total_raised || fund.totalRaised || 0),
+          donorCount: Number(fund.donor_count || fund.donorCount || 0),
+        }))
+        setFunds(transformedFunds)
+      }
+    } catch (error) {
+      console.error("Failed to fetch funds:", error)
+      toast.error("Ошибка при загрузке фондов")
+      setFunds([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleDeleteClick = (fundId: string) => {
     setFundToDelete(fundId)
@@ -60,12 +68,17 @@ export function AdminFundsTable() {
 
     setIsDeleting(true)
     try {
-      // TODO: Implement actual delete API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      toast.success("Фонд удалён")
-      setDeleteDialogOpen(false)
-      setFundToDelete(null)
+      const result = await deleteFund(fundToDelete)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Фонд удалён")
+        setDeleteDialogOpen(false)
+        setFundToDelete(null)
+        fetchFunds() // Refresh the list
+      }
     } catch (error) {
+      console.error("Deletion error:", error)
       toast.error("Не удалось удалить фонд")
     } finally {
       setIsDeleting(false)
@@ -80,7 +93,17 @@ export function AdminFundsTable() {
         <Button>Добавить фонд</Button>
       </div>
 
-      <Table>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Загрузка фондов...</span>
+        </div>
+      ) : funds.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Нет фондов для отображения</p>
+        </div>
+      ) : (
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Название</TableHead>
@@ -124,6 +147,7 @@ export function AdminFundsTable() {
           ))}
         </TableBody>
       </Table>
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
