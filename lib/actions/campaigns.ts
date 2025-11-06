@@ -61,30 +61,35 @@ export async function createCampaign(input: CampaignInput) {
 }
 
 export async function getCampaigns(status?: string) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  let query = supabase
-    .from("campaigns")
-    .select(`
-      *,
-      profiles:creator_id (display_name, avatar_url)
-    `)
-    .order("created_at", { ascending: false })
+    let query = supabase
+      .from("campaigns")
+      .select(`
+        *,
+        profiles:creator_id (display_name, avatar_url)
+      `)
+      .order("created_at", { ascending: false })
 
-  if (status) {
-    query = query.eq("status", status)
-  } else {
-    query = query.eq("status", "active")
+    if (status) {
+      query = query.eq("status", status)
+    } else {
+      query = query.eq("status", "active")
+    }
+
+    const { data: campaigns, error } = await query
+
+    if (error) {
+      console.error("[v0] Get campaigns error:", error)
+      return { campaigns: [], error: "Failed to fetch campaigns" }
+    }
+
+    return { campaigns: campaigns || [] }
+  } catch (error) {
+    console.error("[v0] Get campaigns exception:", error)
+    return { campaigns: [], error: "Failed to fetch campaigns" }
   }
-
-  const { data: campaigns, error } = await query
-
-  if (error) {
-    console.error("[v0] Get campaigns error:", error)
-    return { error: "Failed to fetch campaigns" }
-  }
-
-  return { campaigns }
 }
 
 export async function getCampaignById(id: string) {

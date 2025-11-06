@@ -8,9 +8,22 @@ import { CampaignCard } from "@/components/campaign-card"
 import { getCampaigns } from "@/lib/actions/campaigns"
 
 export default async function CampaignsPage() {
-  // Fetch campaigns from database
-  const activeResult = await getCampaigns("active")
-  const completedResult = await getCampaigns("completed")
+  // Fetch campaigns from database with error handling
+  let activeResult, completedResult
+  
+  try {
+    activeResult = await getCampaigns("active")
+  } catch (error) {
+    console.error("Error fetching active campaigns:", error)
+    activeResult = { campaigns: [], error: "Failed to load campaigns" }
+  }
+  
+  try {
+    completedResult = await getCampaigns("completed")
+  } catch (error) {
+    console.error("Error fetching completed campaigns:", error)
+    completedResult = { campaigns: [], error: "Failed to load campaigns" }
+  }
   
   // Handle errors
   if (activeResult.error) {

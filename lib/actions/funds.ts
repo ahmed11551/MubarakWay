@@ -4,29 +4,34 @@ import { createClient } from "@/lib/supabase/server"
 import { fetchBotApiFunds } from "@/lib/bot-api"
 
 export async function getFunds(category?: string) {
-  // Try to fetch from bot.e-replika.ru API first
-  const botApiFunds = await fetchBotApiFunds(category)
-  if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
-    return { funds: botApiFunds }
+  try {
+    // Try to fetch from bot.e-replika.ru API first
+    const botApiFunds = await fetchBotApiFunds(category)
+    if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
+      return { funds: botApiFunds }
+    }
+
+    // Fallback to Supabase if Bot API is not available
+    const supabase = await createClient()
+
+    let query = supabase.from("funds").select("*").eq("is_active", true).order("total_raised", { ascending: false })
+
+    if (category && category !== "all") {
+      query = query.eq("category", category)
+    }
+
+    const { data: funds, error } = await query
+
+    if (error) {
+      console.error("[v0] Get funds error:", error)
+      return { funds: [], error: "Failed to fetch funds" }
+    }
+
+    return { funds: funds || [] }
+  } catch (error) {
+    console.error("[v0] Get funds exception:", error)
+    return { funds: [], error: "Failed to fetch funds" }
   }
-
-  // Fallback to Supabase if Bot API is not available
-  const supabase = await createClient()
-
-  let query = supabase.from("funds").select("*").eq("is_active", true).order("total_raised", { ascending: false })
-
-  if (category && category !== "all") {
-    query = query.eq("category", category)
-  }
-
-  const { data: funds, error } = await query
-
-  if (error) {
-    console.error("[v0] Get funds error:", error)
-    return { error: "Failed to fetch funds" }
-  }
-
-  return { funds: funds || [] }
 }
 
 export async function getFundById(id: string) {

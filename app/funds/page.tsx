@@ -13,8 +13,14 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function FundsPage() {
-  // Fetch funds from API (bot.e-replika.ru) or Supabase fallback
-  const result = await getFunds()
+  // Fetch funds from API (bot.e-replika.ru) or Supabase fallback with error handling
+  let result
+  try {
+    result = await getFunds()
+  } catch (error) {
+    console.error("Error fetching funds:", error)
+    result = { funds: [], error: "Failed to load funds" }
+  }
   const funds = result.funds || []
 
   const categories = [
