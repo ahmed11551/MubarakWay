@@ -16,6 +16,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { createCampaign } from "@/lib/actions/campaigns"
+import { uploadImageFromBase64 } from "@/lib/actions/storage"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -177,6 +178,21 @@ export function CampaignCreationForm() {
     setIsLoading(true)
 
     try {
+      // Upload image if provided
+      let imageUrl: string | undefined = undefined
+      if (imagePreview && imageFile) {
+        setIsUploadingImage(true)
+        const uploadResult = await uploadImageFromBase64(imagePreview, imageFile.name)
+        setIsUploadingImage(false)
+        
+        if ("error" in uploadResult) {
+          toast.error(uploadResult.error)
+          setIsLoading(false)
+          return
+        }
+        imageUrl = uploadResult.url
+      }
+
       const result = await createCampaign({
         title: title.trim(),
         description: description.trim(),
@@ -185,7 +201,7 @@ export function CampaignCreationForm() {
         currency,
         category: category as any,
         deadline: deadline || undefined,
-        imageUrl: imagePreview || undefined,
+        imageUrl,
         fundId: selectedFundId || undefined,
       })
 
@@ -217,6 +233,7 @@ export function CampaignCreationForm() {
       toast.error("Не удалось создать кампанию. Пожалуйста, попробуйте снова.")
     } finally {
       setIsLoading(false)
+      setIsUploadingImage(false)
     }
   }
 
@@ -505,8 +522,20 @@ export function CampaignCreationForm() {
                 <li>Средства будут переведены согласно нашим условиям</li>
               </ul>
             </div>
-            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? "Создание кампании..." : "Отправить на проверку"}
+            <Button type="submit" size="lg" className="w-full" disabled={isLoading || isUploadingImage}>
+              {isUploadingImage ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Загрузка изображения...
+                </>
+              ) : isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Создание кампании...
+                </>
+              ) : (
+                "Отправить на проверку"
+              )}
             </Button>
           </div>
         </CardContent>
