@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Upload, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 const CATEGORIES = [
   { value: "medical", label: "Медицина" },
@@ -36,6 +37,26 @@ export function CampaignCreationForm() {
   const [deadline, setDeadline] = useState<Date>()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedFundId, setSelectedFundId] = useState<string>("")
+  const [funds, setFunds] = useState<any[]>([])
+
+  // Fetch funds on component mount
+  useEffect(() => {
+    async function loadFunds() {
+      try {
+        const response = await fetch("/api/funds")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.funds) {
+            setFunds(data.funds)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load funds:", error)
+      }
+    }
+    loadFunds()
+  }, [])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -51,8 +72,8 @@ export function CampaignCreationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!title || !description || !story || !goalAmount || !category) {
-      alert("Пожалуйста, заполните все обязательные поля")
+    if (!title || !description || !story || !goalAmount || !category || !selectedFundId) {
+      alert("Пожалуйста, заполните все обязательные поля, включая выбор фонда-партнёра")
       return
     }
 
@@ -69,6 +90,7 @@ export function CampaignCreationForm() {
         category,
         deadline,
         imagePreview,
+        fundId: selectedFundId || undefined,
       })
 
       // Simulate API call
@@ -84,6 +106,7 @@ export function CampaignCreationForm() {
       setCategory("")
       setDeadline(undefined)
       setImagePreview(null)
+      setSelectedFundId("")
     } catch (error) {
       console.error("[v0] Campaign creation error:", error)
       alert("Не удалось создать кампанию. Пожалуйста, попробуйте снова.")
@@ -143,6 +166,53 @@ export function CampaignCreationForm() {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Fund Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Выбор фонда-партнёра *</CardTitle>
+          <CardDescription>
+            Выберите фонд, в пользу которого будет проводиться сбор средств. Все переводы совершаются напрямую на реквизиты выбранного фонда.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fund">Фонд-партнёр *</Label>
+            <Select value={selectedFundId} onValueChange={setSelectedFundId} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите фонд из списка партнёров" />
+              </SelectTrigger>
+              <SelectContent>
+                {funds.length > 0 ? (
+                  funds.map((fund) => (
+                    <SelectItem key={fund.id} value={fund.id.toString()}>
+                      {fund.name || fund.name_ru || `Фонд ${fund.id}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="" disabled>
+                    Загрузка фондов...
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Не нашли нужный фонд?{" "}
+              <Link href="/funds" className="text-primary hover:underline">
+                Посмотрите все фонды-партнёры
+              </Link>
+            </p>
+          </div>
+          {selectedFundId && (
+            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Важно:</strong> После создания кампании выбранный фонд подтвердит реквизиты для перевода средств. 
+                На странице кампании появится кнопка «Пожертвовать», которая ведёт на форму с прямыми реквизитами фонда.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

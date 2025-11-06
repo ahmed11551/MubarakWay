@@ -8,6 +8,7 @@ import { Heart, Calculator, Sparkles, HandHeart, Users, ChevronLeft, ChevronRigh
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { QuickDonation } from "@/components/quick-donation"
+import { QuickDonationBlock } from "@/components/quick-donation-block"
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -181,6 +182,11 @@ export default function HomePage() {
               </Card>
             </Link>
           </div>
+        </section>
+
+        {/* Quick Donation Block */}
+        <section className="space-y-4">
+          <QuickDonationBlock />
         </section>
 
         {/* Urgent Campaigns Carousel */}
