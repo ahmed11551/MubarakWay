@@ -14,7 +14,7 @@ FONDINSAN_ACCESS_TOKEN=0xRs6obpvPOx4lkGLYxepBOcMju
 
 ## Структура API
 
-### Эндпоинт: GET `/api/v1/programs`
+### Эндпоинт 1: GET `/api/v1/programs` - Получение всех программ
 
 **URL**: `https://fondinsan.ru/api/v1/programs?access-token={token}`
 
@@ -37,6 +37,14 @@ FONDINSAN_ACCESS_TOKEN=0xRs6obpvPOx4lkGLYxepBOcMju
   ]
 }
 ```
+
+### Эндпоинт 2: GET `/api/v1/program/by-id/{id}` - Получение одной программы
+
+**URL**: `https://fondinsan.ru/api/v1/program/by-id/{id}?access-token={token}`
+
+**Пример**: `https://fondinsan.ru/api/v1/program/by-id/40?access-token=0xRs6obpvPOx4lkGLYxepBOcMju`
+
+**Ответ**: Аналогичен эндпоинту всех программ, но содержит одну программу в массиве `data`.
 
 ## Преобразование данных
 

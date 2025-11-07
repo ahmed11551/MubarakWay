@@ -57,10 +57,28 @@ export async function fetchFondinsanPrograms(): Promise<FondinsanProgram[] | nul
  */
 export async function fetchFondinsanProgramById(id: number): Promise<FondinsanProgram | null> {
   try {
-    const programs = await fetchFondinsanPrograms()
-    if (!programs) return null
+    const url = `${FONDINSAN_API_BASE}/program/by-id/${id}?access-token=${FONDINSAN_ACCESS_TOKEN}`
+    
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    })
 
-    return programs.find((p) => p.id === id) || null
+    if (!response.ok) {
+      throw new Error(`Fondinsan API returned ${response.status}`)
+    }
+
+    const data: FondinsanApiResponse = await response.json()
+
+    if (!data.success || !data.data || data.data.length === 0) {
+      console.error("[Fondinsan API] Invalid response format or program not found:", data)
+      return null
+    }
+
+    return data.data[0]
   } catch (error) {
     console.error("[Fondinsan API] Error fetching program by ID:", error)
     return null
