@@ -2,16 +2,30 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { fetchBotApiFunds } from "@/lib/bot-api"
+import { fetchFondinsanPrograms, transformFondinsanProgramsToFunds } from "@/lib/fondinsan-api"
 
 export async function getFunds(category?: string) {
   try {
-    // Try to fetch from bot.e-replika.ru API first
+    // Priority 1: Try to fetch from Fondinsan API
+    const fondinsanPrograms = await fetchFondinsanPrograms()
+    if (fondinsanPrograms && fondinsanPrograms.length > 0) {
+      let funds = transformFondinsanProgramsToFunds(fondinsanPrograms)
+      
+      // Filter by category if specified
+      if (category && category !== "all") {
+        funds = funds.filter((f) => f.category === category)
+      }
+      
+      return { funds }
+    }
+
+    // Priority 2: Try to fetch from bot.e-replika.ru API
     const botApiFunds = await fetchBotApiFunds(category)
     if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
       return { funds: botApiFunds }
     }
 
-    // Fallback to Supabase if Bot API is not available
+    // Priority 3: Fallback to Supabase if external APIs are not available
     const supabase = await createClient()
 
     let query = supabase.from("funds").select("*").eq("is_active", true).order("total_raised", { ascending: false })
@@ -35,6 +49,23 @@ export async function getFunds(category?: string) {
 }
 
 export async function getFundById(id: string) {
+  // Check if it's a Fondinsan fund
+  if (id.startsWith("fondinsan_")) {
+    try {
+      const { fetchFondinsanProgramById, transformFondinsanProgramToFund } = await import("@/lib/fondinsan-api")
+      const programId = parseInt(id.replace("fondinsan_", ""))
+      const program = await fetchFondinsanProgramById(programId)
+      
+      if (program) {
+        const fund = transformFondinsanProgramToFund(program)
+        return { fund }
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching Fondinsan program:", error)
+    }
+  }
+
+  // Fallback to Supabase
   const supabase = await createClient()
 
   const { data: fund, error } = await supabase.from("funds").select("*").eq("id", id).eq("is_active", true).single()
