@@ -151,3 +151,51 @@
     z-index: 1;
   }
 }
+
+/* Telegram WebApp scroll fix - prevent pull-to-close */
+@layer base {
+  html.telegram-webapp {
+    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  html.telegram-webapp body {
+    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Prevent pull-to-close on scrollable containers */
+  html.telegram-webapp main,
+  html.telegram-webapp [role="main"],
+  html.telegram-webapp .scrollable {
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure main content is scrollable */
+  html.telegram-webapp main {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix for page wrappers */
+  html.telegram-webapp [class*="min-h-screen"] {
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Prevent pull-to-close on all scrollable areas */
+  html.telegram-webapp * {
+    overscroll-behavior-y: contain;
+  }
+}
