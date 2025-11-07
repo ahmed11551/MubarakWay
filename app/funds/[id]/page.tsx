@@ -19,81 +19,86 @@ export default async function FundDetailPage({
 }) {
   const { id } = await params
 
-  // Fetch fund from database
-  const result = await getFundById(id)
-  
-  if (result.error || !result.fund) {
-    notFound()
-  }
+  try {
+    // Fetch fund from database
+    const result = await getFundById(id)
+    
+    if (result.error || !result.fund) {
+      notFound()
+    }
 
-  const fundData = result.fund
+    const fundData = result.fund
 
-  // Fetch recent donations for this fund
-  const supabase = await createClient()
-  const { data: donations } = await supabase
-    .from("donations")
-    .select(`
-      *,
-      profiles:donor_id (display_name, avatar_url)
-    `)
-    .eq("fund_id", id)
-    .eq("status", "completed")
-    .order("created_at", { ascending: false })
-    .limit(10)
+    // Fetch recent donations for this fund
+    const supabase = await createClient()
+    const { data: donations, error: donationsError } = await supabase
+      .from("donations")
+      .select(`
+        *,
+        profiles:donor_id (display_name, avatar_url)
+      `)
+      .eq("fund_id", id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(10)
 
-  // Format recent donors from donations
-  const now = new Date()
-  const formatRelativeTime = (date: Date) => {
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+    if (donationsError) {
+      console.error("Error fetching donations:", donationsError)
+    }
 
-    if (diffMins < 60) return `${diffMins} минут назад`
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "час" : diffHours < 5 ? "часа" : "часов"} назад`
-    return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
-  }
+    // Format recent donors from donations
+    const now = new Date()
+    const formatRelativeTime = (date: Date) => {
+      const diffMs = now.getTime() - date.getTime()
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      const diffDays = Math.floor(diffMs / 86400000)
 
-  const recentDonations = (donations || []).map((donation: any) => ({
-    name: donation.is_anonymous
-      ? "Анонимно"
-      : donation.profiles?.display_name || "Неизвестный донор",
-    amount: Number(donation.amount || 0),
-    createdAt: formatRelativeTime(new Date(donation.created_at)),
-  }))
+      if (diffMins < 60) return `${diffMins} минут назад`
+      if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "час" : diffHours < 5 ? "часа" : "часов"} назад`
+      return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
+    }
 
-  // Transform database format to component format
-  // Note: impactStats and projects are optional fields that may not exist in DB
-  // For now, we'll use empty arrays or default values
-  const fund = {
-    id: fundData.id,
-    name: fundData.name || "",
-    nameAr: fundData.name_ar || "",
-    description: fundData.description || "",
-    descriptionAr: fundData.description_ar || "",
-    fullDescription: fundData.description || "", // Use description as fullDescription if separate field doesn't exist
-    category: fundData.category || "general",
-    logoUrl: fundData.logo_url || "/placeholder.svg",
-    isVerified: fundData.is_verified !== undefined ? fundData.is_verified : false,
-    totalRaised: Number(fundData.total_raised || 0),
-    donorCount: Number(fundData.donor_count || 0),
-    websiteUrl: fundData.website_url || null,
-    contactEmail: fundData.contact_email || null,
-    impactStats: [
-      { label: "Людей помогли", value: "—" },
-      { label: "Стран", value: "—" },
-      { label: "Проектов", value: "—" },
-      { label: "Лет работы", value: "—" },
-    ], // Default stats - can be enhanced later
-    recentDonations,
-    projects: [], // Projects can be added as separate table or JSON field later
-  }
+    const recentDonations = (donations || []).map((donation: any) => ({
+      name: donation.is_anonymous
+        ? "Анонимно"
+        : donation.profiles?.display_name || "Неизвестный донор",
+      amount: Number(donation.amount || 0),
+      createdAt: formatRelativeTime(new Date(donation.created_at)),
+    }))
 
-  return (
-    <div className="min-h-screen pb-20">
-      <AppHeader />
+    // Transform database format to component format
+    // Note: impactStats and projects are optional fields that may not exist in DB
+    // For now, we'll use empty arrays or default values
+    const fund = {
+      id: fundData.id,
+      name: fundData.name || "",
+      nameAr: fundData.name_ar || "",
+      description: fundData.description || "",
+      descriptionAr: fundData.description_ar || "",
+      fullDescription: fundData.description || "", // Use description as fullDescription if separate field doesn't exist
+      category: fundData.category || "general",
+      logoUrl: fundData.logo_url || "/placeholder.svg",
+      isVerified: fundData.is_verified !== undefined ? fundData.is_verified : false,
+      totalRaised: Number(fundData.total_raised || 0),
+      donorCount: Number(fundData.donor_count || 0),
+      websiteUrl: fundData.website_url || null,
+      contactEmail: fundData.contact_email || null,
+      impactStats: [
+        { label: "Людей помогли", value: "—" },
+        { label: "Стран", value: "—" },
+        { label: "Проектов", value: "—" },
+        { label: "Лет работы", value: "—" },
+      ], // Default stats - can be enhanced later
+      recentDonations,
+      projects: [], // Projects can be added as separate table or JSON field later
+    }
 
-      <main className="max-w-lg mx-auto">
+    return (
+      <div className="min-h-screen pb-20">
+        <AppHeader />
+
+        <main className="max-w-lg mx-auto">
         {/* Fund Header */}
         <div className="px-4 py-6 space-y-4 border-b">
           <div className="flex items-start gap-4">
@@ -289,4 +294,8 @@ export default async function FundDetailPage({
       <BottomNav />
     </div>
   )
+  } catch (error) {
+    console.error("Error in FundDetailPage:", error)
+    throw error // Re-throw to trigger error.tsx
+  }
 }

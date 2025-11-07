@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { sendEmail, getDonationConfirmationEmail, getCampaignDonationNotificationEmail } from "@/lib/email"
+import { sendTelegramMessage, getCampaignDonationNotificationMessage } from "@/lib/telegram"
 
 export type DonationInput = {
   amount: number
@@ -209,33 +210,38 @@ export async function createDonation(input: DonationInput) {
 }
 
 export async function getUserDonations() {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-  if (authError || !user) {
-    return { error: "You must be logged in to view donations" }
+    if (authError || !user) {
+      return { donations: [], error: "You must be logged in to view donations" }
+    }
+
+    const { data: donations, error } = await supabase
+      .from("donations")
+      .select(`
+        *,
+        funds:fund_id (name, logo_url),
+        campaigns:campaign_id (title, image_url)
+      `)
+      .eq("donor_id", user.id)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("[v0] Get donations error:", error)
+      return { donations: [], error: "Failed to fetch donations" }
+    }
+
+    return { donations: donations || [] }
+  } catch (error) {
+    console.error("[v0] Get donations exception:", error)
+    return { donations: [], error: "Failed to fetch donations" }
   }
-
-  const { data: donations, error } = await supabase
-    .from("donations")
-    .select(`
-      *,
-      funds:fund_id (name, logo_url),
-      campaigns:campaign_id (title, image_url)
-    `)
-    .eq("donor_id", user.id)
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("[v0] Get donations error:", error)
-    return { error: "Failed to fetch donations" }
-  }
-
-  return { donations }
 }
 
 export async function getAllDonations() {

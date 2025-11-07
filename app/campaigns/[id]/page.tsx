@@ -19,93 +19,98 @@ export default async function CampaignDetailPage({
 }) {
   const { id } = await params
 
-  // Fetch campaign from database
-  const result = await getCampaignById(id)
-  
-  if (result.error || !result.campaign) {
-    notFound()
-  }
+  try {
+    // Fetch campaign from database
+    const result = await getCampaignById(id)
+    
+    if (result.error || !result.campaign) {
+      notFound()
+    }
 
-  const campaignData = result.campaign
+    const campaignData = result.campaign
 
-  // Fetch recent donations for this campaign
-  const supabase = await createClient()
-  const { data: donations } = await supabase
-    .from("donations")
-    .select(`
-      *,
-      profiles:donor_id (display_name, avatar_url)
-    `)
-    .eq("campaign_id", id)
-    .eq("status", "completed")
-    .order("created_at", { ascending: false })
-    .limit(10)
+    // Fetch recent donations for this campaign
+    const supabase = await createClient()
+    const { data: donations, error: donationsError } = await supabase
+      .from("donations")
+      .select(`
+        *,
+        profiles:donor_id (display_name, avatar_url)
+      `)
+      .eq("campaign_id", id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(10)
 
-  // Transform database format to component format
-  const deadline = campaignData.deadline ? new Date(campaignData.deadline) : null
-  const now = new Date()
-  const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : null
+    if (donationsError) {
+      console.error("Error fetching donations:", donationsError)
+    }
 
-  // Format recent donors from donations
-  const formatRelativeTime = (date: Date) => {
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+    // Transform database format to component format
+    const deadline = campaignData.deadline ? new Date(campaignData.deadline) : null
+    const now = new Date()
+    const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : null
 
-    if (diffMins < 60) return `${diffMins} минут назад`
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "час" : diffHours < 5 ? "часа" : "часов"} назад`
-    return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
-  }
+    // Format recent donors from donations
+    const formatRelativeTime = (date: Date) => {
+      const diffMs = now.getTime() - date.getTime()
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      const diffDays = Math.floor(diffMs / 86400000)
 
-  const recentDonors = (donations || []).map((donation: any) => ({
-    name: donation.is_anonymous
-      ? "Аноним"
-      : donation.profiles?.display_name || "Неизвестный донор",
-    amount: Number(donation.amount || 0),
-    isAnonymous: donation.is_anonymous || false,
-    createdAt: formatRelativeTime(new Date(donation.created_at)),
-  }))
+      if (diffMins < 60) return `${diffMins} минут назад`
+      if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "час" : diffHours < 5 ? "часа" : "часов"} назад`
+      return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
+    }
 
-  // Format campaign updates
-  const updates = ((campaignData.campaign_updates as any[]) || []).map((update: any) => ({
-    id: update.id,
-    title: update.title,
-    content: update.content,
-    imageUrl: update.image_url || null,
-    createdAt: new Date(update.created_at).toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }),
-  }))
+    const recentDonors = (donations || []).map((donation: any) => ({
+      name: donation.is_anonymous
+        ? "Аноним"
+        : donation.profiles?.display_name || "Неизвестный донор",
+      amount: Number(donation.amount || 0),
+      isAnonymous: donation.is_anonymous || false,
+      createdAt: formatRelativeTime(new Date(donation.created_at)),
+    }))
 
-  const campaign = {
-    id: campaignData.id,
-    title: campaignData.title || "",
-    description: campaignData.description || "",
-    story: campaignData.story || "",
-    goalAmount: Number(campaignData.goal_amount || 0),
-    currentAmount: Number(campaignData.current_amount || 0),
-    category: campaignData.category || "other",
-    imageUrl: campaignData.image_url || "/placeholder.svg",
-    donorCount: Number(campaignData.donor_count || 0),
-    daysLeft: daysLeft ?? 0,
-    deadline: deadline?.toISOString().split("T")[0] || null,
-    creatorName: (campaignData.profiles as any)?.display_name || "Неизвестный автор",
-    creatorAvatar: (campaignData.profiles as any)?.avatar_url || "/placeholder.svg",
-    createdAt: new Date(campaignData.created_at).toLocaleDateString("ru-RU"),
-    updates,
-    recentDonors,
-  }
+    // Format campaign updates
+    const updates = ((campaignData.campaign_updates as any[]) || []).map((update: any) => ({
+      id: update.id,
+      title: update.title,
+      content: update.content,
+      imageUrl: update.image_url || null,
+      createdAt: new Date(update.created_at).toLocaleDateString("ru-RU", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    }))
 
-  const progress = (campaign.currentAmount / campaign.goalAmount) * 100
+    const campaign = {
+      id: campaignData.id,
+      title: campaignData.title || "",
+      description: campaignData.description || "",
+      story: campaignData.story || "",
+      goalAmount: Number(campaignData.goal_amount || 0),
+      currentAmount: Number(campaignData.current_amount || 0),
+      category: campaignData.category || "other",
+      imageUrl: campaignData.image_url || "/placeholder.svg",
+      donorCount: Number(campaignData.donor_count || 0),
+      daysLeft: daysLeft ?? 0,
+      deadline: deadline?.toISOString().split("T")[0] || null,
+      creatorName: (campaignData.profiles as any)?.display_name || "Неизвестный автор",
+      creatorAvatar: (campaignData.profiles as any)?.avatar_url || "/placeholder.svg",
+      createdAt: new Date(campaignData.created_at).toLocaleDateString("ru-RU"),
+      updates,
+      recentDonors,
+    }
 
-  return (
-    <div className="min-h-screen pb-20">
-      <AppHeader />
+    const progress = (campaign.currentAmount / campaign.goalAmount) * 100
 
-      <main className="max-w-lg mx-auto">
+    return (
+      <div className="min-h-screen pb-20">
+        <AppHeader />
+
+        <main className="max-w-lg mx-auto">
         {/* Campaign Image */}
         <div className="aspect-video bg-muted relative">
           <Image
@@ -265,7 +270,11 @@ export default async function CampaignDetailPage({
         </div>
       </main>
 
-      <BottomNav />
-    </div>
-  )
+        <BottomNav />
+      </div>
+    )
+  } catch (error) {
+    console.error("Error in CampaignDetailPage:", error)
+    throw error // Re-throw to trigger error.tsx
+  }
 }

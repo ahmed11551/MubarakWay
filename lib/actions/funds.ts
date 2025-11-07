@@ -59,61 +59,75 @@ export async function getFunds(category?: string) {
 }
 
 export async function getFundById(id: string) {
-  // Check if it's a Fondinsan fund
-  if (id && id.startsWith("fondinsan_")) {
-    try {
-      const { fetchFondinsanProgramById, transformFondinsanProgramToFund } = await import("@/lib/fondinsan-api")
-      const programIdStr = id.replace("fondinsan_", "")
-      const programId = parseInt(programIdStr, 10)
-      
-      if (isNaN(programId)) {
-        console.error("[v0] Invalid Fondinsan program ID:", programIdStr)
-      } else {
-        const program = await fetchFondinsanProgramById(programId)
+  try {
+    // Check if it's a Fondinsan fund
+    if (id && id.startsWith("fondinsan_")) {
+      try {
+        const { fetchFondinsanProgramById, transformFondinsanProgramToFund } = await import("@/lib/fondinsan-api")
+        const programIdStr = id.replace("fondinsan_", "")
+        const programId = parseInt(programIdStr, 10)
         
-        if (program) {
-          const fund = transformFondinsanProgramToFund(program)
-          if (fund && fund.id) {
-            return { fund }
+        if (isNaN(programId)) {
+          console.error("[v0] Invalid Fondinsan program ID:", programIdStr)
+        } else {
+          const program = await fetchFondinsanProgramById(programId)
+          
+          if (program) {
+            const fund = transformFondinsanProgramToFund(program)
+            if (fund && fund.id) {
+              return { fund }
+            }
           }
         }
+      } catch (error) {
+        console.error("[v0] Error fetching Fondinsan program:", error)
+        // Fall through to Supabase
       }
-    } catch (error) {
-      console.error("[v0] Error fetching Fondinsan program:", error)
-      // Fall through to Supabase
     }
-  }
 
-  // Fallback to Supabase
-  const supabase = await createClient()
+    // Fallback to Supabase
+    const supabase = await createClient()
 
-  const { data: fund, error } = await supabase.from("funds").select("*").eq("id", id).eq("is_active", true).single()
+    const { data: fund, error } = await supabase.from("funds").select("*").eq("id", id).eq("is_active", true).single()
 
-  if (error) {
-    console.error("[v0] Get fund error:", error)
+    if (error) {
+      console.error("[v0] Get fund error:", error)
+      return { error: "Failed to fetch fund" }
+    }
+
+    if (!fund) {
+      return { error: "Fund not found" }
+    }
+
+    return { fund }
+  } catch (error) {
+    console.error("[v0] Get fund exception:", error)
     return { error: "Failed to fetch fund" }
   }
-
-  return { fund }
 }
 
 export async function searchFunds(query: string) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data: funds, error } = await supabase
-    .from("funds")
-    .select("*")
-    .eq("is_active", true)
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .order("total_raised", { ascending: false })
-    .limit(10)
+    const { data: funds, error } = await supabase
+      .from("funds")
+      .select("*")
+      .eq("is_active", true)
+      .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+      .order("total_raised", { ascending: false })
+      .limit(10)
 
-  if (error) {
-    console.error("[v0] Search funds error:", error)
-    return { error: "Failed to search funds" }
+    if (error) {
+      console.error("[v0] Search funds error:", error)
+      return { funds: [], error: "Failed to search funds" }
+    }
+
+    return { funds: funds || [] }
+  } catch (error) {
+    console.error("[v0] Search funds exception:", error)
+    return { funds: [], error: "Failed to search funds" }
   }
-
-  return { funds }
 }
 
 export async function deleteFund(fundId: string) {

@@ -132,24 +132,33 @@ export async function searchCampaigns(query: string, category?: string, status?:
 }
 
 export async function getCampaignById(id: string) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data: campaign, error } = await supabase
-    .from("campaigns")
-    .select(`
-      *,
-      profiles:creator_id (display_name, avatar_url),
-      campaign_updates (*)
-    `)
-    .eq("id", id)
-    .single()
+    const { data: campaign, error } = await supabase
+      .from("campaigns")
+      .select(`
+        *,
+        profiles:creator_id (display_name, avatar_url),
+        campaign_updates (*)
+      `)
+      .eq("id", id)
+      .single()
 
-  if (error) {
-    console.error("[v0] Get campaign error:", error)
+    if (error) {
+      console.error("[v0] Get campaign error:", error)
+      return { error: "Failed to fetch campaign" }
+    }
+
+    if (!campaign) {
+      return { error: "Campaign not found" }
+    }
+
+    return { campaign }
+  } catch (error) {
+    console.error("[v0] Get campaign exception:", error)
     return { error: "Failed to fetch campaign" }
   }
-
-  return { campaign }
 }
 
 export async function createCampaignUpdate(campaignId: string, title: string, content: string, imageUrl?: string) {
