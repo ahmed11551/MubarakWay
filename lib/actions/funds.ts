@@ -7,16 +7,26 @@ import { fetchFondinsanPrograms, transformFondinsanProgramsToFunds } from "@/lib
 export async function getFunds(category?: string) {
   try {
     // Priority 1: Try to fetch from Fondinsan API
-    const fondinsanPrograms = await fetchFondinsanPrograms()
-    if (fondinsanPrograms && fondinsanPrograms.length > 0) {
-      let funds = transformFondinsanProgramsToFunds(fondinsanPrograms)
-      
-      // Filter by category if specified
-      if (category && category !== "all") {
-        funds = funds.filter((f) => f.category === category)
+    try {
+      const fondinsanPrograms = await fetchFondinsanPrograms()
+      if (fondinsanPrograms && Array.isArray(fondinsanPrograms) && fondinsanPrograms.length > 0) {
+        let funds = transformFondinsanProgramsToFunds(fondinsanPrograms)
+        
+        // Filter by category if specified
+        if (category && category !== "all") {
+          funds = funds.filter((f) => f && f.category === category)
+        }
+        
+        // Filter out any invalid funds
+        funds = funds.filter((f) => f && f.id)
+        
+        if (funds.length > 0) {
+          return { funds }
+        }
       }
-      
-      return { funds }
+    } catch (fondinsanError) {
+      console.error("[v0] Fondinsan API error (falling back):", fondinsanError)
+      // Continue to next priority
     }
 
     // Priority 2: Try to fetch from bot.e-replika.ru API
@@ -50,18 +60,27 @@ export async function getFunds(category?: string) {
 
 export async function getFundById(id: string) {
   // Check if it's a Fondinsan fund
-  if (id.startsWith("fondinsan_")) {
+  if (id && id.startsWith("fondinsan_")) {
     try {
       const { fetchFondinsanProgramById, transformFondinsanProgramToFund } = await import("@/lib/fondinsan-api")
-      const programId = parseInt(id.replace("fondinsan_", ""))
-      const program = await fetchFondinsanProgramById(programId)
+      const programIdStr = id.replace("fondinsan_", "")
+      const programId = parseInt(programIdStr, 10)
       
-      if (program) {
-        const fund = transformFondinsanProgramToFund(program)
-        return { fund }
+      if (isNaN(programId)) {
+        console.error("[v0] Invalid Fondinsan program ID:", programIdStr)
+      } else {
+        const program = await fetchFondinsanProgramById(programId)
+        
+        if (program) {
+          const fund = transformFondinsanProgramToFund(program)
+          if (fund && fund.id) {
+            return { fund }
+          }
+        }
       }
     } catch (error) {
       console.error("[v0] Error fetching Fondinsan program:", error)
+      // Fall through to Supabase
     }
   }
 

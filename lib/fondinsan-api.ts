@@ -94,8 +94,8 @@ export function transformFondinsanProgramToFund(program: FondinsanProgram): any 
   let category = "general"
   
   // Try to determine category from title/description
-  const titleLower = program.title.toLowerCase()
-  const descLower = program.description.toLowerCase()
+  const titleLower = (program.title || "").toLowerCase()
+  const descLower = (program.description || "").toLowerCase()
   
   if (titleLower.includes("закят") || descLower.includes("закят")) {
     category = "zakat"
@@ -113,22 +113,35 @@ export function transformFondinsanProgramToFund(program: FondinsanProgram): any 
     category = "emergency"
   }
 
+  // Safely extract text from HTML description
+  let cleanDescription = ""
+  try {
+    if (program.short && program.short.trim()) {
+      cleanDescription = program.short
+    } else if (program.description) {
+      cleanDescription = program.description.replace(/<[^>]*>/g, "").substring(0, 500)
+    }
+  } catch (error) {
+    console.error("[Fondinsan API] Error processing description:", error)
+    cleanDescription = ""
+  }
+
   return {
     id: `fondinsan_${program.id}`,
-    name: program.title,
-    name_ru: program.title,
-    description: program.short || program.description.replace(/<[^>]*>/g, "").substring(0, 500),
-    description_ru: program.description,
+    name: program.title || "Без названия",
+    name_ru: program.title || "Без названия",
+    description: cleanDescription,
+    description_ru: program.description || "",
     category: category,
-    logo_url: program.image,
-    image_url: program.image,
-    website_url: program.url,
+    logo_url: program.image || "",
+    image_url: program.image || "",
+    website_url: program.url || "",
     is_active: true,
     is_verified: true,
     total_raised: 0, // API doesn't provide this
     donor_count: 0, // API doesn't provide this
-    default_amount: program.default_amount,
-    created_at: program.created,
+    default_amount: program.default_amount || 100,
+    created_at: program.created || new Date().toISOString(),
     // Mark as external fund
     source: "fondinsan",
     external_id: program.id.toString(),
