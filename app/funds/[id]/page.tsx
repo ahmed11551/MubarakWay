@@ -12,6 +12,9 @@ import { notFound } from "next/navigation"
 import { getFundById } from "@/lib/actions/funds"
 import { createClient } from "@/lib/supabase/server"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function FundDetailPage({
   params,
 }: {
@@ -148,7 +151,7 @@ export default async function FundDetailPage({
           {/* Action Buttons */}
           <div className="flex gap-2">
             <Button className="flex-1" size="lg" asChild>
-              <Link href={`/donate?fund=${fund.id}`}>
+              <Link href={`/donate?fundId=${fund.id}`}>
                 <Heart className="h-4 w-4 mr-2" />
                 Пожертвовать
               </Link>
@@ -293,7 +296,7 @@ export default async function FundDetailPage({
 
       <BottomNav />
     </div>
-  )
+    )
   } catch (error) {
     console.error("Error in FundDetailPage:", error)
     throw error // Re-throw to trigger error.tsx

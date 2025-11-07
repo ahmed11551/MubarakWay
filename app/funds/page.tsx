@@ -60,18 +60,36 @@ export default async function FundsPage() {
           </TabsList>
 
           <TabsContent value="all" className="space-y-4 mt-4">
-            {funds.map((fund) => (
-              <FundCard key={fund.id} fund={fund} />
-            ))}
+            {funds.length > 0 ? (
+              funds.map((fund) => (
+                <FundCard key={fund.id} fund={fund} />
+              ))
+            ) : (
+              <Card>
+                <CardContent className="pt-6 pb-6 text-center">
+                  <p className="text-muted-foreground">Фонды не найдены</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {categories.slice(1).map((cat) => (
             <TabsContent key={cat.value} value={cat.value} className="space-y-4 mt-4">
               {funds
                 .filter((f) => f.category === cat.value)
-                .map((fund) => (
-                  <FundCard key={fund.id} fund={fund} />
-                ))}
+                .length > 0 ? (
+                funds
+                  .filter((f) => f.category === cat.value)
+                  .map((fund) => (
+                    <FundCard key={fund.id} fund={fund} />
+                  ))
+              ) : (
+                <Card>
+                  <CardContent className="pt-6 pb-6 text-center">
+                    <p className="text-muted-foreground">Фонды в категории "{cat.label}" не найдены</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           ))}
         </Tabs>
