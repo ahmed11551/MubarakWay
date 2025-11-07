@@ -26,26 +26,46 @@ export async function fetchFondinsanPrograms(): Promise<FondinsanProgram[] | nul
   try {
     const url = `${FONDINSAN_API_BASE}/programs?access-token=${FONDINSAN_ACCESS_TOKEN}`
     
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    })
+    // Add timeout to prevent hanging
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 seconds timeout
+    
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        signal: controller.signal,
+      })
 
-    if (!response.ok) {
-      throw new Error(`Fondinsan API returned ${response.status}`)
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`Fondinsan API returned ${response.status}`)
+      }
+
+      const data: FondinsanApiResponse = await response.json()
+
+      if (!data || typeof data !== "object") {
+        console.error("[Fondinsan API] Invalid response format (not an object):", typeof data)
+        return null
+      }
+
+      if (!data.success || !Array.isArray(data.data)) {
+        console.error("[Fondinsan API] Invalid response format:", data)
+        return null
+      }
+
+      return data.data
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      if (fetchError.name === "AbortError") {
+        console.error("[Fondinsan API] Request timeout")
+      }
+      throw fetchError
     }
-
-    const data: FondinsanApiResponse = await response.json()
-
-    if (!data.success || !Array.isArray(data.data)) {
-      console.error("[Fondinsan API] Invalid response format:", data)
-      return null
-    }
-
-    return data.data
   } catch (error) {
     console.error("[Fondinsan API] Error fetching programs:", error)
     return null
@@ -59,26 +79,46 @@ export async function fetchFondinsanProgramById(id: number): Promise<FondinsanPr
   try {
     const url = `${FONDINSAN_API_BASE}/program/by-id/${id}?access-token=${FONDINSAN_ACCESS_TOKEN}`
     
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    })
+    // Add timeout to prevent hanging
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 seconds timeout
+    
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        signal: controller.signal,
+      })
 
-    if (!response.ok) {
-      throw new Error(`Fondinsan API returned ${response.status}`)
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`Fondinsan API returned ${response.status}`)
+      }
+
+      const data: FondinsanApiResponse = await response.json()
+
+      if (!data || typeof data !== "object") {
+        console.error("[Fondinsan API] Invalid response format (not an object):", typeof data)
+        return null
+      }
+
+      if (!data.success || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
+        console.error("[Fondinsan API] Invalid response format or program not found:", data)
+        return null
+      }
+
+      return data.data[0]
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      if (fetchError.name === "AbortError") {
+        console.error("[Fondinsan API] Request timeout")
+      }
+      throw fetchError
     }
-
-    const data: FondinsanApiResponse = await response.json()
-
-    if (!data.success || !data.data || data.data.length === 0) {
-      console.error("[Fondinsan API] Invalid response format or program not found:", data)
-      return null
-    }
-
-    return data.data[0]
   } catch (error) {
     console.error("[Fondinsan API] Error fetching program by ID:", error)
     return null
