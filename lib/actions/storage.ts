@@ -36,17 +36,41 @@ export async function uploadImageFromBase64(
     const uniqueFileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
     const filePath = `${folder}/${uniqueFileName}`
 
+    // Detect MIME type from base64 data or file extension
+    let contentType = "image/jpeg"
+    if (base64Data.startsWith("data:image/")) {
+      const mimeMatch = base64Data.match(/data:image\/([^;]+)/)
+      if (mimeMatch) {
+        contentType = `image/${mimeMatch[1]}`
+      }
+    } else {
+      const ext = fileExt.toLowerCase()
+      if (ext === "png") contentType = "image/png"
+      else if (ext === "webp") contentType = "image/webp"
+      else if (ext === "gif") contentType = "image/gif"
+    }
+
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
       .from("images")
       .upload(filePath, buffer, {
-        contentType: "image/jpeg",
+        contentType,
         upsert: false,
       })
 
     if (error) {
       console.error("[v0] Image upload error:", error)
-      return { error: "Failed to upload image" }
+      // Provide more specific error messages
+      if (error.message?.includes("duplicate") || error.message?.includes("already exists")) {
+        return { error: "Изображение с таким именем уже существует. Попробуйте другое изображение." }
+      }
+      if (error.message?.includes("size") || error.message?.includes("too large")) {
+        return { error: "Размер изображения слишком большой. Максимальный размер: 5 МБ." }
+      }
+      if (error.message?.includes("permission") || error.message?.includes("policy")) {
+        return { error: "Нет прав для загрузки изображений. Проверьте настройки Storage." }
+      }
+      return { error: "Не удалось загрузить изображение. Проверьте подключение и попробуйте снова." }
     }
 
     // Get public URL

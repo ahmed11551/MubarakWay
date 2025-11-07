@@ -1,3 +1,85 @@
+// Telegram WebApp initialization
+export function initTelegramApp() {
+  if (typeof window === "undefined") return
+
+  // Check if Telegram WebApp is available
+  if (!window.Telegram?.WebApp) {
+    console.log("[Telegram] WebApp not available (not running in Telegram)")
+    return
+  }
+
+  const tg = window.Telegram.WebApp
+
+  // Initialize WebApp
+  tg.ready()
+  tg.expand()
+
+  // Set theme colors based on Telegram theme
+  const themeParams = tg.themeParams
+  if (themeParams) {
+    // Apply Telegram theme colors to CSS variables
+    if (themeParams.bg_color) {
+      document.documentElement.style.setProperty("--telegram-bg", themeParams.bg_color)
+    }
+    if (themeParams.text_color) {
+      document.documentElement.style.setProperty("--telegram-text", themeParams.text_color)
+    }
+    if (themeParams.button_color) {
+      document.documentElement.style.setProperty("--telegram-button", themeParams.button_color)
+    }
+    if (themeParams.button_text_color) {
+      document.documentElement.style.setProperty("--telegram-button-text", themeParams.button_text_color)
+    }
+  }
+
+  // Set viewport height for mobile
+  tg.setHeaderColor(themeParams?.bg_color || "#ffffff")
+  tg.setBackgroundColor(themeParams?.bg_color || "#ffffff")
+
+  // Enable closing confirmation
+  tg.enableClosingConfirmation()
+
+  console.log("[Telegram] WebApp initialized", {
+    version: tg.version,
+    platform: tg.platform,
+    colorScheme: tg.colorScheme,
+    initData: tg.initData ? "available" : "not available",
+  })
+}
+
+// Get Telegram user data
+export function getTelegramUser() {
+  if (typeof window === "undefined" || !window.Telegram?.WebApp) {
+    return null
+  }
+
+  const tg = window.Telegram.WebApp
+  const initData = tg.initDataUnsafe
+
+  if (!initData?.user) {
+    return null
+  }
+
+  return {
+    id: initData.user.id,
+    firstName: initData.user.first_name,
+    lastName: initData.user.last_name,
+    username: initData.user.username,
+    languageCode: initData.user.language_code,
+    photoUrl: initData.user.photo_url,
+    isPremium: initData.user.is_premium || false,
+  }
+}
+
+// Get Telegram theme
+export function getTelegramTheme() {
+  if (typeof window === "undefined" || !window.Telegram?.WebApp) {
+    return "light"
+  }
+
+  return window.Telegram.WebApp.colorScheme || "light"
+}
+
 // Telegram notification utilities
 // To use this, you need to:
 // 1. Set TELEGRAM_BOT_TOKEN in environment variables

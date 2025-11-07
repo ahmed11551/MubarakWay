@@ -11,6 +11,53 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getFundById } from "@/lib/actions/funds"
 import { createClient } from "@/lib/supabase/server"
+import type { Metadata } from "next"
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const result = await getFundById(id)
+
+  if (result.error || !result.fund) {
+    return {
+      title: "Фонд не найден",
+    }
+  }
+
+  const fund = result.fund
+  const title = fund.name || fund.name_ru || "Фонд"
+  const description = fund.description || fund.description_ru || "Поддержите этот благотворительный фонд"
+  const imageUrl = fund.logo_url || `${siteUrl}/og-image.png`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | MubarakWay`,
+      description,
+      url: `${siteUrl}/funds/${id}`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  }
+}
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

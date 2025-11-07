@@ -94,6 +94,8 @@ export function CampaignsSearch({ campaigns, onFilteredChange }: CampaignsSearch
     onFilteredChange?.(filteredAndSorted)
   }, [filteredAndSorted, onFilteredChange])
 
+  const hasActiveFilters = searchQuery.trim() || selectedCategory !== "all" || sortBy !== "newest"
+
   return (
     <div className="space-y-4">
       {/* Search */}
@@ -116,6 +118,13 @@ export function CampaignsSearch({ campaigns, onFilteredChange }: CampaignsSearch
           </Button>
         )}
       </div>
+
+      {/* Results count */}
+      {hasActiveFilters && (
+        <div className="text-xs text-muted-foreground">
+          Найдено: {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "кампания" : filteredAndSorted.length < 5 ? "кампании" : "кампаний"}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-2">

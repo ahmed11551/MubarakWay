@@ -11,6 +11,53 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCampaignById } from "@/lib/actions/campaigns"
 import { createClient } from "@/lib/supabase/server"
+import type { Metadata } from "next"
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const result = await getCampaignById(id)
+
+  if (result.error || !result.campaign) {
+    return {
+      title: "Кампания не найдена",
+    }
+  }
+
+  const campaign = result.campaign
+  const title = campaign.title || "Кампания"
+  const description = campaign.description || "Поддержите эту кампанию по сбору средств"
+  const imageUrl = campaign.image_url || `${siteUrl}/og-image.png`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | MubarakWay`,
+      description,
+      url: `${siteUrl}/campaigns/${id}`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  }
+}
 
 export default async function CampaignDetailPage({
   params,

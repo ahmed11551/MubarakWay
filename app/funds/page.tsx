@@ -8,6 +8,19 @@ import { Search, CheckCircle, Users, TrendingUp } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { getFunds } from "@/lib/actions/funds"
+import type { Metadata } from "next"
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
+
+export const metadata: Metadata = {
+  title: "Фонды-партнёры",
+  description: "Поддержите проверенные благотворительные организации. Фонды-партнёры MubarakWay с проверенной репутацией.",
+  openGraph: {
+    title: "Фонды-партнёры | MubarakWay",
+    description: "Поддержите проверенные благотворительные организации",
+    url: `${siteUrl}/funds`,
+  },
+}
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

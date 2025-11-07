@@ -6,6 +6,19 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 import { CampaignsList } from "@/components/campaigns-list"
 import { getCampaigns } from "@/lib/actions/campaigns"
+import type { Metadata } from "next"
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
+
+export const metadata: Metadata = {
+  title: "Кампании",
+  description: "Поддержите общественные инициативы и кампании по сбору средств. Активные, скоро завершающиеся и завершённые кампании.",
+  openGraph: {
+    title: "Кампании | MubarakWay",
+    description: "Поддержите общественные инициативы и кампании по сбору средств",
+    url: `${siteUrl}/campaigns`,
+  },
+}
 
 export default async function CampaignsPage() {
   // Fetch campaigns from database with error handling
