@@ -188,12 +188,21 @@
   html.telegram-webapp main {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    max-height: 100vh;
   }
 
-  /* Fix for page wrappers */
+  /* Fix for page wrappers - make them scrollable if body is not */
   html.telegram-webapp [class*="min-h-screen"] {
     overscroll-behavior: contain;
     overscroll-behavior-y: contain;
+    /* Allow scrolling on wrapper if it's the scrollable container */
+    position: relative;
+  }
+
+  /* Make documentElement scrollable when body is not */
+  html.telegram-webapp {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Prevent pull-to-close on all scrollable areas */
