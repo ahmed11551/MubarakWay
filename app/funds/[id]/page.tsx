@@ -450,25 +450,55 @@ export default async function FundDetailPage({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {fund.recentDonations.length > 0 ? (
-                    fund.recentDonations.map((donor, i) => (
-                      <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{donor.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-medium">{donor.name}</p>
-                            <p className="text-xs text-muted-foreground">{donor.createdAt}</p>
+                    <>
+                      {fund.recentDonations.map((donor, i) => (
+                        <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>{donor.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium">{donor.name}</p>
+                              <p className="text-xs text-muted-foreground">{donor.createdAt}</p>
+                            </div>
                           </div>
+                          <span className="text-sm font-semibold text-primary">{donor.amount.toLocaleString("ru-RU")} ₽</span>
                         </div>
-                        <span className="text-sm font-semibold text-primary">{donor.amount} ₽</span>
-                      </div>
-                    ))
+                      ))}
+                      {donationCount > fund.recentDonations.length && (
+                        <p className="text-xs text-muted-foreground text-center pt-2">
+                          И еще {donationCount - fund.recentDonations.length} доноров
+                        </p>
+                      )}
+                    </>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-4">Пока нет пожертвований</p>
                   )}
                 </CardContent>
               </Card>
+              
+              {/* Top Donors Statistics */}
+              {fund.recentDonations.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Статистика доноров</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Всего доноров</p>
+                        <p className="text-xl font-bold text-primary">{donationCount}</p>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Средний чек</p>
+                        <p className="text-xl font-bold text-primary">
+                          {donationCount > 0 ? Math.round(totalDonations / donationCount).toLocaleString("ru-RU") : 0} ₽
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-4 mt-4">
