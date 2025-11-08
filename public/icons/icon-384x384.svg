@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="384" height="384" viewBox="0 0 384 384" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="384" height="384" fill="#ffffff" rx="76.80000000000001"/>
+  
+  <!-- Gradient -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#16a34a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon: Heart with Sparkles (simplified) -->
+  <g transform="translate(192, 192)">
+    <!-- Heart shape -->
+    <path d="M -34.559999999999995 23.04 
+             C -57.599999999999994 -23.04, -92.16 -11.52, -92.16 23.04
+             C -92.16 57.599999999999994, -34.559999999999995 92.16, 0 115.19999999999999
+             C 34.559999999999995 92.16, 92.16 57.599999999999994, 92.16 23.04
+             C 92.16 -11.52, 57.599999999999994 -23.04, 34.559999999999995 23.04
+             Z" 
+          fill="url(#grad)" 
+          stroke="#16a34a" 
+          stroke-width="7.68"/>
+    
+    <!-- Sparkle dots -->
+    <circle cx="-69.11999999999999" cy="-46.08" r="11.52" fill="#16a34a" opacity="0.8"/>
+    <circle cx="69.11999999999999" cy="-57.599999999999994" r="9.600000000000001" fill="#22c55e" opacity="0.8"/>
+    <circle cx="-57.599999999999994" cy="69.11999999999999" r="9.600000000000001" fill="#22c55e" opacity="0.8"/>
+  </g>
+</svg>
