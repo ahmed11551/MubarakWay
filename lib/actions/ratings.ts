@@ -26,54 +26,56 @@ export async function getTopDonors(period: RatingPeriod = "all_time", limit: num
   try {
     const supabase = await createClient()
     
-    const { data, error } = await supabase.rpc("get_top_donors", {
+    // Сначала пробуем RPC функцию
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_top_donors", {
       period: period,
       limit_count: limit,
     })
 
-    if (error) {
-      console.error("[Ratings] Get top donors RPC error:", error)
-      // Fallback: прямой запрос
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("user_ratings")
-        .select(`
-          user_id,
-          total_donated,
-          profiles:user_id (
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq("period_type", period)
-        .order("total_donated", { ascending: false })
-        .limit(limit)
-
-      if (fallbackError) {
-        console.error("[Ratings] Get top donors fallback error:", fallbackError)
-        return { donors: [], error: fallbackError.message }
-      }
-
-      const donors: TopDonor[] = (fallbackData || []).map((item: any, index: number) => ({
-        user_id: item.user_id,
-        total_donated: Number(item.total_donated || 0),
-        rank: index + 1,
-        display_name: item.profiles?.display_name || null,
-        avatar_url: item.profiles?.avatar_url || null,
-      }))
-
-      return { donors }
+    if (!rpcError && rpcData && Array.isArray(rpcData)) {
+      return { donors: rpcData as TopDonor[] }
     }
 
-    // Проверяем что data существует и является массивом
-    if (!data || !Array.isArray(data)) {
-      console.warn("[Ratings] Get top donors: data is not an array, returning empty")
+    // Если RPC не работает, используем fallback
+    if (rpcError) {
+      console.warn("[Ratings] Get top donors RPC error, using fallback:", rpcError.message)
+    }
+
+    // Fallback: прямой запрос к user_ratings
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("user_ratings")
+      .select(`
+        user_id,
+        total_donated,
+        profiles:user_id (
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("period_type", period)
+      .order("total_donated", { ascending: false })
+      .limit(limit)
+
+    if (fallbackError) {
+      console.error("[Ratings] Get top donors fallback error:", fallbackError)
+      // Если и fallback не работает, возвращаем пустой массив без ошибки
+      // чтобы страница могла отобразиться
       return { donors: [] }
     }
 
-    return { donors: data as TopDonor[] }
+    const donors: TopDonor[] = (fallbackData || []).map((item: any, index: number) => ({
+      user_id: item.user_id,
+      total_donated: Number(item.total_donated || 0),
+      rank: index + 1,
+      display_name: item.profiles?.display_name || null,
+      avatar_url: item.profiles?.avatar_url || null,
+    }))
+
+    return { donors }
   } catch (error) {
     console.error("[Ratings] Get top donors exception:", error)
-    return { donors: [], error: "Failed to get top donors" }
+    // Возвращаем пустой массив вместо ошибки, чтобы страница могла отобразиться
+    return { donors: [] }
   }
 }
 
@@ -82,54 +84,56 @@ export async function getTopReferrals(period: RatingPeriod = "all_time", limit: 
   try {
     const supabase = await createClient()
     
-    const { data, error } = await supabase.rpc("get_top_referrals", {
+    // Сначала пробуем RPC функцию
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_top_referrals", {
       period: period,
       limit_count: limit,
     })
 
-    if (error) {
-      console.error("[Ratings] Get top referrals RPC error:", error)
-      // Fallback: прямой запрос
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("user_ratings")
-        .select(`
-          user_id,
-          referral_count,
-          profiles:user_id (
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq("period_type", period)
-        .order("referral_count", { ascending: false })
-        .limit(limit)
-
-      if (fallbackError) {
-        console.error("[Ratings] Get top referrals fallback error:", fallbackError)
-        return { referrals: [], error: fallbackError.message }
-      }
-
-      const referrals: TopReferral[] = (fallbackData || []).map((item: any, index: number) => ({
-        user_id: item.user_id,
-        referral_count: Number(item.referral_count || 0),
-        rank: index + 1,
-        display_name: item.profiles?.display_name || null,
-        avatar_url: item.profiles?.avatar_url || null,
-      }))
-
-      return { referrals }
+    if (!rpcError && rpcData && Array.isArray(rpcData)) {
+      return { referrals: rpcData as TopReferral[] }
     }
 
-    // Проверяем что data существует и является массивом
-    if (!data || !Array.isArray(data)) {
-      console.warn("[Ratings] Get top referrals: data is not an array, returning empty")
+    // Если RPC не работает, используем fallback
+    if (rpcError) {
+      console.warn("[Ratings] Get top referrals RPC error, using fallback:", rpcError.message)
+    }
+
+    // Fallback: прямой запрос к user_ratings
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("user_ratings")
+      .select(`
+        user_id,
+        referral_count,
+        profiles:user_id (
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("period_type", period)
+      .order("referral_count", { ascending: false })
+      .limit(limit)
+
+    if (fallbackError) {
+      console.error("[Ratings] Get top referrals fallback error:", fallbackError)
+      // Если и fallback не работает, возвращаем пустой массив без ошибки
+      // чтобы страница могла отобразиться
       return { referrals: [] }
     }
 
-    return { referrals: data as TopReferral[] }
+    const referrals: TopReferral[] = (fallbackData || []).map((item: any, index: number) => ({
+      user_id: item.user_id,
+      referral_count: Number(item.referral_count || 0),
+      rank: index + 1,
+      display_name: item.profiles?.display_name || null,
+      avatar_url: item.profiles?.avatar_url || null,
+    }))
+
+    return { referrals }
   } catch (error) {
     console.error("[Ratings] Get top referrals exception:", error)
-    return { referrals: [], error: "Failed to get top referrals" }
+    // Возвращаем пустой массив вместо ошибки, чтобы страница могла отобразиться
+    return { referrals: [] }
   }
 }
 

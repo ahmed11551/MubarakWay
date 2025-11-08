@@ -43,31 +43,37 @@ export default async function RatingPage() {
       allTimeDonors = results[0].value
     } else {
       console.error("[RatingPage] Error loading all_time donors:", results[0].reason)
-      allTimeDonors = { donors: [], error: "Failed to load" }
+      allTimeDonors = { donors: [], error: results[0].reason?.toString() || "Failed to load" }
     }
 
     if (results[1].status === "fulfilled") {
       ramadanDonors = results[1].value
     } else {
       console.error("[RatingPage] Error loading ramadan donors:", results[1].reason)
-      ramadanDonors = { donors: [], error: "Failed to load" }
+      ramadanDonors = { donors: [], error: results[1].reason?.toString() || "Failed to load" }
     }
 
     if (results[2].status === "fulfilled") {
       allTimeReferrals = results[2].value
     } else {
       console.error("[RatingPage] Error loading all_time referrals:", results[2].reason)
-      allTimeReferrals = { referrals: [], error: "Failed to load" }
+      allTimeReferrals = { referrals: [], error: results[2].reason?.toString() || "Failed to load" }
     }
 
     if (results[3].status === "fulfilled") {
       ramadanReferrals = results[3].value
     } else {
       console.error("[RatingPage] Error loading ramadan referrals:", results[3].reason)
-      ramadanReferrals = { referrals: [], error: "Failed to load" }
+      ramadanReferrals = { referrals: [], error: results[3].reason?.toString() || "Failed to load" }
     }
   } catch (error) {
     console.error("[RatingPage] Unexpected error loading ratings:", error)
+    // Устанавливаем ошибки для всех, если общий catch сработал
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    allTimeDonors = { donors: [], error: errorMessage }
+    ramadanDonors = { donors: [], error: errorMessage }
+    allTimeReferrals = { referrals: [], error: errorMessage }
+    ramadanReferrals = { referrals: [], error: errorMessage }
   }
 
   const formatAmount = (amount: number) => {
