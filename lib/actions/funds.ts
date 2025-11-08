@@ -1,10 +1,27 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+
+// Create a simple client for public data (bypasses cookie issues)
+function createPublicClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables")
+  }
+
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
 export async function getFunds(category?: string) {
   try {
-    const supabase = await createClient()
+    // For public data (funds), use simple client without cookies
+    // This avoids issues with cookies() in Server Components during static generation
+    const supabase = createPublicClient()
 
     // Get the main fund "Инсан" from Supabase
     // This is the primary fund - all campaigns and programs are linked to it

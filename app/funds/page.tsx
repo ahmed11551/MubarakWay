@@ -41,30 +41,7 @@ export default async function FundsPage() {
     result = { funds: [], error: `Failed to load funds: ${error instanceof Error ? error.message : "Unknown error"}` }
   }
   
-  // Fallback: try API route if server action fails
   let funds = result.funds || []
-  if (funds.length === 0 && !result.error) {
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
-        : 'http://localhost:3000'
-      const apiResponse = await fetch(`${baseUrl}/api/funds`, {
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (apiResponse.ok) {
-        const apiData = await apiResponse.json()
-        if (apiData.funds && apiData.funds.length > 0) {
-          console.log("[FundsPage] Fallback API succeeded, got funds:", apiData.funds.length)
-          funds = apiData.funds
-        }
-      }
-    } catch (apiError) {
-      console.error("[FundsPage] Fallback API also failed:", apiError)
-    }
-  }
   
   // Additional debug
   if (funds.length === 0) {
