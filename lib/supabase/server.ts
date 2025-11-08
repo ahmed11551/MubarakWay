@@ -7,6 +7,14 @@ export async function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    // Log detailed information for debugging
+    console.error("[Supabase Server] Missing environment variables:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      urlValue: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : "undefined",
+      keyValue: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "undefined",
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes("SUPABASE")),
+    })
     const error = new Error("Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.")
     logError(error, {
       hasUrl: !!supabaseUrl,
