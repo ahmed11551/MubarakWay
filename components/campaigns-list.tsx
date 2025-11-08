@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { CampaignCard } from "@/components/campaign-card"
 import { CampaignsSearch } from "@/components/campaigns-search"
+import { SkeletonCampaignCard } from "@/components/skeleton-campaign-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TrendingUp, Clock, CheckCircle } from "lucide-react"
 
@@ -30,6 +31,7 @@ export function CampaignsList({ activeCampaigns, endingCampaigns, completedCampa
   const [filteredEnding, setFilteredEnding] = useState(endingCampaigns)
   const [filteredCompleted, setFilteredCompleted] = useState(completedCampaigns)
   const [activeTab, setActiveTab] = useState("active")
+  const [isLoading, setIsLoading] = useState(false)
 
   // Reset filtered campaigns when source campaigns change
   useEffect(() => {
