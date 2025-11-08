@@ -96,9 +96,34 @@ export default async function FundDetailPage({
       console.error("Error fetching donations:", donationsError)
     }
 
-    // Fetch campaigns linked to this fund
-    // Note: fund_id column might not exist yet - handle gracefully
+    // Fetch projects/programs for this fund
+    let fundProjects: any[] = []
     let fundCampaigns: any[] = []
+    
+    // For Insan fund, fetch programs from fondinsan.ru API
+    if (id === "00000000-0000-0000-0000-000000000001") {
+      try {
+        const { fetchFondinsanPrograms } = await import("@/lib/fondinsan-api")
+        const programs = await fetchFondinsanPrograms()
+        
+        if (programs && programs.length > 0) {
+          fundProjects = programs.map((program) => ({
+            id: `fondinsan_${program.id}`,
+            title: program.title,
+            description: program.short || program.description.replace(/<[^>]*>/g, "").substring(0, 200),
+            imageUrl: program.image,
+            url: program.url,
+            defaultAmount: program.default_amount,
+            created: program.created,
+            beneficiaries: 0, // API doesn't provide this
+          }))
+        }
+      } catch (error: any) {
+        console.warn("Error fetching fondinsan programs:", error?.message)
+      }
+    }
+    
+    // Also try to fetch campaigns linked to this fund (if fund_id column exists in future)
     try {
       const { data, error: campaignsError } = await supabase
         .from("campaigns")
@@ -107,8 +132,7 @@ export default async function FundDetailPage({
         .order("created_at", { ascending: false })
 
       if (campaignsError) {
-        // If fund_id column doesn't exist, campaignsError will contain the error
-        // This is expected if migration hasn't been run yet
+        // If fund_id column doesn't exist, this is expected
         console.warn("Error fetching campaigns (fund_id column might not exist):", campaignsError.message)
         fundCampaigns = []
       } else {
@@ -186,11 +210,11 @@ export default async function FundDetailPage({
       impactStats: [
         { label: "Людей помогли", value: "—" },
         { label: "Стран", value: "—" },
-        { label: "Проектов", value: "—" },
+        { label: "Проектов", value: fundProjects.length > 0 ? fundProjects.length.toString() : "—" },
         { label: "Лет работы", value: "—" },
       ], // Default stats - can be enhanced later
       recentDonations,
-      projects: [], // Projects can be added as separate table or JSON field later
+      projects: fundProjects, // Projects from API or campaigns
     }
 
     return (
@@ -336,34 +360,44 @@ export default async function FundDetailPage({
             </TabsContent>
 
             <TabsContent value="projects" className="space-y-4 mt-4">
-              {fund.projects.map((project) => (
-                <Card key={project.id}>
-                  <div className="aspect-video bg-muted relative overflow-hidden">
-                    <Image
-                      src={project.imageUrl || "/placeholder.svg"}
-                      alt={project.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-base">{project.title}</CardTitle>
-                    <CardDescription className="text-xs">{project.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span className="text-muted-foreground">
-                        {project.beneficiaries.toLocaleString()} получателей помощи
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="projects" className="space-y-4 mt-4">
+              {/* Show projects from API (for Insan fund) or campaigns */}
+              {fund.projects.length > 0 ? (
+                fund.projects.map((project: any) => (
+                  <Card key={project.id} className="hover:shadow-md transition-shadow">
+                    {project.imageUrl && (
+                      <div className="aspect-video bg-muted relative overflow-hidden rounded-t-xl">
+                        <Image
+                          src={project.imageUrl}
+                          alt={project.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                      </div>
+                    )}
+                    <CardHeader>
+                      <CardTitle className="text-base">{project.title}</CardTitle>
+                      <CardDescription className="text-xs line-clamp-2">{project.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {project.url && (
+                        <Button variant="outline" size="sm" className="w-full" asChild>
+                          <a href={project.url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Подробнее на сайте фонда
+                          </a>
+                        </Button>
+                      )}
+                      {project.defaultAmount && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Рекомендуемая сумма:</span>
+                          <span className="font-semibold text-primary">{project.defaultAmount} ₽</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : fundCampaigns.length > 0 ? (
               {fundCampaigns && fundCampaigns.length > 0 ? (
                 fundCampaigns.map((campaign: any) => (
                   <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
@@ -454,16 +488,64 @@ export default async function FundDetailPage({
                       <p className="text-2xl font-bold text-primary">{donationCount.toLocaleString("ru-RU")}</p>
                     </div>
                     <div className="p-4 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Активных кампаний</p>
-                      <p className="text-2xl font-bold text-primary">{activeCampaigns}</p>
+                      <p className="text-xs text-muted-foreground mb-1">Проектов</p>
+                      <p className="text-2xl font-bold text-primary">{fundProjects.length + fundCampaigns.length}</p>
                     </div>
                     <div className="p-4 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Завершено кампаний</p>
-                      <p className="text-2xl font-bold text-primary">{completedCampaigns}</p>
+                      <p className="text-xs text-muted-foreground mb-1">Активных кампаний</p>
+                      <p className="text-2xl font-bold text-primary">{activeCampaigns}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* Monthly Statistics */}
+              {allDonations.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Статистика по месяцам</CardTitle>
+                    <CardDescription>Пожертвования за последние 6 месяцев</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {(() => {
+                        // Group donations by month
+                        const monthlyStats = allDonations.reduce((acc: any, donation: any) => {
+                          const date = new Date(donation.created_at)
+                          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+                          const monthName = date.toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
+                          
+                          if (!acc[monthKey]) {
+                            acc[monthKey] = { month: monthName, amount: 0, count: 0 }
+                          }
+                          acc[monthKey].amount += Number(donation.amount || 0)
+                          acc[monthKey].count += 1
+                          return acc
+                        }, {})
+                        
+                        // Get last 6 months
+                        const sortedMonths = Object.entries(monthlyStats)
+                          .sort(([a], [b]) => b.localeCompare(a))
+                          .slice(0, 6)
+                        
+                        return sortedMonths.length > 0 ? (
+                          sortedMonths.map(([key, stats]: [string, any]) => (
+                            <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <p className="text-sm font-medium">{stats.month}</p>
+                                <p className="text-xs text-muted-foreground">{stats.count} пожертвований</p>
+                              </div>
+                              <p className="text-lg font-bold text-primary">{stats.amount.toLocaleString("ru-RU")} ₽</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-4">Нет данных за последние месяцы</p>
+                        )
+                      })()}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {fundCampaigns && fundCampaigns.length > 0 && (
                 <Card>
