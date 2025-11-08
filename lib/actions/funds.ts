@@ -9,7 +9,13 @@ function createPublicClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables")
+    console.error("[Funds] Missing Supabase environment variables:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      urlPrefix: supabaseUrl?.substring(0, 20) || "missing",
+    })
+    // Не выбрасываем ошибку, а возвращаем null, чтобы fallback мог сработать
+    return null
   }
 
   return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
@@ -25,31 +31,37 @@ export async function getFunds(category?: string) {
   // Approach 1: Try public client first (works for static generation)
   try {
     const supabase = createPublicClient()
-    let query = supabase
-      .from("funds")
-      .select("*")
-      .eq("is_active", true)
-      .order("total_raised", { ascending: false })
+    
+    if (!supabase) {
+      console.warn("[v0] Public client not available (missing env vars), skipping to fallback")
+      lastError = "Public client not configured"
+    } else {
+      let query = supabase
+        .from("funds")
+        .select("*")
+        .eq("is_active", true)
+        .order("total_raised", { ascending: false })
 
-    if (category && category !== "all") {
-      query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
-    }
+      if (category && category !== "all") {
+        query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
+      }
 
-    const { data, error } = await query
+      const { data, error } = await query
 
-    if (error) {
-      console.error("[v0] Public client error:", error)
-      console.error("[v0] Error code:", error.code)
-      console.error("[v0] Error message:", error.message)
-      console.error("[v0] Error details:", JSON.stringify(error, null, 2))
-      lastError = error.message || `Error code: ${error.code}`
-    } else if (data) {
-      if (data.length > 0) {
-        console.log("[v0] Funds loaded successfully via public client:", data.length)
-        funds = data
-      } else {
-        console.warn("[v0] Public client returned empty array")
-        lastError = "No funds found in database"
+      if (error) {
+        console.error("[v0] Public client error:", error)
+        console.error("[v0] Error code:", error.code)
+        console.error("[v0] Error message:", error.message)
+        console.error("[v0] Error details:", JSON.stringify(error, null, 2))
+        lastError = error.message || `Error code: ${error.code}`
+      } else if (data) {
+        if (data.length > 0) {
+          console.log("[v0] Funds loaded successfully via public client:", data.length)
+          funds = data
+        } else {
+          console.warn("[v0] Public client returned empty array")
+          lastError = "No funds found in database"
+        }
       }
     }
   } catch (publicError: any) {

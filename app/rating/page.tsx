@@ -20,10 +20,19 @@ export const metadata: Metadata = {
 }
 
 export default async function RatingPage() {
-  // Получаем текущего пользователя
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const currentUserId = user?.id || null
+  // Получаем текущего пользователя с обработкой ошибок
+  let currentUserId: string | null = null
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError) {
+      console.warn("[RatingPage] Auth error (non-critical):", authError.message)
+    }
+    currentUserId = user?.id || null
+  } catch (error) {
+    console.warn("[RatingPage] Failed to get user (non-critical):", error)
+    // Продолжаем работу без пользователя
+  }
 
   // Загружаем данные для обоих периодов и типов с обработкой ошибок
   let allTimeDonors = { donors: [] as any[], error: undefined as string | undefined }
