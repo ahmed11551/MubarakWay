@@ -88,7 +88,8 @@ export default function SubscriptionCheckoutPage() {
   const Icon = plan.icon
   const amount = priceInfo.price
   const charityAmount = priceInfo.charity
-  const billingFrequency = period.includes("месяц") ? "monthly" : "yearly"
+  // Determine billing frequency: "12 месяцев" is yearly, others are monthly
+  const billingFrequency = period === "12 месяцев" ? "yearly" : "monthly"
 
   const handlePaymentSuccess = async () => {
     hapticFeedback("medium")
