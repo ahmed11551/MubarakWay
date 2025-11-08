@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Users, Link2, Calendar } from "lucide-react"
 import { getTopDonors, getTopReferrals, type RatingPeriod, type RatingType } from "@/lib/actions/ratings"
 import { getAnimalAvatar } from "@/lib/utils/animal-avatars"
+import { getRamadanDateRange } from "@/lib/utils/ramadan"
 import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
 
@@ -211,7 +212,7 @@ export default async function RatingPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Рейтинг Рамадана</CardTitle>
-                    <p className="text-xs text-muted-foreground">1.03 - 30.03.2025</p>
+                    <p className="text-xs text-muted-foreground">{getRamadanDateRange()}</p>
                   </CardHeader>
                   <CardContent>
                     <RatingList
@@ -227,7 +228,7 @@ export default async function RatingPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Рейтинг Рамадана</CardTitle>
-                    <p className="text-xs text-muted-foreground">1.03 - 30.03.2025</p>
+                    <p className="text-xs text-muted-foreground">{getRamadanDateRange()}</p>
                   </CardHeader>
                   <CardContent>
                     <RatingList

@@ -59,13 +59,61 @@ CREATE POLICY "user_bookmarks_delete_own"
   ON public.user_bookmarks FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Функция для проверки, находится ли дата в периоде Рамадана
+CREATE OR REPLACE FUNCTION is_ramadan_date(check_date date)
+RETURNS boolean AS $$
+DECLARE
+  year_val integer;
+  ramadan_start date;
+  ramadan_end date;
+BEGIN
+  year_val := EXTRACT(YEAR FROM check_date);
+  
+  -- Даты Рамадана по годам (примерные, нужно обновлять каждый год)
+  -- Рамадан 2025: 1 марта - 30 марта
+  -- Рамадан 2026: 20 февраля - 21 марта
+  -- Рамадан 2027: 9 февраля - 10 марта
+  CASE year_val
+    WHEN 2025 THEN
+      ramadan_start := '2025-03-01'::date;
+      ramadan_end := '2025-03-30'::date;
+    WHEN 2026 THEN
+      ramadan_start := '2026-02-20'::date;
+      ramadan_end := '2026-03-21'::date;
+    WHEN 2027 THEN
+      ramadan_start := '2027-02-09'::date;
+      ramadan_end := '2027-03-10'::date;
+    WHEN 2028 THEN
+      ramadan_start := '2028-01-28'::date;
+      ramadan_end := '2028-02-26'::date;
+    WHEN 2029 THEN
+      ramadan_start := '2029-01-17'::date;
+      ramadan_end := '2029-02-15'::date;
+    WHEN 2030 THEN
+      ramadan_start := '2030-01-06'::date;
+      ramadan_end := '2030-02-04'::date;
+    ELSE
+      -- Fallback: используем примерные даты для текущего года
+      ramadan_start := (year_val || '-03-01')::date;
+      ramadan_end := (year_val || '-03-30')::date;
+  END CASE;
+  
+  RETURN check_date >= ramadan_start AND check_date <= ramadan_end;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 -- Функция для автоматического обновления рейтинга при пожертвовании
 CREATE OR REPLACE FUNCTION update_user_rating_on_donation()
 RETURNS TRIGGER AS $$
+DECLARE
+  donation_date date;
 BEGIN
   -- Обновляем рейтинг только для завершенных пожертвований
   IF NEW.status = 'completed' AND (OLD.status IS NULL OR OLD.status != 'completed') THEN
-    -- Обновляем общий рейтинг
+    -- Получаем дату пожертвования
+    donation_date := NEW.created_at::date;
+    
+    -- Обновляем общий рейтинг (всегда)
     INSERT INTO public.user_ratings (user_id, total_donated, period_type, updated_at)
     VALUES (NEW.donor_id, NEW.amount, 'all_time', now())
     ON CONFLICT (user_id, period_type) 
@@ -73,15 +121,15 @@ BEGIN
       total_donated = user_ratings.total_donated + NEW.amount,
       updated_at = now();
     
-    -- Обновляем рейтинг Рамадана (если пожертвование в период Рамадана)
-    -- TODO: Добавить проверку даты Рамадана
-    -- Пока обновляем для всех пожертвований
-    INSERT INTO public.user_ratings (user_id, total_donated, period_type, updated_at)
-    VALUES (NEW.donor_id, NEW.amount, 'ramadan', now())
-    ON CONFLICT (user_id, period_type) 
-    DO UPDATE SET 
-      total_donated = user_ratings.total_donated + NEW.amount,
-      updated_at = now();
+    -- Обновляем рейтинг Рамадана (только если пожертвование в период Рамадана)
+    IF is_ramadan_date(donation_date) THEN
+      INSERT INTO public.user_ratings (user_id, total_donated, period_type, updated_at)
+      VALUES (NEW.donor_id, NEW.amount, 'ramadan', now())
+      ON CONFLICT (user_id, period_type) 
+      DO UPDATE SET 
+        total_donated = user_ratings.total_donated + NEW.amount,
+        updated_at = now();
+    END IF;
   END IF;
   
   RETURN NEW;
