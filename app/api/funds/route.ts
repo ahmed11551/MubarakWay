@@ -12,24 +12,49 @@ export async function GET(req: NextRequest) {
     if (debug) {
       try {
         const supabase = await createClient()
-        const { data: directData, error: directError } = await supabase
+        
+        // Test 1: Simple query
+        const { data: simpleData, error: simpleError } = await supabase
+          .from("funds")
+          .select("id, name, is_active")
+          .eq("is_active", true)
+        
+        // Test 2: Full query
+        const { data: fullData, error: fullError } = await supabase
           .from("funds")
           .select("*")
           .eq("is_active", true)
         
+        // Test 3: getFunds result
+        const getFundsResult = await getFunds(category)
+        
         return NextResponse.json({
           debug: true,
-          directQuery: {
-            data: directData,
-            error: directError,
-            count: directData?.length || 0,
+          timestamp: new Date().toISOString(),
+          tests: {
+            simpleQuery: {
+              data: simpleData,
+              error: simpleError,
+              count: simpleData?.length || 0,
+            },
+            fullQuery: {
+              data: fullData,
+              error: fullError,
+              count: fullData?.length || 0,
+            },
+            getFunds: getFundsResult,
           },
-          getFundsResult: await getFunds(category),
+          env: {
+            hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+            hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20) || "missing",
+          },
         })
       } catch (debugError: any) {
         return NextResponse.json({
           debug: true,
           debugError: debugError.message,
+          stack: debugError.stack,
           getFundsResult: await getFunds(category),
         }, { status: 500 })
       }

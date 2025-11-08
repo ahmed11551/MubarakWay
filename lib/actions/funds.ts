@@ -23,28 +23,30 @@ export async function getFunds(category?: string) {
 
     const { data: funds, error } = await query
 
-    // If error, try to get more details
-    if (error) {
-      // Check if it's an RLS policy issue
-      if (error.code === 'PGRST116' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
-        console.error("[v0] RLS policy issue - trying direct query")
-        // Try without RLS (shouldn't happen, but for debugging)
-        const directQuery = supabase
-          .from("funds")
-          .select("*")
-          .eq("is_active", true)
-        const { data: directData, error: directError } = await directQuery
-        if (directError) {
-          console.error("[v0] Direct query also failed:", directError)
-        } else {
-          console.log("[v0] Direct query succeeded, RLS might be blocking:", directData?.length || 0)
-        }
-      }
-    }
-
+    // If error, log detailed information
     if (error) {
       console.error("[v0] Get funds error:", error)
+      console.error("[v0] Error code:", error.code)
+      console.error("[v0] Error message:", error.message)
       console.error("[v0] Error details:", JSON.stringify(error, null, 2))
+      
+      // Check if it's an RLS policy issue
+      if (error.code === 'PGRST116' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        console.error("[v0] RLS policy issue detected")
+        // Try a simpler query to test RLS
+        const testQuery = supabase
+          .from("funds")
+          .select("id, name, is_active")
+          .eq("is_active", true)
+          .limit(1)
+        const { data: testData, error: testError } = await testQuery
+        console.log("[v0] Test query result:", { 
+          data: testData, 
+          error: testError,
+          count: testData?.length || 0 
+        })
+      }
+      
       return { funds: [], error: `Failed to fetch funds: ${error.message || "Unknown error"}` }
     }
 
