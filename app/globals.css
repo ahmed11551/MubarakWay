@@ -168,9 +168,11 @@
     -webkit-overflow-scrolling: touch;
     position: relative;
     overflow-x: hidden;
+    overflow-y: hidden; /* Prevent body scroll, let main handle it */
     touch-action: pan-y;
     height: 100%;
     width: 100%;
+    overscroll-behavior-block: contain; /* Additional protection */
   }
 
   /* Prevent pull-to-close on scrollable containers */
