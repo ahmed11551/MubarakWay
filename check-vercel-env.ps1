@@ -92,5 +92,5 @@ try {
     Write-Host "Попробуйте проверить токен и project ID" -ForegroundColor Yellow
 }
 
-Write-Host "`nГотово!" -ForegroundColor Cyan
+Write-Host "`nDone!" -ForegroundColor Cyan
 
