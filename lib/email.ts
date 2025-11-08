@@ -21,7 +21,15 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
 
   try {
     // Dynamic import to avoid errors if resend is not installed
-    const { Resend } = await import("resend")
+    let Resend
+    try {
+      const resendModule = await import("resend")
+      Resend = resendModule.Resend
+    } catch (importError) {
+      console.warn("[Email] Resend package not installed, skipping email send")
+      return { success: false, error: "Email service package not installed" }
+    }
+    
     const resend = new Resend(apiKey)
 
     const fromEmail = options.from || process.env.RESEND_FROM_EMAIL || "noreply@mubarakway.com"

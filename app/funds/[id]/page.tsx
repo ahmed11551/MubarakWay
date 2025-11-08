@@ -474,7 +474,7 @@ export default async function FundDetailPage({
                   <CardContent className="space-y-3">
                     {fundCampaigns.map((campaign: any) => {
                       const progress = Number(campaign.goal_amount || 0) > 0
-                        ? (Number(campaign.current_amount || 0) / Number(campaign.goal_amount)) * 100)
+                        ? (Number(campaign.current_amount || 0) / Number(campaign.goal_amount)) * 100
                         : 0
                       
                       return (

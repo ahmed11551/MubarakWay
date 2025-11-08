@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   creator: "MubarakWay",
   publisher: "MubarakWay",
   manifest: "/manifest.json",
-  themeColor: "#16a34a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -75,6 +74,10 @@ export const metadata: Metadata = {
     // google: "your-google-verification-code",
     // yandex: "your-yandex-verification-code",
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#16a34a",
 }
 
 export default function RootLayout({
