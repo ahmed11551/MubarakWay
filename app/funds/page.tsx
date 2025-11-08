@@ -43,6 +43,12 @@ export default async function FundsPage() {
   
   let funds = result.funds || []
   
+  // Если фонды не найдены, но ошибки нет - возможно проблема с RLS
+  if (funds.length === 0 && !result.error) {
+    console.warn("[FundsPage] No funds found but no error. Possible RLS issue.")
+    result.error = "Фонды не найдены. Проверьте настройки базы данных."
+  }
+  
   // Additional debug
   if (funds.length === 0) {
     console.warn("[FundsPage] No funds to display. Result:", result)

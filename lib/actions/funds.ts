@@ -37,18 +37,23 @@ export async function getFunds(category?: string) {
 
     const { data, error } = await query
 
-    if (!error && data && data.length > 0) {
-      console.log("[v0] Funds loaded successfully via public client:", data.length)
-      funds = data
-    } else if (error) {
-      console.warn("[v0] Public client error:", error.message)
-      lastError = error.message
-    } else if (data && data.length === 0) {
-      console.warn("[v0] Public client returned empty array")
-      lastError = "No funds found"
+    if (error) {
+      console.error("[v0] Public client error:", error)
+      console.error("[v0] Error code:", error.code)
+      console.error("[v0] Error message:", error.message)
+      console.error("[v0] Error details:", JSON.stringify(error, null, 2))
+      lastError = error.message || `Error code: ${error.code}`
+    } else if (data) {
+      if (data.length > 0) {
+        console.log("[v0] Funds loaded successfully via public client:", data.length)
+        funds = data
+      } else {
+        console.warn("[v0] Public client returned empty array")
+        lastError = "No funds found in database"
+      }
     }
   } catch (publicError: any) {
-    console.warn("[v0] Public client exception:", publicError?.message)
+    console.error("[v0] Public client exception:", publicError)
     lastError = publicError?.message || "Public client failed"
   }
 
