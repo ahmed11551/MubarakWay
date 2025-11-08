@@ -143,6 +143,7 @@ export default async function CampaignDetailPage({
       story: campaignData.story || "",
       goalAmount: Number(campaignData.goal_amount || 0),
       currentAmount: Number(campaignData.current_amount || 0),
+      documents: (campaignData.documents as any[]) || [],
       category: campaignData.category || "other",
       imageUrl: campaignData.image_url || "/placeholder.svg",
       donorCount: Number(campaignData.donor_count || 0),

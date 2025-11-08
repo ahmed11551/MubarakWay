@@ -83,14 +83,8 @@ export function BookmarkButton({ campaignId, className }: BookmarkButtonProps) {
           })
 
         if (error) {
-          // Если таблица не существует, просто показываем визуальный feedback
-          if (error.code === "42P01") {
-            setIsBookmarked(true)
-            toast.success("Закладка добавлена (функция в разработке)")
-          } else {
-            console.error("Error adding bookmark:", error)
-            toast.error("Не удалось добавить закладку")
-          }
+          console.error("Error adding bookmark:", error)
+          toast.error("Не удалось добавить закладку")
         } else {
           setIsBookmarked(true)
           toast.success("Кампания сохранена")

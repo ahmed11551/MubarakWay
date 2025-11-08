@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Heart, Users, User } from "lucide-react"
+import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/mobile-ux"
 
@@ -18,9 +18,9 @@ const navItems = [
     icon: Heart,
   },
   {
-    name: "Фонды",
-    href: "/funds",
-    icon: Users,
+    name: "Рейтинг",
+    href: "/rating",
+    icon: Trophy,
   },
   {
     name: "Профиль",
