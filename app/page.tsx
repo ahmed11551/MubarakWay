@@ -14,6 +14,7 @@ import { PlatformStats } from "@/components/platform-stats"
 import { UltraQuickDonation } from "@/components/ultra-quick-donation"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import { toast } from "sonner"
+import { SkeletonCampaignCard } from "@/components/skeleton-campaign-card"
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)

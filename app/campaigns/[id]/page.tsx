@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Share2, Heart, Calendar, Users, TrendingUp } from "lucide-react"
+import { Share2, Heart, Calendar, Users, TrendingUp, MessageSquare } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -14,6 +14,8 @@ import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
 import { ShareButton } from "@/components/share-button"
 import { BookmarkButton } from "@/components/bookmark-button"
+import { CampaignLikes } from "@/components/campaign-likes"
+import { CampaignComments } from "@/components/campaign-comments"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
 
@@ -249,10 +251,11 @@ export default async function CampaignDetailPage({
 
           {/* Tabs */}
           <Tabs defaultValue="story" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="story">История</TabsTrigger>
               <TabsTrigger value="updates">Обновления</TabsTrigger>
               <TabsTrigger value="donors">Жертвователи</TabsTrigger>
+              <TabsTrigger value="comments">Комментарии</TabsTrigger>
             </TabsList>
 
             <TabsContent value="story" className="space-y-4 mt-4">
@@ -371,7 +374,29 @@ export default async function CampaignDetailPage({
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="comments" className="space-y-4 mt-4">
+              <CampaignComments campaignId={campaign.id} />
+            </TabsContent>
           </Tabs>
+          
+          {/* Нижняя панель взаимодействия как в Tooba */}
+          <div className="sticky bottom-0 bg-background border-t pt-4 pb-4 px-4 -mx-4 mt-6">
+            <div className="flex items-center justify-between max-w-lg mx-auto">
+              <div className="flex items-center gap-4">
+                <CampaignLikes campaignId={campaign.id} />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Комментарии</span>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="#comments">
+                  Комментарии &gt;
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </main>
 
