@@ -17,6 +17,7 @@ export async function getFunds(category?: string) {
     // Filter by category if specified (but still return Insan fund as it's general)
     if (category && category !== "all") {
       // Always include the main Insan fund (general category)
+      // Use in() for category filter and always include Insan fund
       query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
     }
 

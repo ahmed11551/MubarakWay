@@ -97,22 +97,48 @@ export default async function FundDetailPage({
     }
 
     // Fetch campaigns linked to this fund
-    const { data: fundCampaigns, error: campaignsError } = await supabase
-      .from("campaigns")
-      .select("id, title, description, goal_amount, current_amount, currency, status, image_url, created_at")
-      .eq("fund_id", id)
-      .order("created_at", { ascending: false })
+    // Note: fund_id column might not exist yet - handle gracefully
+    let fundCampaigns: any[] = []
+    try {
+      const { data, error: campaignsError } = await supabase
+        .from("campaigns")
+        .select("id, title, description, goal_amount, current_amount, currency, status, image_url, created_at")
+        .eq("fund_id", id)
+        .order("created_at", { ascending: false })
 
-    if (campaignsError) {
-      console.error("Error fetching campaigns:", campaignsError)
+      if (campaignsError) {
+        // If fund_id column doesn't exist, campaignsError will contain the error
+        // This is expected if migration hasn't been run yet
+        console.warn("Error fetching campaigns (fund_id column might not exist):", campaignsError.message)
+        fundCampaigns = []
+      } else {
+        fundCampaigns = data || []
+      }
+    } catch (error: any) {
+      // Handle case where fund_id column doesn't exist
+      console.warn("Campaigns query failed (fund_id column might not exist):", error?.message)
+      fundCampaigns = []
     }
 
     // Calculate fund statistics
-    const { data: allDonations } = await supabase
-      .from("donations")
-      .select("amount, status")
-      .eq("fund_id", id)
-      .eq("status", "completed")
+    let allDonations: any[] = []
+    try {
+      const { data, error: donationsStatsError } = await supabase
+        .from("donations")
+        .select("amount, status")
+        .eq("fund_id", id)
+        .eq("status", "completed")
+
+      if (donationsStatsError) {
+        console.warn("Error fetching donation stats:", donationsStatsError.message)
+        allDonations = []
+      } else {
+        allDonations = data || []
+      }
+    } catch (error: any) {
+      console.warn("Donation stats query failed:", error?.message)
+      allDonations = []
+    }
 
     const totalDonations = (allDonations || []).reduce((sum, d) => sum + Number(d.amount || 0), 0)
     const donationCount = (allDonations || []).length

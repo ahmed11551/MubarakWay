@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get("category") || undefined
 
   try {
-    // getFunds handles priority: Fondinsan API -> Bot API -> Supabase
+    // getFunds now only fetches from Supabase (single Insan fund)
     const result = await getFunds(category)
     
     if (result.error) {
