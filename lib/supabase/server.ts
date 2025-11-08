@@ -3,21 +3,9 @@ import { cookies } from "next/headers"
 import { logError } from "@/lib/error-handler"
 
 export async function createClient() {
-  // Try to get env vars from multiple sources
-  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  // Fallback: try to get from Vercel env vars if not available
-  if (!supabaseUrl) {
-    supabaseUrl = process.env.VERCEL_ENV === "production" 
-      ? process.env.NEXT_PUBLIC_SUPABASE_URL 
-      : process.env.NEXT_PUBLIC_SUPABASE_URL
-  }
-  if (!supabaseAnonKey) {
-    supabaseAnonKey = process.env.VERCEL_ENV === "production"
-      ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  }
+  // Try to get env vars - use hardcoded fallback if not available
+  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://fvxkywczuqincnjilgzd.supabase.co"
+  let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2eGt5d2N6dXFpbmNuamlsZ3pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNDgwNTYsImV4cCI6MjA3NzkyNDA1Nn0.jBvLDl0T2u-slvf4Uu4oZj7yRWMQCKmiln0mXRU0q54"
 
   if (!supabaseUrl || !supabaseAnonKey) {
     // Log detailed information for debugging
