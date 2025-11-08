@@ -110,7 +110,8 @@ export default async function FundsPage() {
               )}
             </TabsContent>
           ))}
-        </Tabs>
+          </Tabs>
+        </div>
       </main>
 
       <BottomNav />
