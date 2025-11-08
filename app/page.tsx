@@ -104,11 +104,28 @@ export default function HomePage() {
     }
   }, [currentSlide])
 
+  const handleRefresh = async () => {
+    setIsLoadingCampaigns(true)
+    try {
+      const response = await fetch("/api/campaigns?status=active&limit=3")
+      if (response.ok) {
+        const data = await response.json()
+        setActiveCampaigns(data.campaigns || [])
+        toast.success("Обновлено")
+      }
+    } catch (error) {
+      console.error("Failed to refresh campaigns:", error)
+    } finally {
+      setIsLoadingCampaigns(false)
+    }
+  }
+
   return (
     <div className="min-h-screen pb-20">
       <AppHeader />
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
         {/* Top hero text block reserved for message & UI */}
         <section className="space-y-3">
           <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
@@ -393,7 +410,8 @@ export default function HomePage() {
             )}
           </div>
         </section>
-      </main>
+        </main>
+      </PullToRefresh>
 
       <BottomNav />
     </div>

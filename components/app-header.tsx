@@ -10,7 +10,7 @@ export function AppHeader() {
   const canGoBack = typeof window !== "undefined" && window.history.length > 1 && pathname !== "/"
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-sm">
+    <header className="sticky top-0 z-40 w-full border-b-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-sm safe-area-top">
       <div className="flex h-16 items-center justify-between px-4 max-w-lg mx-auto">
         <div className="flex items-center gap-2">
           {canGoBack ? (

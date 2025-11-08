@@ -139,15 +139,29 @@ function setupScrollPrevention(tg: any) {
         
         const isAtTop = scrollTop <= 1
         const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+        const isContentShort = scrollHeight <= clientHeight
         
-        // Prevent pull-to-close when at top and trying to scroll up
+        // If content is shorter than viewport, prevent all pull-to-close gestures
+        if (isContentShort) {
+          e.stopPropagation()
+          return
+        }
+        
+        // Prevent pull-to-close when at top and trying to scroll up (pull down)
         if (isAtTop && deltaY > 0) {
           e.preventDefault()
           e.stopPropagation()
           return false
         }
         
-        // If scrolling inside content, prevent WebApp gesture
+        // Prevent pull-to-close when at bottom and trying to scroll down (pull up)
+        // This prevents accidental closing when user tries to scroll up from bottom
+        if (isAtBottom && deltaY < 0) {
+          e.stopPropagation()
+        }
+        
+        // If scrolling inside content (not at edges), always prevent WebApp gesture
+        // This is the most important case - prevent closing during normal scrolling
         if (!isAtTop && !isAtBottom) {
           e.stopPropagation()
         }
@@ -159,6 +173,13 @@ function setupScrollPrevention(tg: any) {
         
         const isAtTop = scrollTop <= 1
         const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+        const isContentShort = scrollHeight <= clientHeight
+        
+        // If content is shorter than container, prevent all pull-to-close gestures
+        if (isContentShort) {
+          e.stopPropagation()
+          return
+        }
         
         // Prevent pull-to-close when at top and trying to scroll up
         if (isAtTop && deltaY > 0) {
@@ -167,7 +188,12 @@ function setupScrollPrevention(tg: any) {
           return false
         }
         
-        // If scrolling inside content, prevent WebApp gesture
+        // Prevent pull-to-close when at bottom and trying to scroll down
+        if (isAtBottom && deltaY < 0) {
+          e.stopPropagation()
+        }
+        
+        // If scrolling inside content, always prevent WebApp gesture
         if (!isAtTop && !isAtBottom) {
           e.stopPropagation()
         }
