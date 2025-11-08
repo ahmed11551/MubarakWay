@@ -27,8 +27,10 @@ export const revalidate = 0
 
 export default async function FundsPage() {
   // Fetch funds from Supabase with error handling
+  // Try multiple approaches to ensure we get funds
   let result
   try {
+    // First try: direct getFunds call
     result = await getFunds()
     // Debug logging
     console.log("[FundsPage] getFunds result:", {
@@ -36,6 +38,29 @@ export default async function FundsPage() {
       error: result.error,
       funds: result.funds?.map((f: any) => ({ id: f.id, name: f.name })),
     })
+    
+    // If no funds and no error, try API route as fallback
+    if ((!result.funds || result.funds.length === 0) && !result.error) {
+      console.log("[FundsPage] Trying API route as fallback...")
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mubarak-way.vercel.app'
+        const apiUrl = `${baseUrl}/api/funds`
+        const apiResponse = await fetch(apiUrl, { 
+          cache: 'no-store',
+          next: { revalidate: 0 }
+        })
+        if (apiResponse.ok) {
+          const apiData = await apiResponse.json()
+          if (apiData.funds && apiData.funds.length > 0) {
+            console.log("[FundsPage] Funds loaded via API route:", apiData.funds.length)
+            result = { funds: apiData.funds }
+          }
+        }
+      } catch (apiError) {
+        console.warn("[FundsPage] API route fallback failed:", apiError)
+        // Continue with original result
+      }
+    }
   } catch (error) {
     console.error("[FundsPage] Error fetching funds:", error)
     result = { funds: [], error: `Failed to load funds: ${error instanceof Error ? error.message : "Unknown error"}` }
