@@ -201,12 +201,6 @@
     position: relative;
   }
 
-  /* Make documentElement scrollable when body is not */
-  html.telegram-webapp {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
   /* Prevent pull-to-close on all scrollable areas */
   html.telegram-webapp * {
     overscroll-behavior-y: contain;
