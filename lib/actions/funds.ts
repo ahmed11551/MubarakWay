@@ -1,47 +1,23 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { fetchBotApiFunds } from "@/lib/bot-api"
-import { fetchFondinsanPrograms, transformFondinsanProgramsToFunds } from "@/lib/fondinsan-api"
 
 export async function getFunds(category?: string) {
   try {
-    // Priority 1: Try to fetch from Fondinsan API
-    try {
-      const fondinsanPrograms = await fetchFondinsanPrograms()
-      if (fondinsanPrograms && Array.isArray(fondinsanPrograms) && fondinsanPrograms.length > 0) {
-        let funds = transformFondinsanProgramsToFunds(fondinsanPrograms)
-        
-        // Filter by category if specified
-        if (category && category !== "all") {
-          funds = funds.filter((f) => f && f.category === category)
-        }
-        
-        // Filter out any invalid funds
-        funds = funds.filter((f) => f && f.id)
-        
-        if (funds.length > 0) {
-          return { funds }
-        }
-      }
-    } catch (fondinsanError) {
-      console.error("[v0] Fondinsan API error (falling back):", fondinsanError)
-      // Continue to next priority
-    }
-
-    // Priority 2: Try to fetch from bot.e-replika.ru API
-    const botApiFunds = await fetchBotApiFunds(category)
-    if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
-      return { funds: botApiFunds }
-    }
-
-    // Priority 3: Fallback to Supabase if external APIs are not available
     const supabase = await createClient()
 
-    let query = supabase.from("funds").select("*").eq("is_active", true).order("total_raised", { ascending: false })
+    // Get the main fund "Инсан" from Supabase
+    // This is the primary fund - all campaigns and programs are linked to it
+    let query = supabase
+      .from("funds")
+      .select("*")
+      .eq("is_active", true)
+      .order("total_raised", { ascending: false })
 
+    // Filter by category if specified (but still return Insan fund as it's general)
     if (category && category !== "all") {
-      query = query.eq("category", category)
+      // Always include the main Insan fund (general category)
+      query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
     }
 
     const { data: funds, error } = await query
@@ -49,6 +25,19 @@ export async function getFunds(category?: string) {
     if (error) {
       console.error("[v0] Get funds error:", error)
       return { funds: [], error: "Failed to fetch funds" }
+    }
+
+    // If no funds found, return empty array
+    // The Insan fund should be created via migration script
+    if (!funds || funds.length === 0) {
+      console.warn("[v0] No funds found in database. Please run the migration script to create the Insan fund.")
+      return { funds: [] }
+    }
+
+    // Ensure we have at least the Insan fund
+    const insanFund = funds.find((f: any) => f.id === "00000000-0000-0000-0000-000000000001")
+    if (!insanFund) {
+      console.warn("[v0] Insan fund not found. Please run the migration script.")
     }
 
     return { funds: funds || [] }
@@ -60,32 +49,6 @@ export async function getFunds(category?: string) {
 
 export async function getFundById(id: string) {
   try {
-    // Check if it's a Fondinsan fund
-    if (id && id.startsWith("fondinsan_")) {
-      try {
-        const { fetchFondinsanProgramById, transformFondinsanProgramToFund } = await import("@/lib/fondinsan-api")
-        const programIdStr = id.replace("fondinsan_", "")
-        const programId = parseInt(programIdStr, 10)
-        
-        if (isNaN(programId)) {
-          console.error("[v0] Invalid Fondinsan program ID:", programIdStr)
-        } else {
-          const program = await fetchFondinsanProgramById(programId)
-          
-          if (program) {
-            const fund = transformFondinsanProgramToFund(program)
-            if (fund && fund.id) {
-              return { fund }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("[v0] Error fetching Fondinsan program:", error)
-        // Fall through to Supabase
-      }
-    }
-
-    // Fallback to Supabase
     const supabase = await createClient()
 
     const { data: fund, error } = await supabase.from("funds").select("*").eq("id", id).eq("is_active", true).single()

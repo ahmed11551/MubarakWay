@@ -96,6 +96,29 @@ export default async function FundDetailPage({
       console.error("Error fetching donations:", donationsError)
     }
 
+    // Fetch campaigns linked to this fund
+    const { data: fundCampaigns, error: campaignsError } = await supabase
+      .from("campaigns")
+      .select("id, title, description, goal_amount, current_amount, currency, status, image_url, created_at")
+      .eq("fund_id", id)
+      .order("created_at", { ascending: false })
+
+    if (campaignsError) {
+      console.error("Error fetching campaigns:", campaignsError)
+    }
+
+    // Calculate fund statistics
+    const { data: allDonations } = await supabase
+      .from("donations")
+      .select("amount, status")
+      .eq("fund_id", id)
+      .eq("status", "completed")
+
+    const totalDonations = (allDonations || []).reduce((sum, d) => sum + Number(d.amount || 0), 0)
+    const donationCount = (allDonations || []).length
+    const activeCampaigns = (fundCampaigns || []).filter((c) => c.status === "active").length
+    const completedCampaigns = (fundCampaigns || []).filter((c) => c.status === "completed").length
+
     // Format recent donors from donations
     const now = new Date()
     const formatRelativeTime = (date: Date) => {
@@ -217,10 +240,11 @@ export default async function FundDetailPage({
         <div className="px-4 py-6 space-y-6">
           {/* Tabs */}
           <Tabs defaultValue="about" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="about">О фонде</TabsTrigger>
               <TabsTrigger value="projects">Проекты</TabsTrigger>
               <TabsTrigger value="donors">Доноры</TabsTrigger>
+              <TabsTrigger value="reports">Отчетность</TabsTrigger>
             </TabsList>
 
             <TabsContent value="about" className="space-y-4 mt-4">
@@ -313,29 +337,152 @@ export default async function FundDetailPage({
               ))}
             </TabsContent>
 
+            <TabsContent value="projects" className="space-y-4 mt-4">
+              {fundCampaigns && fundCampaigns.length > 0 ? (
+                fundCampaigns.map((campaign: any) => (
+                  <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
+                    <Card className="hover:shadow-md transition-shadow">
+                      {campaign.image_url && (
+                        <div className="aspect-video bg-muted relative overflow-hidden rounded-t-xl">
+                          <Image
+                            src={campaign.image_url}
+                            alt={campaign.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                          />
+                        </div>
+                      )}
+                      <CardHeader>
+                        <CardTitle className="text-base">{campaign.title}</CardTitle>
+                        <CardDescription className="text-xs line-clamp-2">{campaign.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <span className="text-muted-foreground">
+                              {((Number(campaign.current_amount || 0) / Number(campaign.goal_amount || 1)) * 100).toFixed(0)}% собрано
+                            </span>
+                          </div>
+                          <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
+                            {campaign.status === "active" ? "Активна" : campaign.status === "completed" ? "Завершена" : campaign.status}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="pt-6 pb-6 text-center">
+                    <p className="text-muted-foreground">Нет проектов, связанных с этим фондом</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
             <TabsContent value="donors" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Недавние доноры</CardTitle>
-                  <CardDescription>{fund.donorCount.toLocaleString()} человек пожертвовали этому фонду</CardDescription>
+                  <CardDescription>{donationCount.toLocaleString()} человек пожертвовали этому фонду</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {fund.recentDonations.map((donor, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{donor.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium">{donor.name}</p>
-                          <p className="text-xs text-muted-foreground">{donor.createdAt}</p>
+                  {fund.recentDonations.length > 0 ? (
+                    fund.recentDonations.map((donor, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>{donor.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{donor.name}</p>
+                            <p className="text-xs text-muted-foreground">{donor.createdAt}</p>
+                          </div>
                         </div>
+                        <span className="text-sm font-semibold text-primary">{donor.amount} ₽</span>
                       </div>
-                      <span className="text-sm font-semibold text-primary">{donor.amount} ₽</span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">Пока нет пожертвований</p>
+                  )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="reports" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Статистика фонда</CardTitle>
+                  <CardDescription>Общая информация о деятельности фонда</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Всего собрано</p>
+                      <p className="text-2xl font-bold text-primary">{totalDonations.toLocaleString("ru-RU")} ₽</p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Доноров</p>
+                      <p className="text-2xl font-bold text-primary">{donationCount.toLocaleString("ru-RU")}</p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Активных кампаний</p>
+                      <p className="text-2xl font-bold text-primary">{activeCampaigns}</p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Завершено кампаний</p>
+                      <p className="text-2xl font-bold text-primary">{completedCampaigns}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {fundCampaigns && fundCampaigns.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Кампании фонда</CardTitle>
+                    <CardDescription>Все кампании, связанные с этим фондом</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {fundCampaigns.map((campaign: any) => {
+                      const progress = Number(campaign.goal_amount || 0) > 0
+                        ? (Number(campaign.current_amount || 0) / Number(campaign.goal_amount)) * 100)
+                        : 0
+                      
+                      return (
+                        <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
+                          <div className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h4 className="font-medium text-sm flex-1">{campaign.title}</h4>
+                              <Badge variant={campaign.status === "active" ? "default" : "secondary"} className="text-xs">
+                                {campaign.status === "active" ? "Активна" : campaign.status === "completed" ? "Завершена" : campaign.status}
+                              </Badge>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">Прогресс</span>
+                                <span className="font-medium">{progress.toFixed(0)}%</span>
+                              </div>
+                              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary transition-all"
+                                  style={{ width: `${Math.min(progress, 100)}%` }}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>{Number(campaign.current_amount || 0).toLocaleString("ru-RU")} ₽</span>
+                                <span>из {Number(campaign.goal_amount || 0).toLocaleString("ru-RU")} ₽</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </div>

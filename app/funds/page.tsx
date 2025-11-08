@@ -124,9 +124,22 @@ function FundCard({ fund }: { fund: any }) {
   const donorCount = Number(fund.donor_count || fund.donorCount || 0)
   const category = fund.category || "general"
 
+  // Map category to readable label
+  const categoryLabels: Record<string, string> = {
+    education: "Образование",
+    healthcare: "Здравоохранение",
+    water: "Водоснабжение",
+    orphans: "Помощь сиротам",
+    emergency: "Экстренная помощь",
+    general: "Общее",
+    poverty: "Борьба с бедностью",
+  }
+
+  const categoryLabel = categoryLabels[category] || category
+
   return (
     <Link href={`/funds/${fund.id}`}>
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="hover:shadow-lg transition-shadow" data-card>
         <CardHeader className="pb-3">
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative">
@@ -142,7 +155,7 @@ function FundCard({ fund }: { fund: any }) {
                   {nameAr && <p className="text-xs text-muted-foreground line-clamp-1">{nameAr}</p>}
                 </div>
                 <Badge variant="secondary" className="capitalize text-xs flex-shrink-0">
-                  {category}
+                  {categoryLabel}
                 </Badge>
               </div>
               {description && <CardDescription className="text-xs mt-2 line-clamp-2">{description}</CardDescription>}
