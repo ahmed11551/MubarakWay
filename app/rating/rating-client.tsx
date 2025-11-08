@@ -5,9 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Users, Link2, Calendar } from "lucide-react"
-import { SkeletonRatingCard } from "@/components/skeleton-rating-card"
 import { getAnimalAvatar } from "@/lib/utils/animal-avatars"
-import { getRamadanDateRange } from "@/lib/utils/ramadan"
+import { getRamadanDateRange, getCurrentRamadanPeriod } from "@/lib/utils/ramadan"
 
 interface RatingData {
   donors: any[]
@@ -44,8 +43,6 @@ export function RatingClient({
     if (rank === 3) return <Badge className="bg-amber-600 text-white">🥉 3</Badge>
     return <Badge variant="secondary">#{rank}</Badge>
   }
-
-  const ramadanRange = getRamadanDateRange()
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
@@ -178,22 +175,25 @@ export function RatingClient({
 
         {/* Ramadan Tab */}
         <TabsContent value="ramadan" className="space-y-6 mt-6">
-          {ramadanRange && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Период Рамадана
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {ramadanRange.start.toLocaleDateString("ru-RU")} -{" "}
-                  {ramadanRange.end.toLocaleDateString("ru-RU")}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {(() => {
+            const ramadanPeriod = getCurrentRamadanPeriod()
+            const ramadanRangeStr = getRamadanDateRange()
+            return ramadanPeriod ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Период Рамадана
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {ramadanRangeStr}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null
+          })()}
 
           <Tabs defaultValue="donors" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
