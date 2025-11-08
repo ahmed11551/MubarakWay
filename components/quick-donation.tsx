@@ -8,6 +8,7 @@ import { createDonation } from "@/lib/actions/donations"
 import { useRouter } from "next/navigation"
 import { Heart } from "lucide-react"
 import { toast } from "sonner"
+import { hapticFeedback } from "@/lib/mobile-ux"
 
 interface QuickDonationProps {
   amount: number
@@ -36,32 +37,42 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
       })
 
       if (result.error) {
+        hapticFeedback("error")
         toast.error(`Ошибка: ${result.error}`)
         setIsProcessing(false)
         return
       }
 
+      hapticFeedback("success")
       toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
       setIsOpen(false)
       router.push("/profile")
     } catch (error) {
       console.error("Payment error:", error)
+      hapticFeedback("error")
       toast.error("Произошла ошибка при обработке платежа. Пожалуйста, попробуйте снова.")
       setIsProcessing(false)
     }
   }
 
   const handlePaymentFail = (reason: string) => {
+    hapticFeedback("error")
     toast.error(`Платёж не прошёл: ${reason}`)
     setIsProcessing(false)
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open)
+      if (open) {
+        hapticFeedback("medium")
+      }
+    }}>
       <DialogTrigger asChild>
         <Button 
           size="lg" 
           className="w-full h-14 bg-primary hover:bg-primary/90 text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis"
+          onClick={() => hapticFeedback("light")}
         >
           <Heart className="mr-1.5 h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{amount.toLocaleString("ru-RU")} ₽</span>

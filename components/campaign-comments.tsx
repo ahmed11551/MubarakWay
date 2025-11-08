@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
 import { ru } from "date-fns/locale"
+import { hapticFeedback } from "@/lib/mobile-ux"
 
 interface CampaignCommentsProps {
   campaignId: string
@@ -70,21 +71,25 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
 
   const handleSubmitComment = async () => {
     if (!newComment.trim()) {
+      hapticFeedback("error")
       toast.error("Введите комментарий")
       return
     }
 
     if (!currentUserId) {
+      hapticFeedback("error")
       toast.error("Войдите, чтобы оставить комментарий")
       router.push("/profile")
       return
     }
 
+    hapticFeedback("medium")
     setIsSubmitting(true)
     try {
       const result = await addCampaignComment(campaignId, newComment)
       
       if (result.error) {
+        hapticFeedback("error")
         toast.error(result.error)
         return
       }
@@ -92,6 +97,7 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
       if (result.comment) {
         setComments((prev) => [result.comment, ...prev])
         setNewComment("")
+        hapticFeedback("success")
         toast.success("Комментарий добавлен")
         
         // Автоматически прокручиваем к новому комментарию
@@ -101,6 +107,7 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
       }
     } catch (error) {
       console.error("Submit comment error:", error)
+      hapticFeedback("error")
       toast.error("Произошла ошибка")
     } finally {
       setIsSubmitting(false)
@@ -112,18 +119,22 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
       return
     }
 
+    hapticFeedback("medium")
     try {
       const result = await deleteCampaignComment(commentId)
       
       if (result.error) {
+        hapticFeedback("error")
         toast.error(result.error)
         return
       }
 
       setComments((prev) => prev.filter((c) => c.id !== commentId))
+      hapticFeedback("success")
       toast.success("Комментарий удален")
     } catch (error) {
       console.error("Delete comment error:", error)
+      hapticFeedback("error")
       toast.error("Произошла ошибка")
     }
   }

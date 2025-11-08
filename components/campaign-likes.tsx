@@ -6,6 +6,7 @@ import { Heart } from "lucide-react"
 import { getCampaignLikesCount, hasUserLikedCampaign, toggleCampaignLike } from "@/lib/actions/campaign-social"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { hapticFeedback } from "@/lib/mobile-ux"
 
 interface CampaignLikesProps {
   campaignId: string
@@ -43,15 +44,18 @@ export function CampaignLikes({ campaignId, initialCount = 0, initialLiked = fal
   }
 
   const handleToggleLike = async () => {
+    hapticFeedback("light")
     setIsLoading(true)
     try {
       const result = await toggleCampaignLike(campaignId)
       
       if (result.error) {
         if (result.error.includes("авторизованы")) {
+          hapticFeedback("error")
           toast.error("Войдите, чтобы поддержать кампанию")
           router.push("/profile")
         } else {
+          hapticFeedback("error")
           toast.error(result.error)
         }
         return
@@ -62,13 +66,16 @@ export function CampaignLikes({ campaignId, initialCount = 0, initialLiked = fal
       // Обновляем счетчик
       if (result.liked) {
         setLikesCount((prev) => prev + 1)
+        hapticFeedback("success")
         toast.success("Вы поддержали кампанию!")
       } else {
         setLikesCount((prev) => Math.max(0, prev - 1))
+        hapticFeedback("light")
         toast.success("Поддержка удалена")
       }
     } catch (error) {
       console.error("Toggle like error:", error)
+      hapticFeedback("error")
       toast.error("Произошла ошибка")
     } finally {
       setIsLoading(false)

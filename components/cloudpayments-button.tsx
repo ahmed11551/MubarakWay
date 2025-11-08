@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { initiateCloudPayment } from "@/lib/cloudpayments"
 import { Loader2 } from "lucide-react"
+import { hapticFeedback } from "@/lib/mobile-ux"
 
 interface CloudPaymentsButtonProps {
   amount: number
@@ -29,6 +30,7 @@ export function CloudPaymentsButton({
   const [isLoading, setIsLoading] = useState(false)
 
   const handlePayment = async () => {
+    hapticFeedback("medium")
     setIsLoading(true)
 
     try {
@@ -44,10 +46,12 @@ export function CloudPaymentsButton({
         {
           onSuccess: (options) => {
             console.log("[v0] Платёж успешен:", options)
+            hapticFeedback("success")
             onSuccess?.()
           },
           onFail: (reason, options) => {
             console.error("[v0] Платёж не прошёл:", reason, options)
+            hapticFeedback("error")
             onFail?.(reason)
           },
           onComplete: (paymentResult) => {
@@ -58,6 +62,7 @@ export function CloudPaymentsButton({
       )
     } catch (error) {
       console.error("[v0] Ошибка инициализации платежа:", error)
+      hapticFeedback("error")
       setIsLoading(false)
       onFail?.("Не удалось инициировать платёж")
     }
