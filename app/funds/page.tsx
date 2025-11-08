@@ -50,7 +50,7 @@ export default async function FundsPage() {
   }
   
   // Если есть ошибка, но она связана с переменными окружения, попробуем показать более понятное сообщение
-  if (result.error && result.error.includes("Missing Supabase") || result.error.includes("environment variables")) {
+  if (result.error && (result.error.includes("Missing Supabase") || result.error.includes("environment variables"))) {
     console.error("[FundsPage] Environment variables issue detected")
     result.error = "Ошибка конфигурации: переменные окружения Supabase не установлены. Обратитесь к администратору."
   }
