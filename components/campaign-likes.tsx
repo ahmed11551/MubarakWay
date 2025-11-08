@@ -45,11 +45,28 @@ export function CampaignLikes({ campaignId, initialCount = 0, initialLiked = fal
 
   const handleToggleLike = async () => {
     hapticFeedback("light")
+    
+    // Оптимистичное обновление UI
+    const previousLiked = isLiked
+    const previousCount = likesCount
+    
+    // Мгновенно обновляем UI
+    setIsLiked(!previousLiked)
+    if (!previousLiked) {
+      setLikesCount((prev) => prev + 1)
+    } else {
+      setLikesCount((prev) => Math.max(0, prev - 1))
+    }
+    
     setIsLoading(true)
     try {
       const result = await toggleCampaignLike(campaignId)
       
       if (result.error) {
+        // Откат при ошибке
+        setIsLiked(previousLiked)
+        setLikesCount(previousCount)
+        
         if (result.error.includes("авторизованы")) {
           hapticFeedback("error")
           toast.error("Войдите, чтобы поддержать кампанию")
@@ -61,19 +78,22 @@ export function CampaignLikes({ campaignId, initialCount = 0, initialLiked = fal
         return
       }
 
+      // Подтверждаем состояние (на случай если сервер вернул другое состояние)
       setIsLiked(result.liked || false)
       
-      // Обновляем счетчик
+      // Обновляем счетчик на основе ответа сервера
       if (result.liked) {
-        setLikesCount((prev) => prev + 1)
         hapticFeedback("success")
         toast.success("Вы поддержали кампанию!")
       } else {
-        setLikesCount((prev) => Math.max(0, prev - 1))
         hapticFeedback("light")
         toast.success("Поддержка удалена")
       }
     } catch (error) {
+      // Откат при ошибке
+      setIsLiked(previousLiked)
+      setLikesCount(previousCount)
+      
       console.error("Toggle like error:", error)
       hapticFeedback("error")
       toast.error("Произошла ошибка")
