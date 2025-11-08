@@ -84,19 +84,40 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
     }
 
     hapticFeedback("medium")
+    
+    // Оптимистичное обновление UI
+    const commentText = newComment.trim()
+    const optimisticComment: Comment = {
+      id: `temp-${Date.now()}`,
+      content: commentText,
+      created_at: new Date().toISOString(),
+      user_id: currentUserId,
+      profiles: null, // Будет загружено с сервера
+    }
+    
+    // Мгновенно добавляем комментарий в UI
+    setComments((prev) => [optimisticComment, ...prev])
+    setNewComment("")
+    
     setIsSubmitting(true)
     try {
-      const result = await addCampaignComment(campaignId, newComment)
+      const result = await addCampaignComment(campaignId, commentText)
       
       if (result.error) {
+        // Откат при ошибке
+        setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id))
+        setNewComment(commentText) // Восстанавливаем текст
         hapticFeedback("error")
         toast.error(result.error)
         return
       }
 
       if (result.comment) {
-        setComments((prev) => [result.comment, ...prev])
-        setNewComment("")
+        // Заменяем оптимистичный комментарий на реальный
+        setComments((prev) => [
+          result.comment,
+          ...prev.filter((c) => c.id !== optimisticComment.id)
+        ])
         hapticFeedback("success")
         toast.success("Комментарий добавлен")
         
@@ -106,6 +127,10 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
         }, 100)
       }
     } catch (error) {
+      // Откат при ошибке
+      setComments((prev) => prev.filter((c) => c.id !== optimisticComment.id))
+      setNewComment(commentText) // Восстанавливаем текст
+      
       console.error("Submit comment error:", error)
       hapticFeedback("error")
       toast.error("Произошла ошибка")
