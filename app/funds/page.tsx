@@ -63,14 +63,19 @@ export default async function FundsPage() {
         </div>
 
         {/* Category Tabs */}
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1">
-            {categories.map((cat) => (
-              <TabsTrigger key={cat.value} value={cat.value} className="whitespace-nowrap text-xs">
-                {cat.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="w-full overflow-x-auto -mx-4 px-4">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="w-full justify-start flex-nowrap h-auto p-1.5 gap-2 bg-muted/50 min-w-max">
+              {categories.map((cat) => (
+                <TabsTrigger 
+                  key={cat.value} 
+                  value={cat.value} 
+                  className="whitespace-nowrap text-sm px-4 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all flex-shrink-0"
+                >
+                  {cat.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
           <TabsContent value="all" className="space-y-4 mt-4">
             {funds.length > 0 ? (
