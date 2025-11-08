@@ -398,7 +398,6 @@ export default async function FundDetailPage({
                   </Card>
                 ))
               ) : fundCampaigns.length > 0 ? (
-              {fundCampaigns && fundCampaigns.length > 0 ? (
                 fundCampaigns.map((campaign: any) => (
                   <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
                     <Card className="hover:shadow-md transition-shadow">
