@@ -40,7 +40,31 @@ export default async function FundsPage() {
     console.error("[FundsPage] Error fetching funds:", error)
     result = { funds: [], error: `Failed to load funds: ${error instanceof Error ? error.message : "Unknown error"}` }
   }
-  const funds = result.funds || []
+  
+  // Fallback: try API route if server action fails
+  let funds = result.funds || []
+  if (funds.length === 0 && !result.error) {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : 'http://localhost:3000'
+      const apiResponse = await fetch(`${baseUrl}/api/funds`, {
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      if (apiResponse.ok) {
+        const apiData = await apiResponse.json()
+        if (apiData.funds && apiData.funds.length > 0) {
+          console.log("[FundsPage] Fallback API succeeded, got funds:", apiData.funds.length)
+          funds = apiData.funds
+        }
+      }
+    } catch (apiError) {
+      console.error("[FundsPage] Fallback API also failed:", apiError)
+    }
+  }
   
   // Additional debug
   if (funds.length === 0) {
@@ -95,11 +119,22 @@ export default async function FundsPage() {
               ))
             ) : (
               <Card>
-                <CardContent className="pt-6 pb-6 text-center">
-                  <p className="text-muted-foreground">Фонды не найдены</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {result.error || "Попробуйте обновить страницу"}
+                <CardContent className="pt-6 pb-6 text-center space-y-3">
+                  <p className="text-muted-foreground font-medium">Фонды не найдены</p>
+                  {result.error && (
+                    <p className="text-xs text-destructive bg-destructive/10 px-3 py-2 rounded">
+                      Ошибка: {result.error}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Попробуйте обновить страницу или обратитесь в поддержку
                   </p>
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg text-left text-xs space-y-1">
+                    <p className="font-semibold">Отладочная информация:</p>
+                    <p>Фондов в результате: {funds.length}</p>
+                    <p>Ошибка запроса: {result.error || "Нет"}</p>
+                    <p>Статус: {result.error ? "Ошибка" : "Успешно, но пусто"}</p>
+                  </div>
                 </CardContent>
               </Card>
             )}

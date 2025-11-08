@@ -23,6 +23,25 @@ export async function getFunds(category?: string) {
 
     const { data: funds, error } = await query
 
+    // If error, try to get more details
+    if (error) {
+      // Check if it's an RLS policy issue
+      if (error.code === 'PGRST116' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
+        console.error("[v0] RLS policy issue - trying direct query")
+        // Try without RLS (shouldn't happen, but for debugging)
+        const directQuery = supabase
+          .from("funds")
+          .select("*")
+          .eq("is_active", true)
+        const { data: directData, error: directError } = await directQuery
+        if (directError) {
+          console.error("[v0] Direct query also failed:", directError)
+        } else {
+          console.log("[v0] Direct query succeeded, RLS might be blocking:", directData?.length || 0)
+        }
+      }
+    }
+
     if (error) {
       console.error("[v0] Get funds error:", error)
       console.error("[v0] Error details:", JSON.stringify(error, null, 2))

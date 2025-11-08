@@ -207,10 +207,25 @@ export default function ProfilePage() {
 
         {/* История и отчёты */}
         <Tabs defaultValue="history" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="history">История транзакций</TabsTrigger>
-            <TabsTrigger value="subscriptions">Подписки</TabsTrigger>
-            <TabsTrigger value="reports">Отчёты фондов</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 gap-1.5 p-1.5 bg-muted/50 h-auto">
+            <TabsTrigger 
+              value="history" 
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all"
+            >
+              История транзакций
+            </TabsTrigger>
+            <TabsTrigger 
+              value="subscriptions"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all"
+            >
+              Подписки
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reports"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all"
+            >
+              Отчёты фондов
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="history" className="space-y-4">
