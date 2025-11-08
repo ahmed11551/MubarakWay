@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { TelegramProvider } from "@/components/telegram-provider"
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
+import { PWAServiceWorker } from "@/components/pwa-service-worker"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin", "latin-ext"] })
@@ -23,6 +25,13 @@ export const metadata: Metadata = {
   authors: [{ name: "MubarakWay" }],
   creator: "MubarakWay",
   publisher: "MubarakWay",
+  manifest: "/manifest.json",
+  themeColor: "#16a34a",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MubarakWay",
+  },
   formatDetection: {
     email: false,
     address: false,
@@ -77,6 +86,14 @@ export default function RootLayout({
     <html lang="ru">
       <head>
         <script src="https://telegram.org/js/telegram-web-app.js" async></script>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#16a34a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="MubarakWay" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
       </head>
       <body className={`font-sans antialiased`}>
         <ErrorBoundary>
@@ -86,6 +103,8 @@ export default function RootLayout({
         </ErrorBoundary>
         <Toaster />
         <Analytics />
+        <PWAServiceWorker />
+        <PWAInstallPrompt />
       </body>
     </html>
   )
