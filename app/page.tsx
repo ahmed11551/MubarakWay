@@ -10,6 +10,9 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { QuickDonation } from "@/components/quick-donation"
 import { QuickDonationBlock } from "@/components/quick-donation-block"
+import { PlatformStats } from "@/components/platform-stats"
+import { UltraQuickDonation } from "@/components/ultra-quick-donation"
+import { PullToRefresh } from "@/components/pull-to-refresh"
 import { toast } from "sonner"
 
 export default function HomePage() {
@@ -215,6 +218,16 @@ export default function HomePage() {
               </Card>
             </Link>
           </div>
+        </section>
+
+        {/* Platform Statistics */}
+        <section className="space-y-4">
+          <PlatformStats />
+        </section>
+
+        {/* Ultra Quick Donation (3 clicks like Tooba) */}
+        <section className="space-y-4">
+          <UltraQuickDonation />
         </section>
 
         {/* Quick Donation Block */}
