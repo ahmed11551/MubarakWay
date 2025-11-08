@@ -120,7 +120,8 @@ function setupScrollPrevention(tg: any) {
     const touchX = e.touches[0].clientX
     const deltaY = touchY - touchStartY
     const deltaX = Math.abs(touchX - touchStartX)
-    const velocity = Math.abs(touchY - lastTouchY)
+    const timeDelta = Date.now() - touchStartTime
+    const velocity = Math.abs(touchY - lastTouchY) / (timeDelta || 1) // pixels per ms
     lastTouchY = touchY
     
     // Determine if this is a vertical scroll gesture
@@ -143,11 +144,13 @@ function setupScrollPrevention(tg: any) {
         
         // If content is shorter than viewport, prevent all pull-to-close gestures
         if (isContentShort) {
+          e.preventDefault()
           e.stopPropagation()
-          return
+          return false
         }
         
         // Prevent pull-to-close when at top and trying to scroll up (pull down)
+        // Also prevent on fast swipes down from top (velocity > 0.5 px/ms)
         if (isAtTop && deltaY > 0) {
           e.preventDefault()
           e.stopPropagation()
@@ -155,15 +158,20 @@ function setupScrollPrevention(tg: any) {
         }
         
         // Prevent pull-to-close when at bottom and trying to scroll down (pull up)
-        // This prevents accidental closing when user tries to scroll up from bottom
+        // Also prevent on fast swipes up from bottom
         if (isAtBottom && deltaY < 0) {
+          e.preventDefault()
           e.stopPropagation()
+          return false
         }
         
         // If scrolling inside content (not at edges), always prevent WebApp gesture
         // This is the most important case - prevent closing during normal scrolling
+        // Also prevent on fast swipes (velocity > 0.3 px/ms) to handle quick scrolls
         if (!isAtTop && !isAtBottom) {
+          e.preventDefault()
           e.stopPropagation()
+          return false
         }
       } else {
         // For other scrollable containers
@@ -177,11 +185,13 @@ function setupScrollPrevention(tg: any) {
         
         // If content is shorter than container, prevent all pull-to-close gestures
         if (isContentShort) {
+          e.preventDefault()
           e.stopPropagation()
-          return
+          return false
         }
         
         // Prevent pull-to-close when at top and trying to scroll up
+        // Also prevent on fast swipes down from top
         if (isAtTop && deltaY > 0) {
           e.preventDefault()
           e.stopPropagation()
@@ -189,13 +199,19 @@ function setupScrollPrevention(tg: any) {
         }
         
         // Prevent pull-to-close when at bottom and trying to scroll down
+        // Also prevent on fast swipes up from bottom
         if (isAtBottom && deltaY < 0) {
+          e.preventDefault()
           e.stopPropagation()
+          return false
         }
         
         // If scrolling inside content, always prevent WebApp gesture
+        // Also prevent on fast swipes to handle quick scrolls
         if (!isAtTop && !isAtBottom) {
+          e.preventDefault()
           e.stopPropagation()
+          return false
         }
       }
     }
