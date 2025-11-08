@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
@@ -49,7 +49,7 @@ const SUBSCRIPTION_PLANS: Record<string, any> = {
   },
 }
 
-export default function SubscriptionCheckoutPage() {
+function SubscriptionCheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -233,6 +233,23 @@ export default function SubscriptionCheckoutPage() {
 
       <BottomNav />
     </div>
+  )
+}
+
+export default function SubscriptionCheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen pb-20 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <p className="text-muted-foreground">Загрузка...</p>
+          </div>
+        </div>
+      }
+    >
+      <SubscriptionCheckoutContent />
+    </Suspense>
   )
 }
 
