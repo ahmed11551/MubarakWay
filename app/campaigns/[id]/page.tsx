@@ -12,6 +12,8 @@ import { notFound } from "next/navigation"
 import { getCampaignById } from "@/lib/actions/campaigns"
 import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
+import { ShareButton } from "@/components/share-button"
+import { BookmarkButton } from "@/components/bookmark-button"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
 
@@ -190,46 +192,57 @@ export default async function CampaignDetailPage({
             </div>
           </div>
 
-          {/* Progress Card */}
+          {/* Progress Card - улучшенный как в Tooba */}
           <Card>
             <CardContent className="pt-6 space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-2xl font-bold text-primary">
-                    {campaign.currentAmount.toLocaleString("ru-RU")} ₽
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    из {campaign.goalAmount.toLocaleString("ru-RU")} ₽
-                  </span>
+              <div className="space-y-3">
+                {/* Прогресс как в Tooba: нужно / собрали */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">нужно</span>
+                    <span className="text-2xl font-bold text-foreground">
+                      {campaign.goalAmount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b-2 border-primary/20 pb-1">
+                    <span className="text-sm font-medium text-muted-foreground">собрали</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {campaign.currentAmount.toLocaleString("ru-RU")} ₽
+                    </span>
+                  </div>
                 </div>
+                
+                {/* Прогресс бар */}
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full transition-all"
+                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all"
                     style={{ width: `${Math.min(progress, 100)}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                
+                {/* Статистика */}
+                <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
                   <span className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
                     {campaign.donorCount} жертвователей
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {campaign.daysLeft} дней осталось
+                    {campaign.daysLeft !== null ? `${campaign.daysLeft} дней осталось` : "Без дедлайна"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              {/* Кнопки действий */}
+              <div className="flex gap-2 pt-2">
                 <Button className="flex-1" size="lg" asChild>
                   <Link href={`/donate?campaign=${campaign.id}`}>
                     <Heart className="h-4 w-4 mr-2" />
-                    Пожертвовать
+                    Помочь
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Share2 className="h-4 w-4" />
-                </Button>
+                <ShareButton campaignId={campaign.id} campaignTitle={campaign.title} />
+                <BookmarkButton campaignId={campaign.id} />
               </div>
             </CardContent>
           </Card>
@@ -245,7 +258,16 @@ export default async function CampaignDetailPage({
             <TabsContent value="story" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>История кампании</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>О сборе</CardTitle>
+                    {campaign.documents && campaign.documents.length > 0 && (
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href="#documents">
+                          Документы &gt;
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="prose prose-sm max-w-none">
                   {campaign.story.split("\n\n").map((paragraph, i) => (
@@ -253,8 +275,44 @@ export default async function CampaignDetailPage({
                       {paragraph}
                     </p>
                   ))}
+                  
+                  {/* Disclaimer как в Tooba */}
+                  <div className="mt-6 p-3 bg-muted/50 rounded-lg border-l-4 border-primary/50">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold">*</span> Если собранная сумма превысит указанную, то она будет направлена только на цели фонда.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
+              
+              {/* Документы (если есть) */}
+              {campaign.documents && campaign.documents.length > 0 && (
+                <Card id="documents">
+                  <CardHeader>
+                    <CardTitle>Документы</CardTitle>
+                    <CardDescription>Подтверждающие документы для прозрачности</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {campaign.documents.map((doc: any, i: number) => (
+                      <Link
+                        key={i}
+                        href={doc.url || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
+                          <span className="text-primary font-bold">PDF</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{doc.name || `Документ ${i + 1}`}</p>
+                          <p className="text-xs text-muted-foreground">Открыть документ</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="updates" className="space-y-4 mt-4">
