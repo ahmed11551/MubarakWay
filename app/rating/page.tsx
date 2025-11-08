@@ -25,13 +25,50 @@ export default async function RatingPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const currentUserId = user?.id || null
 
-  // Загружаем данные для обоих периодов и типов
-  const [allTimeDonors, ramadanDonors, allTimeReferrals, ramadanReferrals] = await Promise.all([
-    getTopDonors("all_time", 100),
-    getTopDonors("ramadan", 100),
-    getTopReferrals("all_time", 100),
-    getTopReferrals("ramadan", 100),
-  ])
+  // Загружаем данные для обоих периодов и типов с обработкой ошибок
+  let allTimeDonors = { donors: [] as any[], error: undefined as string | undefined }
+  let ramadanDonors = { donors: [] as any[], error: undefined as string | undefined }
+  let allTimeReferrals = { referrals: [] as any[], error: undefined as string | undefined }
+  let ramadanReferrals = { referrals: [] as any[], error: undefined as string | undefined }
+
+  try {
+    const results = await Promise.allSettled([
+      getTopDonors("all_time", 100),
+      getTopDonors("ramadan", 100),
+      getTopReferrals("all_time", 100),
+      getTopReferrals("ramadan", 100),
+    ])
+
+    if (results[0].status === "fulfilled") {
+      allTimeDonors = results[0].value
+    } else {
+      console.error("[RatingPage] Error loading all_time donors:", results[0].reason)
+      allTimeDonors = { donors: [], error: "Failed to load" }
+    }
+
+    if (results[1].status === "fulfilled") {
+      ramadanDonors = results[1].value
+    } else {
+      console.error("[RatingPage] Error loading ramadan donors:", results[1].reason)
+      ramadanDonors = { donors: [], error: "Failed to load" }
+    }
+
+    if (results[2].status === "fulfilled") {
+      allTimeReferrals = results[2].value
+    } else {
+      console.error("[RatingPage] Error loading all_time referrals:", results[2].reason)
+      allTimeReferrals = { referrals: [], error: "Failed to load" }
+    }
+
+    if (results[3].status === "fulfilled") {
+      ramadanReferrals = results[3].value
+    } else {
+      console.error("[RatingPage] Error loading ramadan referrals:", results[3].reason)
+      ramadanReferrals = { referrals: [], error: "Failed to load" }
+    }
+  } catch (error) {
+    console.error("[RatingPage] Unexpected error loading ratings:", error)
+  }
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat("ru-RU", {

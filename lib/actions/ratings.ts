@@ -32,7 +32,7 @@ export async function getTopDonors(period: RatingPeriod = "all_time", limit: num
     })
 
     if (error) {
-      console.error("[Ratings] Get top donors error:", error)
+      console.error("[Ratings] Get top donors RPC error:", error)
       // Fallback: прямой запрос
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("user_ratings")
@@ -49,6 +49,7 @@ export async function getTopDonors(period: RatingPeriod = "all_time", limit: num
         .limit(limit)
 
       if (fallbackError) {
+        console.error("[Ratings] Get top donors fallback error:", fallbackError)
         return { donors: [], error: fallbackError.message }
       }
 
@@ -63,7 +64,13 @@ export async function getTopDonors(period: RatingPeriod = "all_time", limit: num
       return { donors }
     }
 
-    return { donors: (data || []) as TopDonor[] }
+    // Проверяем что data существует и является массивом
+    if (!data || !Array.isArray(data)) {
+      console.warn("[Ratings] Get top donors: data is not an array, returning empty")
+      return { donors: [] }
+    }
+
+    return { donors: data as TopDonor[] }
   } catch (error) {
     console.error("[Ratings] Get top donors exception:", error)
     return { donors: [], error: "Failed to get top donors" }
@@ -81,7 +88,7 @@ export async function getTopReferrals(period: RatingPeriod = "all_time", limit: 
     })
 
     if (error) {
-      console.error("[Ratings] Get top referrals error:", error)
+      console.error("[Ratings] Get top referrals RPC error:", error)
       // Fallback: прямой запрос
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("user_ratings")
@@ -98,6 +105,7 @@ export async function getTopReferrals(period: RatingPeriod = "all_time", limit: 
         .limit(limit)
 
       if (fallbackError) {
+        console.error("[Ratings] Get top referrals fallback error:", fallbackError)
         return { referrals: [], error: fallbackError.message }
       }
 
@@ -112,7 +120,13 @@ export async function getTopReferrals(period: RatingPeriod = "all_time", limit: 
       return { referrals }
     }
 
-    return { referrals: (data || []) as TopReferral[] }
+    // Проверяем что data существует и является массивом
+    if (!data || !Array.isArray(data)) {
+      console.warn("[Ratings] Get top referrals: data is not an array, returning empty")
+      return { referrals: [] }
+    }
+
+    return { referrals: data as TopReferral[] }
   } catch (error) {
     console.error("[Ratings] Get top referrals exception:", error)
     return { referrals: [], error: "Failed to get top referrals" }
