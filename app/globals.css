@@ -159,7 +159,9 @@
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     height: 100%;
-    overflow: hidden;
+    /* Allow scrolling on html when body is hidden */
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   html.telegram-webapp body {
