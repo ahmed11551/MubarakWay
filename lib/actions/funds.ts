@@ -5,8 +5,17 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 // Create a simple client for public data (bypasses cookie issues)
 function createPublicClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // Try to get env vars - they should be available in runtime
+  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Hardcoded fallback values from MCP (if env vars not available)
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("[Funds] Environment variables not available, using fallback values")
+    // Use values from MCP as fallback
+    supabaseUrl = supabaseUrl || "https://fvxkywczuqincnjilgzd.supabase.co"
+    supabaseAnonKey = supabaseAnonKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2eGt5d2N6dXFpbmNuamlsZ3pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNDgwNTYsImV4cCI6MjA3NzkyNDA1Nn0.jBvLDl0T2u-slvf4Uu4oZj7yRWMQCKmiln0mXRU0q54"
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("[Funds] Missing Supabase environment variables:", {
@@ -14,7 +23,6 @@ function createPublicClient() {
       hasKey: !!supabaseAnonKey,
       urlPrefix: supabaseUrl?.substring(0, 20) || "missing",
     })
-    // Не выбрасываем ошибку, а возвращаем null, чтобы fallback мог сработать
     return null
   }
 
@@ -120,46 +128,41 @@ export async function getFunds(category?: string) {
   if (funds.length === 0) {
     try {
       console.log("[v0] Trying direct client creation as last resort...")
-      const directUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const directKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      // Use hardcoded values as fallback if env vars not available
+      const directUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://fvxkywczuqincnjilgzd.supabase.co"
+      const directKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2eGt5d2N6dXFpbmNuamlsZ3pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNDgwNTYsImV4cCI6MjA3NzkyNDA1Nn0.jBvLDl0T2u-slvf4Uu4oZj7yRWMQCKmiln0mXRU0q54"
       
-      if (!directUrl || !directKey) {
-        console.error("[v0] Direct client: Missing environment variables", {
-          hasUrl: !!directUrl,
-          hasKey: !!directKey,
-        })
-        lastError = lastError || "Missing Supabase environment variables"
-      } else {
-        console.log("[v0] Direct client: Environment variables available, creating client...")
-        const directClient = createSupabaseClient(directUrl, directKey, {
-          auth: { persistSession: false, autoRefreshToken: false },
-        })
-        
-        let query = directClient
-          .from("funds")
-          .select("*")
-          .eq("is_active", true)
-          .order("total_raised", { ascending: false })
+      console.log("[v0] Direct client: Using URL:", directUrl.substring(0, 30) + "...")
+      console.log("[v0] Direct client: Key available:", !!directKey)
+      
+      const directClient = createSupabaseClient(directUrl, directKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      
+      let query = directClient
+        .from("funds")
+        .select("*")
+        .eq("is_active", true)
+        .order("total_raised", { ascending: false })
 
-        if (category && category !== "all") {
-          query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
-        }
-        
-        const { data: directData, error: directError } = await query
-        
-        if (directError) {
-          console.error("[v0] Direct client error:", directError)
-          console.error("[v0] Error code:", directError.code)
-          console.error("[v0] Error message:", directError.message)
-          lastError = lastError || directError.message || `Error code: ${directError.code}`
-        } else if (directData) {
-          if (directData.length > 0) {
-            console.log("[v0] Funds loaded via direct client:", directData.length)
-            funds = directData
-          } else {
-            console.warn("[v0] Direct client returned empty array")
-            lastError = lastError || "No funds found in database"
-          }
+      if (category && category !== "all") {
+        query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
+      }
+      
+      const { data: directData, error: directError } = await query
+      
+      if (directError) {
+        console.error("[v0] Direct client error:", directError)
+        console.error("[v0] Error code:", directError.code)
+        console.error("[v0] Error message:", directError.message)
+        lastError = lastError || directError.message || `Error code: ${directError.code}`
+      } else if (directData) {
+        if (directData.length > 0) {
+          console.log("[v0] Funds loaded via direct client:", directData.length)
+          funds = directData
+        } else {
+          console.warn("[v0] Direct client returned empty array")
+          lastError = lastError || "No funds found in database"
         }
       }
     } catch (directError: any) {

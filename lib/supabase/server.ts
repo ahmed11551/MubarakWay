@@ -3,8 +3,21 @@ import { cookies } from "next/headers"
 import { logError } from "@/lib/error-handler"
 
 export async function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // Try to get env vars from multiple sources
+  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Fallback: try to get from Vercel env vars if not available
+  if (!supabaseUrl) {
+    supabaseUrl = process.env.VERCEL_ENV === "production" 
+      ? process.env.NEXT_PUBLIC_SUPABASE_URL 
+      : process.env.NEXT_PUBLIC_SUPABASE_URL
+  }
+  if (!supabaseAnonKey) {
+    supabaseAnonKey = process.env.VERCEL_ENV === "production"
+      ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     // Log detailed information for debugging
@@ -14,6 +27,8 @@ export async function createClient() {
       urlValue: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : "undefined",
       keyValue: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "undefined",
       allEnvKeys: Object.keys(process.env).filter(k => k.includes("SUPABASE")),
+      vercelEnv: process.env.VERCEL_ENV,
+      nodeEnv: process.env.NODE_ENV,
     })
     const error = new Error("Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.")
     logError(error, {
