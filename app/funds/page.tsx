@@ -26,15 +26,26 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function FundsPage() {
-  // Fetch funds from API (bot.e-replika.ru) or Supabase fallback with error handling
+  // Fetch funds from Supabase with error handling
   let result
   try {
     result = await getFunds()
+    // Debug logging
+    console.log("[FundsPage] getFunds result:", {
+      fundsCount: result.funds?.length || 0,
+      error: result.error,
+      funds: result.funds?.map((f: any) => ({ id: f.id, name: f.name })),
+    })
   } catch (error) {
-    console.error("Error fetching funds:", error)
-    result = { funds: [], error: "Failed to load funds" }
+    console.error("[FundsPage] Error fetching funds:", error)
+    result = { funds: [], error: `Failed to load funds: ${error instanceof Error ? error.message : "Unknown error"}` }
   }
   const funds = result.funds || []
+  
+  // Additional debug
+  if (funds.length === 0) {
+    console.warn("[FundsPage] No funds to display. Result:", result)
+  }
 
   const categories = [
     { value: "all", label: "Все фонды" },

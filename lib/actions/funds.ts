@@ -25,14 +25,21 @@ export async function getFunds(category?: string) {
 
     if (error) {
       console.error("[v0] Get funds error:", error)
-      return { funds: [], error: "Failed to fetch funds" }
+      console.error("[v0] Error details:", JSON.stringify(error, null, 2))
+      return { funds: [], error: `Failed to fetch funds: ${error.message || "Unknown error"}` }
     }
+
+    // Debug logging
+    console.log("[v0] Funds query result:", {
+      count: funds?.length || 0,
+      funds: funds?.map((f: any) => ({ id: f.id, name: f.name, is_active: f.is_active, category: f.category })),
+    })
 
     // If no funds found, return empty array
     // The Insan fund should be created via migration script
     if (!funds || funds.length === 0) {
       console.warn("[v0] No funds found in database. Please run the migration script to create the Insan fund.")
-      return { funds: [] }
+      return { funds: [], error: "No active funds found in database" }
     }
 
     // Ensure we have at least the Insan fund
