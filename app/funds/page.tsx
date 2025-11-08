@@ -86,30 +86,36 @@ export default async function FundsPage() {
               <Card>
                 <CardContent className="pt-6 pb-6 text-center">
                   <p className="text-muted-foreground">Фонды не найдены</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {result.error || "Попробуйте обновить страницу"}
+                  </p>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
 
-          {categories.slice(1).map((cat) => (
-            <TabsContent key={cat.value} value={cat.value} className="space-y-4 mt-4">
-              {funds
-                .filter((f) => f.category === cat.value)
-                .length > 0 ? (
-                funds
-                  .filter((f) => f.category === cat.value)
-                  .map((fund) => (
+          {categories.slice(1).map((cat) => {
+            // For each category, show funds that match OR the Insan fund (general category)
+            const filteredFunds = funds.filter(
+              (f) => f.category === cat.value || f.id === "00000000-0000-0000-0000-000000000001"
+            )
+            
+            return (
+              <TabsContent key={cat.value} value={cat.value} className="space-y-4 mt-4">
+                {filteredFunds.length > 0 ? (
+                  filteredFunds.map((fund) => (
                     <FundCard key={fund.id} fund={fund} />
                   ))
-              ) : (
-                <Card>
-                  <CardContent className="pt-6 pb-6 text-center">
-                    <p className="text-muted-foreground">Фонды в категории "{cat.label}" не найдены</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          ))}
+                ) : (
+                  <Card>
+                    <CardContent className="pt-6 pb-6 text-center">
+                      <p className="text-muted-foreground">Фонды в категории "{cat.label}" не найдены</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            )
+          })}
           </Tabs>
         </div>
       </main>
