@@ -49,6 +49,7 @@ export async function getFunds(category?: string) {
       console.error("[v0] Regular client error:", error)
       console.error("[v0] Error code:", error.code)
       console.error("[v0] Error message:", error.message)
+      console.error("[v0] Error details:", JSON.stringify(error, null, 2))
       lastError = error.message || `Error code: ${error.code}`
     } else if (data) {
       if (data.length > 0) {
@@ -61,6 +62,8 @@ export async function getFunds(category?: string) {
     }
   } catch (regularError: any) {
     console.error("[v0] Regular client exception:", regularError)
+    console.error("[v0] Exception message:", regularError?.message)
+    console.error("[v0] Exception stack:", regularError?.stack)
     // If it's an env vars error, try public client
     if (regularError?.message?.includes("Missing Supabase") || regularError?.message?.includes("environment variables")) {
       console.warn("[v0] Regular client env vars issue, trying public client...")
@@ -127,6 +130,7 @@ export async function getFunds(category?: string) {
         })
         lastError = lastError || "Missing Supabase environment variables"
       } else {
+        console.log("[v0] Direct client: Environment variables available, creating client...")
         const directClient = createSupabaseClient(directUrl, directKey, {
           auth: { persistSession: false, autoRefreshToken: false },
         })
