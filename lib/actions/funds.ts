@@ -18,79 +18,92 @@ function createPublicClient() {
 }
 
 export async function getFunds(category?: string) {
-  try {
-    // For public data (funds), use simple client without cookies
-    // This avoids issues with cookies() in Server Components during static generation
-    const supabase = createPublicClient()
+  // Try multiple approaches to ensure we get the funds
+  let funds: any[] = []
+  let lastError: string | null = null
 
-    // Get the main fund "Инсан" from Supabase
-    // This is the primary fund - all campaigns and programs are linked to it
+  // Approach 1: Try public client first (works for static generation)
+  try {
+    const supabase = createPublicClient()
     let query = supabase
       .from("funds")
       .select("*")
       .eq("is_active", true)
       .order("total_raised", { ascending: false })
 
-    // Filter by category if specified (but still return Insan fund as it's general)
     if (category && category !== "all") {
-      // Always include the main Insan fund (general category)
-      // Use or() with proper syntax: field.eq.value,field2.eq.value2
       query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
     }
 
-    const { data: funds, error } = await query
+    const { data, error } = await query
 
-    // If error, log detailed information
-    if (error) {
-      console.error("[v0] Get funds error:", error)
-      console.error("[v0] Error code:", error.code)
-      console.error("[v0] Error message:", error.message)
-      console.error("[v0] Error details:", JSON.stringify(error, null, 2))
-      
-      // Check if it's an RLS policy issue
-      if (error.code === 'PGRST116' || error.message?.includes('permission denied') || error.message?.includes('RLS')) {
-        console.error("[v0] RLS policy issue detected")
-        // Try a simpler query to test RLS
-        const testQuery = supabase
-          .from("funds")
-          .select("id, name, is_active")
-          .eq("is_active", true)
-          .limit(1)
-        const { data: testData, error: testError } = await testQuery
-        console.log("[v0] Test query result:", { 
-          data: testData, 
-          error: testError,
-          count: testData?.length || 0 
-        })
-      }
-      
-      return { funds: [], error: `Failed to fetch funds: ${error.message || "Unknown error"}` }
+    if (!error && data && data.length > 0) {
+      console.log("[v0] Funds loaded successfully via public client:", data.length)
+      funds = data
+    } else if (error) {
+      console.warn("[v0] Public client error:", error.message)
+      lastError = error.message
+    } else if (data && data.length === 0) {
+      console.warn("[v0] Public client returned empty array")
+      lastError = "No funds found"
     }
-
-    // Debug logging
-    console.log("[v0] Funds query result:", {
-      count: funds?.length || 0,
-      funds: funds?.map((f: any) => ({ id: f.id, name: f.name, is_active: f.is_active, category: f.category })),
-    })
-
-    // If no funds found, return empty array
-    // The Insan fund should be created via migration script
-    if (!funds || funds.length === 0) {
-      console.warn("[v0] No funds found in database. Please run the migration script to create the Insan fund.")
-      return { funds: [], error: "No active funds found in database" }
-    }
-
-    // Ensure we have at least the Insan fund
-    const insanFund = funds.find((f: any) => f.id === "00000000-0000-0000-0000-000000000001")
-    if (!insanFund) {
-      console.warn("[v0] Insan fund not found. Please run the migration script.")
-    }
-
-    return { funds: funds || [] }
-  } catch (error) {
-    console.error("[v0] Get funds exception:", error)
-    return { funds: [], error: "Failed to fetch funds" }
+  } catch (publicError: any) {
+    console.warn("[v0] Public client exception:", publicError?.message)
+    lastError = publicError?.message || "Public client failed"
   }
+
+  // Approach 2: Try regular client as fallback (only if first approach failed)
+  if (funds.length === 0) {
+    try {
+      console.log("[v0] Trying regular client as fallback...")
+      const fallbackSupabase = await createClient()
+      let query = fallbackSupabase
+        .from("funds")
+        .select("*")
+        .eq("is_active", true)
+        .order("total_raised", { ascending: false })
+
+      if (category && category !== "all") {
+        query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
+      }
+
+      const { data, error } = await query
+
+      if (!error && data && data.length > 0) {
+        console.log("[v0] Funds loaded successfully via regular client:", data.length)
+        funds = data
+      } else if (error) {
+        console.warn("[v0] Regular client error:", error.message)
+        lastError = lastError || error.message
+      } else if (data && data.length === 0) {
+        console.warn("[v0] Regular client returned empty array")
+        lastError = lastError || "No funds found"
+      }
+    } catch (regularError: any) {
+      console.warn("[v0] Regular client exception:", regularError?.message)
+      lastError = lastError || regularError?.message || "Regular client failed"
+    }
+  }
+
+  // If both approaches failed, return error
+  if (funds.length === 0) {
+    console.error("[v0] All approaches failed. Last error:", lastError)
+    return { funds: [], error: `Failed to fetch funds: ${lastError || "Unknown error"}` }
+  }
+
+  // Debug logging
+  console.log("[v0] Funds query result:", {
+    count: funds?.length || 0,
+    funds: funds?.map((f: any) => ({ id: f.id, name: f.name, is_active: f.is_active, category: f.category })),
+  })
+
+  // Ensure we have at least the Insan fund
+  const insanFund = funds.find((f: any) => f.id === "00000000-0000-0000-0000-000000000001")
+  if (!insanFund) {
+    console.warn("[v0] Insan fund not found. Please run the migration script.")
+  }
+
+  return { funds: funds || [] }
 }
 
 export async function getFundById(id: string) {
