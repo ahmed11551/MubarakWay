@@ -28,111 +28,139 @@ export async function getFunds(category?: string) {
   let funds: any[] = []
   let lastError: string | null = null
 
-  // Approach 1: Try public client first (works for static generation)
+  // Approach 1: Try regular client first (most reliable on Vercel)
+  // This uses cookies and has better access to env vars
   try {
-    const supabase = createPublicClient()
-    
-    if (!supabase) {
-      console.warn("[v0] Public client not available (missing env vars), skipping to fallback")
-      lastError = "Public client not configured"
-    } else {
-      let query = supabase
-        .from("funds")
-        .select("*")
-        .eq("is_active", true)
-        .order("total_raised", { ascending: false })
+    console.log("[v0] Trying regular client first...")
+    const supabase = await createClient()
+    let query = supabase
+      .from("funds")
+      .select("*")
+      .eq("is_active", true)
+      .order("total_raised", { ascending: false })
 
-      if (category && category !== "all") {
-        query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
-      }
+    if (category && category !== "all") {
+      query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
+    }
 
-      const { data, error } = await query
+    const { data, error } = await query
 
-      if (error) {
-        console.error("[v0] Public client error:", error)
-        console.error("[v0] Error code:", error.code)
-        console.error("[v0] Error message:", error.message)
-        console.error("[v0] Error details:", JSON.stringify(error, null, 2))
-        lastError = error.message || `Error code: ${error.code}`
-      } else if (data) {
-        if (data.length > 0) {
-          console.log("[v0] Funds loaded successfully via public client:", data.length)
-          funds = data
-        } else {
-          console.warn("[v0] Public client returned empty array")
-          lastError = "No funds found in database"
-        }
+    if (error) {
+      console.error("[v0] Regular client error:", error)
+      console.error("[v0] Error code:", error.code)
+      console.error("[v0] Error message:", error.message)
+      lastError = error.message || `Error code: ${error.code}`
+    } else if (data) {
+      if (data.length > 0) {
+        console.log("[v0] Funds loaded successfully via regular client:", data.length)
+        funds = data
+      } else {
+        console.warn("[v0] Regular client returned empty array")
+        lastError = "No funds found in database"
       }
     }
-  } catch (publicError: any) {
-    console.error("[v0] Public client exception:", publicError)
-    lastError = publicError?.message || "Public client failed"
+  } catch (regularError: any) {
+    console.error("[v0] Regular client exception:", regularError)
+    // If it's an env vars error, try public client
+    if (regularError?.message?.includes("Missing Supabase") || regularError?.message?.includes("environment variables")) {
+      console.warn("[v0] Regular client env vars issue, trying public client...")
+      lastError = regularError?.message || "Regular client failed"
+    } else {
+      lastError = regularError?.message || "Regular client failed"
+    }
   }
 
-  // Approach 2: Try regular client as fallback (only if first approach failed)
+  // Approach 2: Try public client as fallback (only if first approach failed)
   if (funds.length === 0) {
     try {
-      console.log("[v0] Trying regular client as fallback...")
-      const fallbackSupabase = await createClient()
-      let query = fallbackSupabase
-        .from("funds")
-        .select("*")
-        .eq("is_active", true)
-        .order("total_raised", { ascending: false })
-
-      if (category && category !== "all") {
-        query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error("[v0] Regular client error:", error)
-        console.error("[v0] Error code:", error.code)
-        console.error("[v0] Error message:", error.message)
-        lastError = lastError || error.message || `Error code: ${error.code}`
-      } else if (data) {
-        if (data.length > 0) {
-          console.log("[v0] Funds loaded successfully via regular client:", data.length)
-          funds = data
-        } else {
-          console.warn("[v0] Regular client returned empty array")
-          lastError = lastError || "No funds found in database"
-        }
-      }
-    } catch (regularError: any) {
-      console.error("[v0] Regular client exception:", regularError)
-      // Если это ошибка с переменными окружения, попробуем создать простой клиент напрямую
-      if (regularError?.message?.includes("Missing Supabase") || regularError?.message?.includes("environment variables")) {
-        console.warn("[v0] Environment variables issue, trying direct client creation...")
-        try {
-          const directUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-          const directKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-          if (directUrl && directKey) {
-            const directClient = createSupabaseClient(directUrl, directKey, {
-              auth: { persistSession: false, autoRefreshToken: false },
-            })
-            const { data: directData, error: directError } = await directClient
-              .from("funds")
-              .select("*")
-              .eq("is_active", true)
-              .order("total_raised", { ascending: false })
-            
-            if (!directError && directData && directData.length > 0) {
-              console.log("[v0] Funds loaded via direct client:", directData.length)
-              funds = directData
-            } else if (directError) {
-              console.error("[v0] Direct client error:", directError)
-              lastError = lastError || directError.message
-            }
-          }
-        } catch (directError: any) {
-          console.error("[v0] Direct client exception:", directError)
-          lastError = lastError || directError?.message || "All approaches failed"
-        }
+      console.log("[v0] Trying public client as fallback...")
+      const supabase = createPublicClient()
+      
+      if (!supabase) {
+        console.warn("[v0] Public client not available (missing env vars)")
+        lastError = lastError || "Public client not configured"
       } else {
-        lastError = lastError || regularError?.message || "Regular client failed"
+        let query = supabase
+          .from("funds")
+          .select("*")
+          .eq("is_active", true)
+          .order("total_raised", { ascending: false })
+
+        if (category && category !== "all") {
+          query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
+        }
+
+        const { data, error } = await query
+
+        if (error) {
+          console.error("[v0] Public client error:", error)
+          console.error("[v0] Error code:", error.code)
+          console.error("[v0] Error message:", error.message)
+          lastError = lastError || error.message || `Error code: ${error.code}`
+        } else if (data) {
+          if (data.length > 0) {
+            console.log("[v0] Funds loaded successfully via public client:", data.length)
+            funds = data
+          } else {
+            console.warn("[v0] Public client returned empty array")
+            lastError = lastError || "No funds found in database"
+          }
+        }
       }
+    } catch (publicError: any) {
+      console.error("[v0] Public client exception:", publicError)
+      lastError = lastError || publicError?.message || "Public client failed"
+    }
+  }
+
+  // Approach 3: Try direct client creation as last resort (only if both approaches failed)
+  if (funds.length === 0) {
+    try {
+      console.log("[v0] Trying direct client creation as last resort...")
+      const directUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const directKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      
+      if (!directUrl || !directKey) {
+        console.error("[v0] Direct client: Missing environment variables", {
+          hasUrl: !!directUrl,
+          hasKey: !!directKey,
+        })
+        lastError = lastError || "Missing Supabase environment variables"
+      } else {
+        const directClient = createSupabaseClient(directUrl, directKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        })
+        
+        let query = directClient
+          .from("funds")
+          .select("*")
+          .eq("is_active", true)
+          .order("total_raised", { ascending: false })
+
+        if (category && category !== "all") {
+          query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
+        }
+        
+        const { data: directData, error: directError } = await query
+        
+        if (directError) {
+          console.error("[v0] Direct client error:", directError)
+          console.error("[v0] Error code:", directError.code)
+          console.error("[v0] Error message:", directError.message)
+          lastError = lastError || directError.message || `Error code: ${directError.code}`
+        } else if (directData) {
+          if (directData.length > 0) {
+            console.log("[v0] Funds loaded via direct client:", directData.length)
+            funds = directData
+          } else {
+            console.warn("[v0] Direct client returned empty array")
+            lastError = lastError || "No funds found in database"
+          }
+        }
+      }
+    } catch (directError: any) {
+      console.error("[v0] Direct client exception:", directError)
+      lastError = lastError || directError?.message || "All approaches failed"
     }
   }
 
