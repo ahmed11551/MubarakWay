@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
           env: {
             hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
             hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20) || "missing",
+            urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) || "missing",
+            keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 30) || "missing",
           },
         })
       } catch (debugError: any) {
