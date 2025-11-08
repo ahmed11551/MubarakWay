@@ -86,26 +86,62 @@ export async function getFunds(category?: string) {
 
       const { data, error } = await query
 
-      if (!error && data && data.length > 0) {
-        console.log("[v0] Funds loaded successfully via regular client:", data.length)
-        funds = data
-      } else if (error) {
-        console.warn("[v0] Regular client error:", error.message)
-        lastError = lastError || error.message
-      } else if (data && data.length === 0) {
-        console.warn("[v0] Regular client returned empty array")
-        lastError = lastError || "No funds found"
+      if (error) {
+        console.error("[v0] Regular client error:", error)
+        console.error("[v0] Error code:", error.code)
+        console.error("[v0] Error message:", error.message)
+        lastError = lastError || error.message || `Error code: ${error.code}`
+      } else if (data) {
+        if (data.length > 0) {
+          console.log("[v0] Funds loaded successfully via regular client:", data.length)
+          funds = data
+        } else {
+          console.warn("[v0] Regular client returned empty array")
+          lastError = lastError || "No funds found in database"
+        }
       }
     } catch (regularError: any) {
-      console.warn("[v0] Regular client exception:", regularError?.message)
-      lastError = lastError || regularError?.message || "Regular client failed"
+      console.error("[v0] Regular client exception:", regularError)
+      // Если это ошибка с переменными окружения, попробуем создать простой клиент напрямую
+      if (regularError?.message?.includes("Missing Supabase") || regularError?.message?.includes("environment variables")) {
+        console.warn("[v0] Environment variables issue, trying direct client creation...")
+        try {
+          const directUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+          const directKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          if (directUrl && directKey) {
+            const directClient = createSupabaseClient(directUrl, directKey, {
+              auth: { persistSession: false, autoRefreshToken: false },
+            })
+            const { data: directData, error: directError } = await directClient
+              .from("funds")
+              .select("*")
+              .eq("is_active", true)
+              .order("total_raised", { ascending: false })
+            
+            if (!directError && directData && directData.length > 0) {
+              console.log("[v0] Funds loaded via direct client:", directData.length)
+              funds = directData
+            } else if (directError) {
+              console.error("[v0] Direct client error:", directError)
+              lastError = lastError || directError.message
+            }
+          }
+        } catch (directError: any) {
+          console.error("[v0] Direct client exception:", directError)
+          lastError = lastError || directError?.message || "All approaches failed"
+        }
+      } else {
+        lastError = lastError || regularError?.message || "Regular client failed"
+      }
     }
   }
 
   // If both approaches failed, return error
   if (funds.length === 0) {
     console.error("[v0] All approaches failed. Last error:", lastError)
-    return { funds: [], error: `Failed to fetch funds: ${lastError || "Unknown error"}` }
+    // Не возвращаем ошибку, а возвращаем пустой массив с информацией
+    // чтобы страница могла отобразиться
+    return { funds: [], error: lastError ? `Failed to fetch funds: ${lastError}` : "No funds found" }
   }
 
   // Debug logging
@@ -117,7 +153,8 @@ export async function getFunds(category?: string) {
   // Ensure we have at least the Insan fund
   const insanFund = funds.find((f: any) => f.id === "00000000-0000-0000-0000-000000000001")
   if (!insanFund) {
-    console.warn("[v0] Insan fund not found. Please run the migration script.")
+    console.warn("[v0] Insan fund not found in results, but continuing...")
+    // Не критично, просто предупреждение
   }
 
   return { funds: funds || [] }
