@@ -240,38 +240,13 @@ export async function approveCampaign(campaignId: string) {
       return { error: "Failed to approve campaign" }
     }
 
-    // Send notifications to creator
-    if (campaignBefore?.profiles) {
-      // Send email notification
-      if (campaignBefore.profiles.email) {
-        try {
-          await sendEmail({
-            to: campaignBefore.profiles.email,
-            subject: `Кампания "${campaignBefore.title}" одобрена`,
-            html: getCampaignApprovalEmail({
-              title: campaignBefore.title,
-              approved: true,
-            }),
-          })
-        } catch (emailError) {
-          console.error("[v0] Failed to send approval email:", emailError)
-        }
-      }
-
-      // Send Telegram notification
-      if (campaignBefore.profiles.telegram_id) {
-        try {
-          await sendTelegramMessage(
-            campaignBefore.profiles.telegram_id,
-            getCampaignModerationNotificationMessage({
-              title: campaignBefore.title,
-              approved: true,
-            })
-          )
-        } catch (telegramError) {
-          console.error("[v0] Failed to send approval telegram:", telegramError)
-        }
-      }
+    // Send notifications to creator using new notification system
+    try {
+      const { notifyCampaignStatusChange } = await import("@/lib/notifications")
+      await notifyCampaignStatusChange(campaignId, "approved")
+    } catch (notificationError) {
+      console.error("[v0] Failed to send approval notification:", notificationError)
+      // Don't fail the approval if notification fails
     }
 
     revalidatePath("/admin")
@@ -284,7 +259,7 @@ export async function approveCampaign(campaignId: string) {
   }
 }
 
-export async function rejectCampaign(campaignId: string) {
+export async function rejectCampaign(campaignId: string, reason?: string) {
   const supabase = await createClient()
 
   const {
@@ -323,38 +298,13 @@ export async function rejectCampaign(campaignId: string) {
       return { error: "Failed to reject campaign" }
     }
 
-    // Send notifications to creator
-    if (campaignBefore?.profiles) {
-      // Send email notification
-      if (campaignBefore.profiles.email) {
-        try {
-          await sendEmail({
-            to: campaignBefore.profiles.email,
-            subject: `Кампания "${campaignBefore.title}" отклонена`,
-            html: getCampaignApprovalEmail({
-              title: campaignBefore.title,
-              approved: false,
-            }),
-          })
-        } catch (emailError) {
-          console.error("[v0] Failed to send rejection email:", emailError)
-        }
-      }
-
-      // Send Telegram notification
-      if (campaignBefore.profiles.telegram_id) {
-        try {
-          await sendTelegramMessage(
-            campaignBefore.profiles.telegram_id,
-            getCampaignModerationNotificationMessage({
-              title: campaignBefore.title,
-              approved: false,
-            })
-          )
-        } catch (telegramError) {
-          console.error("[v0] Failed to send rejection telegram:", telegramError)
-        }
-      }
+    // Send notifications to creator using new notification system
+    try {
+      const { notifyCampaignStatusChange } = await import("@/lib/notifications")
+      await notifyCampaignStatusChange(campaignId, "rejected", reason)
+    } catch (notificationError) {
+      console.error("[v0] Failed to send rejection notification:", notificationError)
+      // Don't fail the rejection if notification fails
     }
 
     revalidatePath("/admin")

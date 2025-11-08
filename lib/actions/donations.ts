@@ -74,67 +74,27 @@ export async function createDonation(input: DonationInput) {
       if (campaignError) {
         console.error("[v0] Campaign update error:", campaignError)
       } else {
-        // Send notification to campaign creator
+        // Send notification to campaign creator using new notification system
         try {
-          const { data: campaign } = await supabase
-            .from("campaigns")
-            .select(`
-              title,
-              creator_id,
-              profiles:creator_id (email, display_name)
-            `)
-            .eq("id", input.campaignId)
+          const { data: donorProfile } = await supabase
+            .from("profiles")
+            .select("display_name")
+            .eq("id", user.id)
             .single()
 
-          if (campaign?.profiles) {
-            const { data: donorProfile } = await supabase
-              .from("profiles")
-              .select("display_name")
-              .eq("id", user.id)
-              .single()
+          const donorName = donorProfile?.display_name || "Пользователь"
 
-            const donorName = donorProfile?.display_name || "Пользователь"
-
-            // Send email notification
-            if (campaign.profiles.email) {
-              try {
-                await sendEmail({
-                  to: campaign.profiles.email,
-                  subject: `Новое пожертвование в вашу кампанию "${campaign.title}"`,
-                  html: getCampaignDonationNotificationEmail({
-                    title: campaign.title,
-                    donorName,
-                    amount: input.amount,
-                    currency: input.currency,
-                    isAnonymous: input.isAnonymous,
-                  }),
-                })
-              } catch (emailError) {
-                console.error("[v0] Failed to send campaign notification email:", emailError)
-              }
-            }
-
-            // Send Telegram notification if user has telegram_id
-            if (campaign.profiles.telegram_id) {
-              try {
-                await sendTelegramMessage(
-                  campaign.profiles.telegram_id,
-                  getCampaignDonationNotificationMessage({
-                    title: campaign.title,
-                    donorName,
-                    amount: input.amount,
-                    currency: input.currency,
-                    isAnonymous: input.isAnonymous,
-                  })
-                )
-              } catch (telegramError) {
-                console.error("[v0] Failed to send campaign notification telegram:", telegramError)
-              }
-            }
-          }
-        } catch (emailError) {
-          console.error("[v0] Failed to send campaign notification email:", emailError)
-          // Don't fail the donation if email fails
+          // Use new notification system
+          const { notifyCampaignCreator } = await import("@/lib/notifications")
+          await notifyCampaignCreator(input.campaignId, {
+            amount: input.amount,
+            currency: input.currency,
+            donorName: input.isAnonymous ? undefined : donorName,
+            isAnonymous: input.isAnonymous,
+          })
+        } catch (notificationError) {
+          console.error("[v0] Failed to send campaign notification:", notificationError)
+          // Don't fail the donation if notification fails
         }
       }
     }
