@@ -1,7 +1,7 @@
 -- Cleanup funds: Deactivate all funds except "Инсан"
 -- This script ensures only the main "Инсан" fund is active
 
--- First, ensure the Insan fund exists
+-- Step 1: Create/Update the Insan fund (ensure it exists and is active)
 INSERT INTO public.funds (
   id,
   name,
@@ -48,7 +48,7 @@ ON CONFLICT (id) DO UPDATE SET
   contact_email = EXCLUDED.contact_email,
   updated_at = NOW();
 
--- Deactivate all other funds (soft delete - set is_active = false)
+-- Step 2: Deactivate all other funds (soft delete - set is_active = false)
 -- This preserves data but hides them from the UI
 UPDATE public.funds
 SET is_active = false,
@@ -56,12 +56,7 @@ SET is_active = false,
 WHERE id != '00000000-0000-0000-0000-000000000001'::uuid
   AND is_active = true;
 
--- Optional: If you want to completely delete other funds (uncomment if needed)
--- WARNING: This will permanently delete all funds except Insan
--- Make sure to update any donations/campaigns that reference these funds first!
--- DELETE FROM public.funds
--- WHERE id != '00000000-0000-0000-0000-000000000001'::uuid;
-
--- Verify: Should return only 1 fund (Insan)
--- SELECT id, name, is_active FROM public.funds WHERE is_active = true;
-
+-- Step 3: Verify - Should return only 1 fund (Insan)
+SELECT id, name, is_active, category 
+FROM public.funds 
+WHERE is_active = true;
