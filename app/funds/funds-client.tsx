@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { Search, CheckCircle, Users, TrendingUp } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { SkeletonFundCard } from "@/components/skeleton-fund-card"
+import { useDebounce } from "@/lib/hooks/use-debounce"
 
 interface Fund {
   id: string
