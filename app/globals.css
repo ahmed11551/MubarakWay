@@ -132,6 +132,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 }
 
@@ -262,6 +263,16 @@
     min-height: 44px;
     min-width: 44px;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fix for bottom navigation - ensure clicks work immediately */
+  nav[class*="fixed"][class*="bottom-0"] button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: auto !important;
   }
 
   /* Improved tap feedback */
