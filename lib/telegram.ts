@@ -55,179 +55,75 @@ export function initTelegramApp() {
 
 /**
  * Setup scroll prevention to avoid WebApp closing on scroll
+ * Simplified version for better performance
  */
 function setupScrollPrevention(tg: any) {
   // Add CSS class to html for Telegram WebApp
   document.documentElement.classList.add("telegram-webapp")
 
-  // Set up touch event handlers to prevent pull-to-close
+  // Minimal touch handling - only block obvious pull-to-close gestures
   let touchStartY = 0
-  let touchStartX = 0
-  let scrollContainerElement: HTMLElement | null = null
-  let isVerticalScroll = false
-  let touchStartTime = 0
-  let lastTouchY = 0
+  let initialScrollTop = 0
 
   const handleTouchStart = (e: TouchEvent) => {
+    if (e.touches.length !== 1) return
     touchStartY = e.touches[0].clientY
-    touchStartX = e.touches[0].clientX
-    lastTouchY = touchStartY
-    touchStartTime = Date.now()
-    
-    // Find the scrollable container (closest scrollable parent)
-    let target = e.target as HTMLElement
-    scrollContainerElement = null
-    
-    while (target && target !== document.body && target !== document.documentElement) {
-      const style = window.getComputedStyle(target)
-      const overflowY = style.overflowY || style.overflow
-      const hasScroll = overflowY === "auto" || overflowY === "scroll"
-      
-      if (hasScroll || target.scrollHeight > target.clientHeight) {
-        scrollContainerElement = target
-        break
-      }
-      
-      target = target.parentElement as HTMLElement
-    }
-    
-    // If no scrollable container found, check if body or window is scrollable
-    if (!scrollContainerElement) {
-      // Check if window/document is scrollable
-      const docHeight = document.documentElement.scrollHeight
-      const winHeight = window.innerHeight
-      
-      if (docHeight > winHeight) {
-        // Window is scrollable, use documentElement
-        scrollContainerElement = document.documentElement
-      } else {
-        // Check body
-        const bodyStyle = window.getComputedStyle(document.body)
-        if (document.body.scrollHeight > document.body.clientHeight) {
-          scrollContainerElement = document.body
-        } else {
-          // Use document element as fallback
-          scrollContainerElement = document.documentElement
-        }
-      }
-    }
+    initialScrollTop = window.pageYOffset || document.documentElement.scrollTop
   }
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (!scrollContainerElement) return
+    if (e.touches.length !== 1) return
 
     const touchY = e.touches[0].clientY
-    const touchX = e.touches[0].clientX
     const deltaY = touchY - touchStartY
-    const deltaX = Math.abs(touchX - touchStartX)
-    const timeDelta = Date.now() - touchStartTime
-    const velocity = Math.abs(touchY - lastTouchY) / (timeDelta || 1) // pixels per ms
-    lastTouchY = touchY
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop
+    const scrollHeight = document.documentElement.scrollHeight
+    const clientHeight = window.innerHeight
     
-    // Determine if this is a vertical scroll gesture
-    // Check both distance and that it's more vertical than horizontal
-    isVerticalScroll = Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 3
+    // Check if user is actually scrolling (scroll position changed)
+    const isUserScrolling = Math.abs(currentScrollTop - initialScrollTop) > 3
     
-    if (isVerticalScroll) {
-      // Try to find the actual scrollable element
-      let container = scrollContainerElement
-      
-      // If container is body or documentElement, check window scroll
-      if (container === document.body || container === document.documentElement) {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-        const scrollHeight = document.documentElement.scrollHeight
-        const clientHeight = window.innerHeight
-        
-        const isAtTop = scrollTop <= 5 // Increased threshold for better detection
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5
-        const isContentShort = scrollHeight <= clientHeight
-        
-        // If content is shorter than viewport, prevent all pull-to-close gestures
-        if (isContentShort) {
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-        
-        // Only prevent pull-to-close when at top and trying to scroll DOWN (pull down gesture)
-        // Don't block normal scrolling UP when at top
-        if (isAtTop && deltaY > 10) { // Only block significant pull-down gestures
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-        
-        // Only prevent pull-to-close when at bottom and trying to scroll UP (pull up gesture)
-        // Don't block normal scrolling DOWN when at bottom
-        if (isAtBottom && deltaY < -10) { // Only block significant pull-up gestures
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-        
-        // Allow normal scrolling in the middle - don't block it!
-        // Only block if it's a very fast swipe that might trigger pull-to-close
-        if (!isAtTop && !isAtBottom && velocity > 2) {
-          // Only block very fast swipes that might be pull-to-close gestures
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-      } else {
-        // For other scrollable containers
-        const scrollTop = container.scrollTop
-        const scrollHeight = container.scrollHeight
-        const clientHeight = container.clientHeight
-        
-        const isAtTop = scrollTop <= 5
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5
-        const isContentShort = scrollHeight <= clientHeight
-        
-        // If content is shorter than container, prevent all pull-to-close gestures
-        if (isContentShort) {
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-        
-        // Only prevent pull-to-close when at top and trying to scroll DOWN
-        if (isAtTop && deltaY > 10) {
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-        
-        // Only prevent pull-to-close when at bottom and trying to scroll UP
-        if (isAtBottom && deltaY < -10) {
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-        
-        // Allow normal scrolling in the middle
-        if (!isAtTop && !isAtBottom && velocity > 2) {
-          e.preventDefault()
-          e.stopPropagation()
-          return false
-        }
-      }
+    // If user is scrolling, don't block anything - allow normal scroll
+    if (isUserScrolling) {
+      return
+    }
+    
+    // Only block pull-to-close gestures when:
+    // 1. Content is shorter than viewport
+    // 2. At top and pulling down significantly (> 40px)
+    // 3. At bottom and pulling up significantly (< -40px)
+    const isAtTop = currentScrollTop <= 5
+    const isAtBottom = currentScrollTop + clientHeight >= scrollHeight - 5
+    
+    if (scrollHeight <= clientHeight && Math.abs(deltaY) > 10) {
+      // Short content - prevent all pull gestures
+      e.preventDefault()
+      return false
+    }
+    
+    if (isAtTop && deltaY > 40) {
+      // At top, pulling down - block pull-to-close
+      e.preventDefault()
+      return false
+    }
+    
+    if (isAtBottom && deltaY < -40) {
+      // At bottom, pulling up - block pull-to-close
+      e.preventDefault()
+      return false
     }
   }
 
   const handleTouchEnd = () => {
-    // Reset state
-    setTimeout(() => {
-      scrollContainerElement = null
-      isVerticalScroll = false
-    }, 50)
+    touchStartY = 0
+    initialScrollTop = 0
   }
 
-  // Add event listeners
-  // Use capture phase to catch events early, but only for touchstart
-  // For touchmove, use non-capture to allow normal scroll first
-  document.addEventListener("touchstart", handleTouchStart, { passive: true, capture: false })
-  document.addEventListener("touchmove", handleTouchMove, { passive: false, capture: false })
-  document.addEventListener("touchend", handleTouchEnd, { passive: true, capture: false })
+  // Add event listeners with passive where possible
+  // Only touchmove needs to be non-passive to call preventDefault
+  document.addEventListener("touchstart", handleTouchStart, { passive: true })
+  document.addEventListener("touchmove", handleTouchMove, { passive: false })
+  document.addEventListener("touchend", handleTouchEnd, { passive: true })
 
   // Handle viewport changes for proper height
   const updateViewport = () => {

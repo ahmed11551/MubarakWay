@@ -159,9 +159,8 @@
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     height: 100%;
-    /* Allow scrolling on html when body is hidden */
-    overflow-y: auto;
     overflow-x: hidden;
+    /* Don't set overflow-y here - let body handle it */
   }
 
   html.telegram-webapp body {
@@ -170,11 +169,10 @@
     -webkit-overflow-scrolling: touch;
     position: relative;
     overflow-x: hidden;
-    overflow-y: auto; /* Allow body scroll for better compatibility */
-    touch-action: pan-y pan-x pinch-zoom; /* Allow all touch actions for better scroll */
+    overflow-y: auto; /* Single scrollable container */
+    touch-action: pan-y; /* Allow vertical scrolling */
     height: 100%;
     width: 100%;
-    overscroll-behavior-block: contain; /* Additional protection */
   }
 
   /* Prevent pull-to-close on scrollable containers */
