@@ -44,7 +44,9 @@ export async function initiatePayment(input: PaymentInitiateInput) {
         campaign_id: input.campaignId,
         message: input.message,
         is_anonymous: input.isAnonymous,
-        return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/payment/success`,
+        // Pass donationId in InvoiceId format expected by webhook
+        invoice_id: JSON.stringify({ donationId: donationResult.donation.id }),
+        return_url: input.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/payment/success?donation_id=${donationResult.donation.id}`,
         cancel_url: input.cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/payment/cancel`,
       }),
     })

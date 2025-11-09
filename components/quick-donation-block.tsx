@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CloudPaymentsButton } from "@/components/cloudpayments-button"
-import { createDonation } from "@/lib/actions/donations"
 import { useRouter } from "next/navigation"
 import { Heart, Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -75,38 +74,11 @@ export function QuickDonationBlock() {
   }
 
   const handlePaymentSuccess = async () => {
-    if (!selectedAmount) return
-
-    setIsProcessing(true)
-
-    try {
-      const result = await createDonation({
-        amount: selectedAmount,
-        currency: "RUB",
-        donationType: "one_time",
-        category: donationType === "project" ? "general" : (selectedCategory as any),
-        fundId: donationType === "target" && selectedFund && selectedFund !== "general" ? selectedFund : undefined,
-        campaignId: undefined,
-        isAnonymous: false,
-      })
-
-      if (result.error) {
-        hapticFeedback("error")
-        toast.error(`Ошибка: ${result.error}`)
-        setIsProcessing(false)
-        return
-      }
-
-      hapticFeedback("success")
-      toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
-      setIsDialogOpen(false)
-      router.push("/profile")
-    } catch (error) {
-      console.error("Payment error:", error)
-      hapticFeedback("error")
-      toast.error("Произошла ошибка при обработке платежа. Пожалуйста, попробуйте снова.")
-      setIsProcessing(false)
-    }
+    // Donation уже создан в initiatePayment, просто перенаправляем
+    hapticFeedback("success")
+    toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
+    setIsDialogOpen(false)
+    router.push("/profile")
   }
 
   const handlePaymentFail = (reason: string) => {

@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, Repeat } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CloudPaymentsButton } from "@/components/cloudpayments-button"
-import { createDonation } from "@/lib/actions/donations"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
@@ -63,26 +62,7 @@ export function DonationForm() {
   }, [search])
 
   const handlePaymentSuccess = async () => {
-    if (!selectedAmount) return
-
-    // Создаём запись о пожертвовании в БД
-    const result = await createDonation({
-      amount: selectedAmount,
-      currency,
-      donationType,
-      frequency: donationType === "recurring" ? (frequency as any) : undefined,
-      category: category as any,
-      fundId: fundId || undefined,
-        campaignId: campaignId || undefined,
-      message: message || undefined,
-      isAnonymous,
-    })
-
-    if (result.error) {
-      toast.error(`Ошибка: ${result.error}`)
-      return
-    }
-
+    // Donation уже создан в initiatePayment, просто перенаправляем
     toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
     router.push("/profile")
   }

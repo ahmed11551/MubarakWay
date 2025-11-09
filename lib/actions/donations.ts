@@ -54,113 +54,14 @@ export async function createDonation(input: DonationInput) {
       return { error: "Failed to create donation record" }
     }
 
-    // Update user's total donated amount
-    const { error: profileError } = await supabase.rpc("increment_total_donated", {
-      user_id: user.id,
-      amount: input.amount,
-    })
-
-    if (profileError) {
-      console.error("[v0] Profile update error:", profileError)
-    }
-
-    // If donating to a campaign, update campaign amount
-    if (input.campaignId) {
-      const { error: campaignError } = await supabase.rpc("increment_campaign_amount", {
-        campaign_id: input.campaignId,
-        amount: input.amount,
-      })
-
-      if (campaignError) {
-        console.error("[v0] Campaign update error:", campaignError)
-      } else {
-        // Send notification to campaign creator using new notification system
-        try {
-          const { data: donorProfile } = await supabase
-            .from("profiles")
-            .select("display_name")
-            .eq("id", user.id)
-            .single()
-
-          const donorName = donorProfile?.display_name || "Пользователь"
-
-          // Use new notification system
-          const { notifyCampaignCreator } = await import("@/lib/notifications")
-          await notifyCampaignCreator(input.campaignId, {
-            amount: input.amount,
-            currency: input.currency,
-            donorName: input.isAnonymous ? undefined : donorName,
-            isAnonymous: input.isAnonymous,
-          })
-        } catch (notificationError) {
-          console.error("[v0] Failed to send campaign notification:", notificationError)
-          // Don't fail the donation if notification fails
-        }
-      }
-    }
-
-    // If donating to a fund, update fund amount
-    if (input.fundId) {
-      const { error: fundError } = await supabase.rpc("increment_fund_amount", {
-        fund_id: input.fundId,
-        amount: input.amount,
-      })
-
-      if (fundError) {
-        console.error("[v0] Fund update error:", fundError)
-      }
-    }
+    // NOTE: Do NOT update amounts here - they will be updated in webhook after successful payment
+    // This prevents double-counting if payment fails or is cancelled
 
     revalidatePath("/")
     revalidatePath("/profile")
 
-    // Send confirmation email to donor
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("id", user.id)
-        .single()
-
-      if (profile?.email) {
-        // Get fund or campaign name
-        let fundName: string | undefined
-        let campaignName: string | undefined
-
-        if (input.fundId) {
-          const { data: fund } = await supabase
-            .from("funds")
-            .select("name, name_ru")
-            .eq("id", input.fundId)
-            .single()
-          fundName = fund?.name_ru || fund?.name
-        }
-
-        if (input.campaignId) {
-          const { data: campaign } = await supabase
-            .from("campaigns")
-            .select("title")
-            .eq("id", input.campaignId)
-            .single()
-          campaignName = campaign?.title
-        }
-
-        await sendEmail({
-          to: profile.email,
-          subject: "Подтверждение пожертвования",
-          html: getDonationConfirmationEmail({
-            amount: input.amount,
-            currency: input.currency,
-            fundName,
-            campaignName,
-            isAnonymous: input.isAnonymous,
-          }),
-        })
-      }
-    } catch (emailError) {
-      console.error("[v0] Failed to send confirmation email:", emailError)
-      // Don't fail the donation if email fails
-    }
+    // NOTE: Email confirmation will be sent in webhook after successful payment
+    // This prevents sending emails for failed or cancelled payments
 
     return { success: true, donation }
   } catch (error) {

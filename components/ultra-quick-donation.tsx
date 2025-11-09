@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CloudPaymentsButton } from "@/components/cloudpayments-button"
-import { createDonation } from "@/lib/actions/donations"
 import { useRouter } from "next/navigation"
 import { Heart, Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -85,37 +84,13 @@ export function UltraQuickDonation() {
   }
 
   const handlePaymentSuccess = async () => {
-    if (!amount || Number(amount) <= 0) return
-
-    setIsProcessing(true)
-
-    try {
-      const result = await createDonation({
-        amount: Number(amount),
-        currency: "RUB",
-        donationType: "one_time",
-        category: "sadaqah",
-        campaignId: selectedCampaign || undefined,
-        isAnonymous: false,
-      })
-
-      if (result.error) {
-        toast.error(`Ошибка: ${result.error}`)
-        setIsProcessing(false)
-        return
-      }
-
-      toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
-      setIsDialogOpen(false)
-      setStep(1)
-      setAmount("")
-      setSelectedCampaign(null)
-      router.push("/profile")
-    } catch (error) {
-      console.error("Payment error:", error)
-      toast.error("Произошла ошибка при обработке платежа. Пожалуйста, попробуйте снова.")
-      setIsProcessing(false)
-    }
+    // Donation уже создан в initiatePayment, просто перенаправляем
+    toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
+    setIsDialogOpen(false)
+    setStep(1)
+    setAmount("")
+    setSelectedCampaign(null)
+    router.push("/profile")
   }
 
   const handlePaymentFail = (reason: string) => {

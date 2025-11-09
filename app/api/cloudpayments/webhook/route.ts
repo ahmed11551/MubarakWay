@@ -81,40 +81,132 @@ async function handlePaymentSuccess(data: any) {
 
     // Update donation status if it's a donation
     if (invoiceData.donationId) {
-      const { error: donationError } = await supabase
+      // First, get the donation to check if it's already completed
+      const { data: existingDonation } = await supabase
         .from("donations")
-        .update({
-          status: "completed",
-          payment_transaction_id: transactionId.toString(),
-          updated_at: new Date().toISOString(),
-        })
+        .select("campaign_id, fund_id, amount, donor_id, status")
         .eq("id", invoiceData.donationId)
-        .eq("status", "pending")
+        .single()
 
-      if (donationError) {
-        console.error("[CloudPayments] Donation update error:", donationError)
-      } else {
-        // Update campaign/fund amounts via RPC
-        const { data: donation } = await supabase
+      if (!existingDonation) {
+        console.warn("[CloudPayments] Donation not found:", invoiceData.donationId)
+        return
+      }
+
+      // Only update if status is pending (prevent double processing)
+      if (existingDonation.status === "pending") {
+        const { error: donationError } = await supabase
           .from("donations")
-          .select("campaign_id, fund_id, amount")
+          .update({
+            status: "completed",
+            payment_transaction_id: transactionId.toString(),
+            updated_at: new Date().toISOString(),
+          })
           .eq("id", invoiceData.donationId)
-          .single()
+          .eq("status", "pending")
 
-        if (donation) {
-          if (donation.campaign_id) {
-            await supabase.rpc("increment_campaign_amount", {
-              campaign_id: donation.campaign_id,
-              amount: donation.amount,
-            })
+        if (donationError) {
+          console.error("[CloudPayments] Donation update error:", donationError)
+        } else {
+          // Update user's total donated amount
+          const { error: profileError } = await supabase.rpc("increment_total_donated", {
+            user_id: existingDonation.donor_id,
+            amount: existingDonation.amount,
+          })
+          if (profileError) {
+            console.error("[CloudPayments] Profile update error:", profileError)
           }
-          if (donation.fund_id) {
-            await supabase.rpc("increment_fund_amount", {
-              fund_id: donation.fund_id,
-              amount: donation.amount,
+
+          // Update campaign/fund amounts via RPC
+          if (existingDonation.campaign_id) {
+            const { error: campaignError } = await supabase.rpc("increment_campaign_amount", {
+              campaign_id: existingDonation.campaign_id,
+              amount: existingDonation.amount,
             })
+            if (campaignError) {
+              console.error("[CloudPayments] Campaign update error:", campaignError)
+            } else {
+              // Send notification to campaign creator
+              try {
+                const { data: donorProfile } = await supabase
+                  .from("profiles")
+                  .select("display_name")
+                  .eq("id", existingDonation.donor_id)
+                  .single()
+
+                const donorName = donorProfile?.display_name || "Пользователь"
+
+                const { notifyCampaignCreator } = await import("@/lib/notifications")
+                await notifyCampaignCreator(existingDonation.campaign_id, {
+                  amount: existingDonation.amount,
+                  currency: data.Model?.Currency || "RUB",
+                  donorName: existingDonation.is_anonymous ? undefined : donorName,
+                  isAnonymous: existingDonation.is_anonymous,
+                })
+              } catch (notificationError) {
+                console.error("[CloudPayments] Failed to send campaign notification:", notificationError)
+              }
+            }
+          }
+          if (existingDonation.fund_id) {
+            const { error: fundError } = await supabase.rpc("increment_fund_amount", {
+              fund_id: existingDonation.fund_id,
+              amount: existingDonation.amount,
+            })
+            if (fundError) {
+              console.error("[CloudPayments] Fund update error:", fundError)
+            }
+          }
+
+          // Send confirmation email to donor
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("email")
+              .eq("id", existingDonation.donor_id)
+              .single()
+
+            if (profile?.email) {
+              let fundName: string | undefined
+              let campaignName: string | undefined
+
+              if (existingDonation.fund_id) {
+                const { data: fund } = await supabase
+                  .from("funds")
+                  .select("name, name_ru")
+                  .eq("id", existingDonation.fund_id)
+                  .single()
+                fundName = fund?.name_ru || fund?.name
+              }
+
+              if (existingDonation.campaign_id) {
+                const { data: campaign } = await supabase
+                  .from("campaigns")
+                  .select("title")
+                  .eq("id", existingDonation.campaign_id)
+                  .single()
+                campaignName = campaign?.title
+              }
+
+              const { sendEmail, getDonationConfirmationEmail } = await import("@/lib/email")
+              await sendEmail({
+                to: profile.email,
+                subject: "Подтверждение пожертвования",
+                html: getDonationConfirmationEmail({
+                  amount: existingDonation.amount,
+                  currency: data.Model?.Currency || "RUB",
+                  fundName,
+                  campaignName,
+                  isAnonymous: existingDonation.is_anonymous,
+                }),
+              })
+            }
+          } catch (emailError) {
+            console.error("[CloudPayments] Failed to send confirmation email:", emailError)
           }
         }
+      } else {
+        console.log("[CloudPayments] Donation already processed:", invoiceData.donationId, existingDonation.status)
       }
     }
 
