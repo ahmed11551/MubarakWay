@@ -15,6 +15,7 @@ import { UltraQuickDonation } from "@/components/ultra-quick-donation"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import { toast } from "sonner"
 import { SkeletonCampaignCard } from "@/components/skeleton-campaign-card"
+import { PrayerTimesWidget } from "@/components/prayer-times-widget"
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -152,6 +153,12 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </section>
+
+        {/* Prayer Times Widget */}
+        <section className="space-y-3">
+          <PrayerTimesWidget />
+        </section>
+
         {/* Quick Actions Section - moved to top */}
         <section className="space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2">

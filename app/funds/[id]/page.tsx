@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe } from "lucide-react"
+import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe, Building2, GraduationCap, Stethoscope, Droplets, Mosque, AlertCircle, HandHeart, Coins } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -359,79 +359,144 @@ export default async function FundDetailPage({
               </Card>
             </TabsContent>
 
-            <TabsContent value="projects" className="space-y-4 mt-4">
+            <TabsContent value="projects" className="space-y-3 mt-4">
               {/* Show projects from API (for Insan fund) or campaigns */}
               {fund.projects.length > 0 ? (
-                fund.projects.map((project: any) => (
-                  <Card key={project.id} className="hover:shadow-md transition-shadow">
-                    {project.imageUrl && (
-                      <div className="aspect-video bg-muted relative overflow-hidden rounded-t-xl">
-                        <Image
-                          src={project.imageUrl}
-                          alt={project.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle className="text-base">{project.title}</CardTitle>
-                      <CardDescription className="text-xs line-clamp-2">{project.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {project.url && (
-                        <Button variant="outline" size="sm" className="w-full" asChild>
-                          <a href={project.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Подробнее на сайте фонда
-                          </a>
-                        </Button>
-                      )}
-                      {project.defaultAmount && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Рекомендуемая сумма:</span>
-                          <span className="font-semibold text-primary">{project.defaultAmount} ₽</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))
-              ) : fundCampaigns.length > 0 ? (
-                fundCampaigns.map((campaign: any) => (
-                  <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
-                    <Card className="hover:shadow-md transition-shadow">
-                      {campaign.image_url && (
-                        <div className="aspect-video bg-muted relative overflow-hidden rounded-t-xl">
-                          <Image
-                            src={campaign.image_url}
-                            alt={campaign.title}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                          />
-                        </div>
-                      )}
-                      <CardHeader>
-                        <CardTitle className="text-base">{campaign.title}</CardTitle>
-                        <CardDescription className="text-xs line-clamp-2">{campaign.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-primary" />
-                            <span className="text-muted-foreground">
-                              {((Number(campaign.current_amount || 0) / Number(campaign.goal_amount || 1)) * 100).toFixed(0)}% собрано
-                            </span>
+                fund.projects.map((project: any) => {
+                  // Determine icon based on project title/description
+                  const getProjectIcon = (title: string, description: string) => {
+                    const text = (title + " " + description).toLowerCase()
+                    if (text.includes("закят") || text.includes("zakat")) return Coins
+                    if (text.includes("садака") || text.includes("sadaqa")) return HandHeart
+                    if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Mosque
+                    if (text.includes("образование") || text.includes("хифз") || text.includes("школ")) return GraduationCap
+                    if (text.includes("медицин") || text.includes("больн") || text.includes("лечен")) return Stethoscope
+                    if (text.includes("вода") || text.includes("колодец")) return Droplets
+                    if (text.includes("экстрен") || text.includes("помощь")) return AlertCircle
+                    return Building2
+                  }
+
+                  const ProjectIcon = getProjectIcon(project.title, project.description || "")
+
+                  return (
+                    <Card key={project.id} className="hover:shadow-md transition-shadow border-2">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          {/* Icon on the left */}
+                          <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center flex-shrink-0">
+                            <ProjectIcon className="h-8 w-8 text-primary" />
                           </div>
-                          <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
-                            {campaign.status === "active" ? "Активна" : campaign.status === "completed" ? "Завершена" : campaign.status}
-                          </Badge>
+
+                          {/* Title and description in the center */}
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base mb-1 line-clamp-1">{project.title}</CardTitle>
+                            <CardDescription className="text-xs line-clamp-2">{project.description}</CardDescription>
+                          </div>
+
+                          {/* Button on the right */}
+                          <div className="flex-shrink-0">
+                            {project.url ? (
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white whitespace-nowrap"
+                                asChild
+                              >
+                                <a href={project.url} target="_blank" rel="noopener noreferrer">
+                                  Помочь
+                                </a>
+                              </Button>
+                            ) : project.defaultAmount ? (
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white whitespace-nowrap"
+                                asChild
+                              >
+                                <Link href={`/donate?fundId=${id}&projectId=${project.id}&amount=${project.defaultAmount}`}>
+                                  Помочь
+                                </Link>
+                              </Button>
+                            ) : (
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white whitespace-nowrap"
+                                asChild
+                              >
+                                <Link href={`/donate?fundId=${id}`}>
+                                  Помочь
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
-                ))
+                  )
+                })
+              ) : fundCampaigns.length > 0 ? (
+                fundCampaigns.map((campaign: any) => {
+                  const getCampaignIcon = (title: string, description: string) => {
+                    const text = (title + " " + description).toLowerCase()
+                    if (text.includes("закят") || text.includes("zakat")) return Coins
+                    if (text.includes("садака") || text.includes("sadaqa")) return HandHeart
+                    if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Mosque
+                    if (text.includes("образование") || text.includes("хифз") || text.includes("школ")) return GraduationCap
+                    if (text.includes("медицин") || text.includes("больн") || text.includes("лечен")) return Stethoscope
+                    if (text.includes("вода") || text.includes("колодец")) return Droplets
+                    if (text.includes("экстрен") || text.includes("помощь")) return AlertCircle
+                    return Building2
+                  }
+
+                  const CampaignIcon = getCampaignIcon(campaign.title, campaign.description || "")
+
+                  return (
+                    <Card key={campaign.id} className="hover:shadow-md transition-shadow border-2">
+                      <CardContent className="p-4">
+                        <Link href={`/campaigns/${campaign.id}`}>
+                          <div className="flex items-center gap-4">
+                            {/* Icon on the left */}
+                            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center flex-shrink-0">
+                              {campaign.image_url ? (
+                                <div className="h-16 w-16 rounded-xl overflow-hidden relative">
+                                  <Image
+                                    src={campaign.image_url}
+                                    alt={campaign.title}
+                                    fill
+                                    className="object-cover"
+                                    sizes="64px"
+                                  />
+                                </div>
+                              ) : (
+                                <CampaignIcon className="h-8 w-8 text-primary" />
+                              )}
+                            </div>
+
+                            {/* Title and description in the center */}
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-base mb-1 line-clamp-1">{campaign.title}</CardTitle>
+                              <CardDescription className="text-xs line-clamp-2">{campaign.description}</CardDescription>
+                              <div className="flex items-center gap-2 mt-1">
+                                <TrendingUp className="h-3 w-3 text-primary" />
+                                <span className="text-xs text-muted-foreground">
+                                  {((Number(campaign.current_amount || 0) / Number(campaign.goal_amount || 1)) * 100).toFixed(0)}% собрано
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Button on the right */}
+                            <div className="flex-shrink-0">
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white whitespace-nowrap"
+                              >
+                                Помочь
+                              </Button>
+                            </div>
+                          </div>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  )
+                })
               ) : (
                 <Card>
                   <CardContent className="pt-6 pb-6 text-center">

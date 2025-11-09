@@ -339,7 +339,7 @@ function getEmailTemplate(template: string, data: Record<string, any>): string {
     `,
   }
 
-  const templateFn = templates[template] || templates.donation_success]
+  const templateFn = templates[template] || templates.donation_success
   return templateFn(data)
 }
 

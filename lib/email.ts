@@ -21,8 +21,10 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
 
   try {
     // Dynamic import to avoid errors if resend is not installed
-    let Resend
+    // Use type assertion to avoid build-time errors
+    let Resend: any
     try {
+      // @ts-ignore - resend may not be installed
       const resendModule = await import("resend")
       Resend = resendModule.Resend
     } catch (importError) {

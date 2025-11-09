@@ -5,7 +5,6 @@ import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { TelegramProvider } from "@/components/telegram-provider"
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
 import { PWAServiceWorker } from "@/components/pwa-service-worker"
 import "./globals.css"
 
@@ -107,7 +106,6 @@ export default function RootLayout({
         <Toaster />
         <Analytics />
         <PWAServiceWorker />
-        <PWAInstallPrompt />
       </body>
     </html>
   )

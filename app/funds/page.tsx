@@ -83,16 +83,6 @@ export default async function FundsPage() {
     })
   }
 
-  const categories = [
-    { value: "all", label: "Все фонды" },
-    { value: "education", label: "Образование" },
-    { value: "healthcare", label: "Здравоохранение" },
-    { value: "water", label: "Вода" },
-    { value: "orphans", label: "Сироты" },
-    { value: "emergency", label: "Экстренная помощь" },
-    { value: "general", label: "Общее" },
-  ]
-
   return (
     <div className="min-h-screen pb-20">
       <AppHeader />
@@ -100,3 +90,4 @@ export default async function FundsPage() {
       <BottomNav />
     </div>
   )
+}
