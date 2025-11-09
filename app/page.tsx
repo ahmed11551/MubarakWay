@@ -126,11 +126,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-32">
       <AppHeader />
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+        <main className="max-w-lg mx-auto px-4 py-6 space-y-6 pb-6">
         {/* Top hero text block reserved for message & UI */}
         <section className="space-y-3">
           <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">

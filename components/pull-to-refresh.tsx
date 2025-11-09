@@ -73,8 +73,8 @@ export function PullToRefresh({
 
     const handleTouchStart = (e: TouchEvent) => {
       const scrollTop = getScrollTop()
-      // Only activate pull-to-refresh if at the very top (within 3px tolerance)
-      if (scrollTop <= 3) {
+      // Only activate pull-to-refresh if at the very top (within 5px tolerance)
+      if (scrollTop <= 5) {
         startY.current = e.touches[0].clientY
       } else {
         // User is not at top - completely disable pull-to-refresh
@@ -87,7 +87,7 @@ export function PullToRefresh({
       
       // CRITICAL: If user has scrolled down at all, completely disable pull-to-refresh
       // This prevents pull-to-refresh from activating when scrolling up after scrolling down
-      if (scrollTop > 3) {
+      if (scrollTop > 5) {
         // User is not at top - completely disable pull-to-refresh
         if (startY.current !== null) {
           startY.current = null
@@ -111,18 +111,21 @@ export function PullToRefresh({
 
       // Only prevent default for pull DOWN (positive distance) when at top
       // Negative distance (scrolling up) should always be allowed
-      if (distance > 0 && scrollTop <= 3) {
+      if (distance > 10 && scrollTop <= 5) {
         // Pulling down at top - activate pull-to-refresh
         e.preventDefault()
         const pull = Math.min(distance * 0.5, threshold * 1.5)
         updatePullState(pull)
-      } else {
-        // User is scrolling up or moved away from top - cancel pull-to-refresh
+      } else if (distance < -5) {
+        // User is scrolling up - cancel pull-to-refresh immediately
         startY.current = null
         setPullDistance(0)
         setIsPulling(false)
         lastPullDistance.current = 0
         lastIsPulling.current = false
+        // Don't prevent default - allow normal scrolling
+      } else {
+        // Small movement - don't interfere with scrolling
         // Don't prevent default - allow normal scrolling
       }
     }

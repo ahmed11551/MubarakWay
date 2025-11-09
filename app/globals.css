@@ -179,10 +179,7 @@
     width: 100%;
     /* Ensure smooth scrolling */
     scroll-behavior: smooth;
-    /* Performance optimizations */
-    will-change: scroll-position;
-    transform: translateZ(0); /* Force hardware acceleration */
-    -webkit-transform: translateZ(0);
+    /* Remove problematic optimizations that can cause stuttering */
   }
 
   /* Prevent pull-to-close on scrollable containers */
@@ -199,6 +196,8 @@
     overflow: visible;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y; /* Explicitly allow vertical scrolling */
+    /* Ensure content can be scrolled fully */
+    min-height: calc(100vh - 4rem); /* Account for header */
   }
 
   /* Fix for page wrappers - ensure they don't interfere with body scrolling */
@@ -210,9 +209,24 @@
     overflow: visible;
   }
 
+  /* Ensure content is not cut off by fixed bottom nav - apply to all pages */
+  html.telegram-webapp [class*="pb-20"],
+  html.telegram-webapp [class*="pb-28"] {
+    padding-bottom: 7.5rem !important; /* 120px - safe padding for bottom nav (64px) + safe area + extra space */
+  }
+
   /* Prevent pull-to-close on all scrollable areas */
   html.telegram-webapp * {
     overscroll-behavior-y: contain;
+  }
+
+  /* Optimize scrolling performance */
+  html.telegram-webapp body {
+    /* Use passive scrolling optimizations */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent layout shifts during scroll */
+    scroll-padding-bottom: 7rem; /* Space for bottom nav */
   }
 }
 
@@ -223,6 +237,17 @@
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
     height: 100%;
+  }
+
+  /* Optimize scrolling performance for all devices */
+  body {
+    /* Use GPU acceleration for smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure all pages have enough bottom padding */
+  [class*="min-h-screen"] {
+    padding-bottom: 7.5rem; /* 120px - safe space for bottom nav */
   }
 
 
