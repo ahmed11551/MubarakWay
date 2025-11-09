@@ -14,6 +14,8 @@ import { User, Award, Calendar, Download, Filter } from "lucide-react"
 import Link from "next/link"
 import { getUserDonations } from "@/lib/actions/donations"
 import { SubscriptionsManager } from "@/components/subscriptions-manager"
+import { AvatarUpload } from "@/components/avatar-upload"
+import { getProfile } from "@/lib/actions/profile"
 import { toast } from "sonner"
 
 type Transaction = {
@@ -32,6 +34,28 @@ export default function ProfilePage() {
   const [filterType, setFilterType] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [profile, setProfile] = useState<any>(null)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+
+  // Fetch profile data
+  useEffect(() => {
+    async function loadProfile() {
+      setIsLoadingProfile(true)
+      try {
+        const result = await getProfile()
+        if (result.error) {
+          console.error("Error loading profile:", result.error)
+        } else {
+          setProfile(result.profile)
+        }
+      } catch (error) {
+        console.error("Failed to load profile:", error)
+      } finally {
+        setIsLoadingProfile(false)
+      }
+    }
+    loadProfile()
+  }, [])
 
   // Fetch real donations data
   useEffect(() => {
@@ -177,13 +201,42 @@ export default function ProfilePage() {
         <Card className="border border-primary/15 bg-gradient-to-br from-primary/5 to-accent/5 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-8 w-8 text-primary" />
-              </div>
+              {isLoadingProfile ? (
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+                  <User className="h-8 w-8 text-primary" />
+                </div>
+              ) : (
+                <AvatarUpload
+                  currentAvatarUrl={profile?.avatar_url}
+                  displayName={profile?.display_name || "U"}
+                  userId={profile?.id}
+                  onAvatarChange={(newUrl) => {
+                    setProfile((prev: any) => ({ ...prev, avatar_url: newUrl }))
+                  }}
+                  size="md"
+                />
+              )}
               <div className="flex-1">
-                <CardTitle className="text-2xl">Ахмед Исламов</CardTitle>
-                <CardDescription>Участник с января 2025</CardDescription>
-                <Badge className="mt-2 bg-accent">Мутахсин Pro</Badge>
+                <CardTitle className="text-2xl">
+                  {isLoadingProfile ? "Загрузка..." : profile?.display_name || "Пользователь"}
+                </CardTitle>
+                <CardDescription>
+                  {profile?.created_at
+                    ? `Участник с ${new Date(profile.created_at).toLocaleDateString("ru-RU", {
+                        month: "long",
+                        year: "numeric",
+                      })}`
+                    : "Участник"}
+                </CardDescription>
+                {profile?.subscription_tier && profile.subscription_tier !== "free" && (
+                  <Badge className="mt-2 bg-accent">
+                    {profile.subscription_tier === "mutahsin_pro"
+                      ? "Мутахсин Pro"
+                      : profile.subscription_tier === "sahib_al_waqf_premium"
+                        ? "Сахиб аль-Вакф Premium"
+                        : profile.subscription_tier}
+                  </Badge>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -194,7 +247,11 @@ export default function ProfilePage() {
                 <div className="text-[11px] text-muted-foreground mt-1">Пожертвований</div>
               </div>
               <div className="flex flex-col items-center justify-center rounded-xl border-2 border-accent/20 bg-card/90 p-4 shadow-sm">
-                <div className="text-3xl font-extrabold text-accent tracking-tight">45 600 RUB</div>
+                <div className="text-3xl font-extrabold text-accent tracking-tight">
+                  {profile?.total_donated
+                    ? `${Number(profile.total_donated).toLocaleString("ru-RU")} ₽`
+                    : "0 ₽"}
+                </div>
                 <div className="text-[11px] text-muted-foreground mt-1">Всего отдано</div>
               </div>
               <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/15 bg-card/90 p-4 shadow-sm">

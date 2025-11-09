@@ -123,3 +123,37 @@ export async function deleteAvatar() {
   }
 }
 
+/**
+ * Получить данные профиля текущего пользователя
+ */
+export async function getProfile() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "You must be logged in to view profile" }
+  }
+
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError) {
+      console.error("[Profile] Get profile error:", profileError)
+      return { error: "Failed to fetch profile" }
+    }
+
+    return { profile }
+  } catch (error) {
+    console.error("[Profile] Unexpected get profile error:", error)
+    return { error: "An unexpected error occurred" }
+  }
+}
+
