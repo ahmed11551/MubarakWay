@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
+import { startTransition } from "react"
 import Link from "next/link"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -33,11 +34,23 @@ export function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Prefetch всех страниц при монтировании
+  // Агрессивный prefetch всех страниц при монтировании и при изменении pathname
   useEffect(() => {
+    // Prefetch через router
     navItems.forEach((item) => {
       if (item.href !== pathname) {
         router.prefetch(item.href)
+      }
+    })
+
+    // Дополнительный prefetch через link для тяжелых страниц
+    const heavyPages = ["/campaigns", "/rating"]
+    heavyPages.forEach((href) => {
+      if (href !== pathname) {
+        const link = document.createElement("link")
+        link.rel = "prefetch"
+        link.href = href
+        document.head.appendChild(link)
       }
     })
   }, [pathname, router])
@@ -57,9 +70,19 @@ export function BottomNav() {
       } catch {}
     }
 
-    // Плавная навигация через Next.js router без перезагрузки
+    // Для тяжелых страниц используем startTransition для приоритизации
     e.preventDefault()
-    router.push(href)
+    const isHeavyPage = href === "/campaigns" || href === "/rating"
+    
+    if (isHeavyPage) {
+      // Используем startTransition для тяжелых страниц
+      startTransition(() => {
+        router.push(href)
+      })
+    } else {
+      // Обычная навигация для легких страниц
+      router.push(href)
+    }
   }
 
   return (
