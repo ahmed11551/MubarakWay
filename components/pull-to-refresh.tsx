@@ -29,21 +29,40 @@ export function PullToRefresh({
   useEffect(() => {
     if (disabled || isRefreshing) return
 
-    const container = containerRef.current
-    if (!container) return
+    // Get scroll position from window/body (where actual scrolling happens)
+    const getScrollTop = () => {
+      return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
+    }
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (container.scrollTop > 0) return
-      startY.current = e.touches[0].clientY
+      const scrollTop = getScrollTop()
+      // Only activate pull-to-refresh if at the very top (within 5px tolerance)
+      if (scrollTop <= 5) {
+        startY.current = e.touches[0].clientY
+      } else {
+        // User is not at top - don't interfere with scrolling
+        startY.current = null
+      }
     }
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (startY.current === null || container.scrollTop > 0) return
+      const scrollTop = getScrollTop()
+      
+      // If user has scrolled down, allow normal scrolling - don't block
+      if (scrollTop > 5) {
+        startY.current = null
+        return // Allow normal scroll - don't prevent default
+      }
+
+      // Only handle pull-to-refresh if at the very top
+      if (startY.current === null) return
 
       const currentY = e.touches[0].clientY
       const distance = currentY - startY.current
 
-      if (distance > 0) {
+      // Only prevent default for pull DOWN (positive distance) when at top
+      // This allows pull-to-refresh but doesn't block scrolling up
+      if (distance > 0 && scrollTop <= 5) {
         e.preventDefault()
         const pull = Math.min(distance * 0.5, threshold * 1.5)
         setPullDistance(pull)
@@ -52,6 +71,11 @@ export function PullToRefresh({
         if (pull >= threshold && !isPulling) {
           hapticFeedback("medium")
         }
+      } else if (distance < 0) {
+        // User is scrolling up - allow it, cancel pull-to-refresh
+        startY.current = null
+        setPullDistance(0)
+        setIsPulling(false)
       }
     }
 
@@ -76,14 +100,15 @@ export function PullToRefresh({
       startY.current = null
     }
 
-    container.addEventListener("touchstart", handleTouchStart, { passive: false })
-    container.addEventListener("touchmove", handleTouchMove, { passive: false })
-    container.addEventListener("touchend", handleTouchEnd)
+    // Listen on document to catch all touch events
+    document.addEventListener("touchstart", handleTouchStart, { passive: false })
+    document.addEventListener("touchmove", handleTouchMove, { passive: false })
+    document.addEventListener("touchend", handleTouchEnd, { passive: true })
 
     return () => {
-      container.removeEventListener("touchstart", handleTouchStart)
-      container.removeEventListener("touchmove", handleTouchMove)
-      container.removeEventListener("touchend", handleTouchEnd)
+      document.removeEventListener("touchstart", handleTouchStart)
+      document.removeEventListener("touchmove", handleTouchMove)
+      document.removeEventListener("touchend", handleTouchEnd)
     }
   }, [disabled, isRefreshing, pullDistance, threshold, isPulling, onRefresh])
 
@@ -91,7 +116,7 @@ export function PullToRefresh({
   const indicatorRotation = (pullDistance / threshold) * 180
 
   return (
-    <div ref={containerRef} className={cn("relative overflow-auto", className)}>
+    <div ref={containerRef} className={cn("relative", className)}>
       <div
         className={cn(
           "pull-to-refresh-indicator flex flex-col items-center justify-center gap-2 text-primary transition-all duration-200",
