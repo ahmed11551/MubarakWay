@@ -32,6 +32,10 @@ function createPublicClient() {
 }
 
 export async function getFunds(category?: string) {
+  // Общий таймаут для всей функции - максимум 5 секунд
+  const startTime = Date.now()
+  const MAX_TIME = 5000 // 5 секунд
+  
   // Try multiple approaches to ensure we get the funds
   let funds: any[] = []
   let lastError: string | null = null
@@ -39,6 +43,12 @@ export async function getFunds(category?: string) {
   // Approach 1: Try regular client first (most reliable on Vercel)
   // This uses cookies and has better access to env vars
   try {
+    // Проверяем, не превышен ли общий таймаут
+    if (Date.now() - startTime > MAX_TIME) {
+      console.warn("[v0] Timeout before trying regular client")
+      return { funds: [], error: "Timeout loading funds" }
+    }
+    
     console.log("[v0] Trying regular client first...")
     const supabase = await createClient()
     let query = supabase
