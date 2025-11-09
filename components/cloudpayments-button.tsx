@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { initiateCloudPayment } from "@/lib/cloudpayments"
 import { Loader2 } from "lucide-react"
 import { hapticFeedback } from "@/lib/mobile-ux"
+import { initiatePayment, type PaymentInitiateInput } from "@/lib/actions/payments"
 
 interface CloudPaymentsButtonProps {
   amount: number
@@ -34,37 +34,49 @@ export function CloudPaymentsButton({
     setIsLoading(true)
 
     try {
-      await initiateCloudPayment(
-        {
-          publicId: "demo", // Временное значение для демонстрации
-          description,
-          amount,
-          currency,
-          invoiceId: `INV-${Date.now()}`,
-          data: donationData,
-        },
-        {
-          onSuccess: (options) => {
-            console.log("[v0] Платёж успешен:", options)
-            hapticFeedback("success")
-            onSuccess?.()
-          },
-          onFail: (reason, options) => {
-            console.error("[v0] Платёж не прошёл:", reason, options)
-            hapticFeedback("error")
-            onFail?.(reason)
-          },
-          onComplete: (paymentResult) => {
-            console.log("[v0] Платёж завершён:", paymentResult)
-            setIsLoading(false)
-          },
-        },
-      )
+      // Формируем данные для создания платежа
+      const paymentInput: PaymentInitiateInput = {
+        amount,
+        currency,
+        donationType: donationData?.donationType || "one_time",
+        frequency: donationData?.frequency,
+        category: donationData?.category || "sadaqah",
+        fundId: donationData?.fundId,
+        campaignId: donationData?.campaignId,
+        message: donationData?.message,
+        isAnonymous: donationData?.isAnonymous || false,
+      }
+
+      // Вызываем server action для создания платежа и получения ссылки
+      const result = await initiatePayment(paymentInput)
+
+      if (result.error) {
+        console.error("[Payment] Ошибка создания платежа:", result.error)
+        hapticFeedback("error")
+        setIsLoading(false)
+        onFail?.(result.error)
+        return
+      }
+
+      if (!result.paymentUrl) {
+        console.error("[Payment] Ссылка на оплату не получена")
+        hapticFeedback("error")
+        setIsLoading(false)
+        onFail?.("Ссылка на оплату не получена")
+        return
+      }
+
+      // Редиректим пользователя на страницу оплаты
+      console.log("[Payment] Редирект на оплату:", result.paymentUrl)
+      window.location.href = result.paymentUrl
+      
+      // onSuccess будет вызван после возврата с платежной страницы
+      // (через returnUrl)
     } catch (error) {
-      console.error("[v0] Ошибка инициализации платежа:", error)
+      console.error("[Payment] Ошибка инициализации платежа:", error)
       hapticFeedback("error")
       setIsLoading(false)
-      onFail?.("Не удалось инициировать платёж")
+      onFail?.(error instanceof Error ? error.message : "Не удалось инициировать платёж")
     }
   }
 
