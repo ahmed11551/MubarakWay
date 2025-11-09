@@ -239,7 +239,7 @@ export default async function CampaignDetailPage({
               {/* Кнопки действий */}
               <div className="flex gap-2 pt-2">
                 <Button className="flex-1" size="lg" asChild>
-                  <Link href={`/donate?campaign=${campaign.id}`}>
+                  <Link href={`/donate?campaignId=${campaign.id}`}>
                     <Heart className="h-4 w-4 mr-2" />
                     Помочь
                   </Link>
