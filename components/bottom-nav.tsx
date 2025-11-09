@@ -50,7 +50,7 @@ export function BottomNav() {
       return
     }
 
-    // Haptic feedback
+    // Haptic feedback - синхронно для мгновенной обратной связи
     if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
       try {
         window.Telegram.WebApp.HapticFeedback.impactOccurred("light")

@@ -241,24 +241,24 @@ export default function ProfilePage() {
 
         {/* История и отчёты */}
         <Tabs defaultValue="history" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 gap-1.5 p-1.5 bg-muted/50 h-auto">
+          <TabsList className="grid w-full grid-cols-3 gap-1.5 p-1 bg-muted/50 h-auto rounded-lg">
             <TabsTrigger 
               value="history" 
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all text-xs sm:text-sm px-2 py-2.5 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
             >
-              История транзакций
+              <span className="truncate block w-full text-center">История</span>
             </TabsTrigger>
             <TabsTrigger 
               value="subscriptions"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all text-xs sm:text-sm px-2 py-2.5 min-w-0"
             >
               Подписки
             </TabsTrigger>
             <TabsTrigger 
               value="reports"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all text-xs sm:text-sm px-2 py-2.5 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
             >
-              Отчёты фондов
+              <span className="truncate block w-full text-center">Отчёты</span>
             </TabsTrigger>
           </TabsList>
 
