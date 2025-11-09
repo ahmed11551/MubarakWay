@@ -170,9 +170,11 @@
     position: relative;
     overflow-x: hidden;
     overflow-y: auto; /* Single scrollable container */
-    touch-action: pan-y; /* Allow vertical scrolling */
+    touch-action: pan-y; /* Allow vertical scrolling - critical for smooth scroll */
     height: 100%;
     width: 100%;
+    /* Ensure smooth scrolling */
+    scroll-behavior: smooth;
   }
 
   /* Prevent pull-to-close on scrollable containers */

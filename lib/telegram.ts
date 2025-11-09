@@ -55,75 +55,25 @@ export function initTelegramApp() {
 
 /**
  * Setup scroll prevention to avoid WebApp closing on scroll
- * Simplified version for better performance
+ * CSS-only approach - no JS blocking for normal scroll
  */
 function setupScrollPrevention(tg: any) {
   // Add CSS class to html for Telegram WebApp
   document.documentElement.classList.add("telegram-webapp")
 
-  // Minimal touch handling - only block obvious pull-to-close gestures
-  let touchStartY = 0
-  let initialScrollTop = 0
-
-  const handleTouchStart = (e: TouchEvent) => {
-    if (e.touches.length !== 1) return
-    touchStartY = e.touches[0].clientY
-    initialScrollTop = window.pageYOffset || document.documentElement.scrollTop
-  }
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (e.touches.length !== 1) return
-
-    const touchY = e.touches[0].clientY
-    const deltaY = touchY - touchStartY
-    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop
-    const scrollHeight = document.documentElement.scrollHeight
-    const clientHeight = window.innerHeight
-    
-    // Check if user is actually scrolling (scroll position changed)
-    const isUserScrolling = Math.abs(currentScrollTop - initialScrollTop) > 3
-    
-    // If user is scrolling, don't block anything - allow normal scroll
-    if (isUserScrolling) {
-      return
-    }
-    
-    // Only block pull-to-close gestures when:
-    // 1. Content is shorter than viewport
-    // 2. At top and pulling down significantly (> 40px)
-    // 3. At bottom and pulling up significantly (< -40px)
-    const isAtTop = currentScrollTop <= 5
-    const isAtBottom = currentScrollTop + clientHeight >= scrollHeight - 5
-    
-    if (scrollHeight <= clientHeight && Math.abs(deltaY) > 10) {
-      // Short content - prevent all pull gestures
-      e.preventDefault()
-      return false
-    }
-    
-    if (isAtTop && deltaY > 40) {
-      // At top, pulling down - block pull-to-close
-      e.preventDefault()
-      return false
-    }
-    
-    if (isAtBottom && deltaY < -40) {
-      // At bottom, pulling up - block pull-to-close
-      e.preventDefault()
-      return false
+  // Try to use Telegram WebApp API to disable pull-to-close if available
+  if (typeof tg.disableVerticalSwipes === "function") {
+    try {
+      tg.disableVerticalSwipes()
+      console.log("[Telegram] Vertical swipes disabled via API")
+    } catch (e) {
+      console.log("[Telegram] disableVerticalSwipes not available")
     }
   }
 
-  const handleTouchEnd = () => {
-    touchStartY = 0
-    initialScrollTop = 0
-  }
-
-  // Add event listeners with passive where possible
-  // Only touchmove needs to be non-passive to call preventDefault
-  document.addEventListener("touchstart", handleTouchStart, { passive: true })
-  document.addEventListener("touchmove", handleTouchMove, { passive: false })
-  document.addEventListener("touchend", handleTouchEnd, { passive: true })
+  // Rely entirely on CSS overscroll-behavior for scroll prevention
+  // No JS blocking - this allows normal scroll to work smoothly
+  // CSS will handle pull-to-close prevention via overscroll-behavior: contain
 
   // Handle viewport changes for proper height
   const updateViewport = () => {
