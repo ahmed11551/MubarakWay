@@ -13,15 +13,14 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
       if (window.Telegram?.WebApp) {
         initTelegramApp()
         
-        // Автоматическая авторизация через Telegram
+        // Автоматическая авторизация через Telegram - просто подтягиваем данные
         const telegramUser = getTelegramUser()
         if (telegramUser?.id) {
           try {
-            // Проверяем, авторизован ли пользователь
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
 
-            // Если пользователь не авторизован, авторизуем через Telegram
+            // Если пользователь не авторизован, подтягиваем данные из Telegram
             if (!user) {
               const response = await fetch("/api/auth/telegram", {
                 method: "POST",
@@ -31,69 +30,47 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
                   firstName: telegramUser.firstName,
                   lastName: telegramUser.lastName,
                   username: telegramUser.username,
+                  photoUrl: telegramUser.photoUrl,
                 }),
               })
 
               if (response.ok) {
                 const { actionLink, accessToken } = await response.json()
+                
+                // Устанавливаем сессию через magic link
                 if (actionLink) {
-                  // Используем action link для авторизации
-                  // Извлекаем токен из URL
                   const url = new URL(actionLink)
-                  const token = url.searchParams.get("token_hash") || url.searchParams.get("token") || url.hash.split("=")[1]
+                  const token = url.searchParams.get("token_hash") || url.searchParams.get("token")
                   
                   if (token) {
-                    // Используем verifyOtp для авторизации
-                    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+                    const { error: verifyError } = await supabase.auth.verifyOtp({
                       token_hash: token,
                       type: "magiclink",
                     })
 
-                    if (sessionError) {
-                      console.warn("[Telegram] Failed to verify OTP:", sessionError)
-                      // Если verifyOtp не работает, пробуем использовать accessToken напрямую
-                      if (accessToken) {
-                        try {
-                          await supabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: accessToken,
-                          })
-                        } catch (setSessionError) {
-                          console.warn("[Telegram] Failed to set session:", setSessionError)
-                        }
-                      }
+                    if (verifyError) {
+                      console.warn("[Telegram] Failed to verify OTP, trying direct session:", verifyError)
                     } else {
                       console.log("[Telegram] User authenticated via Telegram")
-                    }
-                  } else if (accessToken) {
-                    // Если токен не найден в URL, используем accessToken напрямую
-                    try {
-                      await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: accessToken,
-                      })
-                    } catch (setSessionError) {
-                      console.warn("[Telegram] Failed to set session:", setSessionError)
                     }
                   }
                 }
               } else {
-                console.warn("[Telegram] Failed to authenticate via Telegram API")
+                const errorData = await response.json().catch(() => ({}))
+                console.warn("[Telegram] Failed to authenticate:", errorData.error || "Unknown error")
               }
             } else {
-              // Пользователь уже авторизован - синхронизируем telegram_id
+              // Пользователь уже авторизован - просто синхронизируем telegram_id
               try {
                 const { syncTelegramId } = await import("@/lib/actions/profile")
                 await syncTelegramId(telegramUser.id)
                 console.log("[Telegram] Telegram ID synced:", telegramUser.id)
               } catch (error) {
                 console.error("[Telegram] Failed to sync Telegram ID:", error)
-                // Не критично, продолжаем работу
               }
             }
           } catch (error) {
             console.error("[Telegram] Failed to authenticate:", error)
-            // Не критично, продолжаем работу
           }
         }
       } else {
