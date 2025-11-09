@@ -64,10 +64,8 @@ export function BottomNav() {
       } catch {}
     }
 
-    // МГНОВЕННАЯ навигация - используем setTimeout 0 для приоритета
-    setTimeout(() => {
-      window.location.href = href
-    }, 0)
+    // МГНОВЕННАЯ навигация - БЕЗ ЗАДЕРЖЕК
+    window.location.href = href
 
     return false
   }
@@ -90,9 +88,8 @@ export function BottomNav() {
       } catch {}
     }
 
-    setTimeout(() => {
-      window.location.href = href
-    }, 0)
+    // МГНОВЕННАЯ навигация - БЕЗ ЗАДЕРЖЕК
+    window.location.href = href
 
     return false
   }
