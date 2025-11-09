@@ -1,11 +1,10 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { startTransition } from "react"
+import { startTransition, useState, useEffect } from "react"
 import Link from "next/link"
-import { Home, Heart, Users, User, Trophy } from "lucide-react"
+import { Home, Heart, Users, User, Trophy, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect } from "react"
 
 const navItems = [
   {

@@ -1,10 +1,11 @@
+import { Suspense } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, Users, Link2, Calendar } from "lucide-react"
+import { Trophy, Users, Link2, Calendar, Loader2 } from "lucide-react"
 import { getTopDonors, getTopReferrals, type RatingPeriod, type RatingType } from "@/lib/actions/ratings"
 import { getAnimalAvatar } from "@/lib/utils/animal-avatars"
 import { getRamadanDateRange } from "@/lib/utils/ramadan"
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   description: "Рейтинг доноров и рефералов платформы MubarakWay",
 }
 
-export default async function RatingPage() {
+async function RatingContent() {
   // Получаем текущего пользователя с обработкой ошибок
   let currentUserId: string | null = null
   try {
@@ -298,6 +299,29 @@ export default async function RatingPage() {
 
       <BottomNav />
     </div>
+  )
+}
+
+export default async function RatingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen pb-20">
+          <AppHeader />
+          <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                <p className="text-muted-foreground">Загрузка рейтинга...</p>
+              </div>
+            </div>
+          </main>
+          <BottomNav />
+        </div>
+      }
+    >
+      <RatingContent />
+    </Suspense>
   )
 }
 

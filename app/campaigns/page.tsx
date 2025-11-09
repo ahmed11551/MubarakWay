@@ -1,8 +1,9 @@
+import { Suspense } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { CampaignsList } from "@/components/campaigns-list"
 import { getCampaigns } from "@/lib/actions/campaigns"
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function CampaignsPage() {
+async function CampaignsContent() {
   // Fetch campaigns from database with error handling
   let activeResult, completedResult
   
@@ -106,5 +107,28 @@ export default async function CampaignsPage() {
 
       <BottomNav />
     </div>
+  )
+}
+
+export default async function CampaignsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen pb-20">
+          <AppHeader />
+          <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                <p className="text-muted-foreground">Загрузка кампаний...</p>
+              </div>
+            </div>
+          </main>
+          <BottomNav />
+        </div>
+      }
+    >
+      <CampaignsContent />
+    </Suspense>
   )
 }
