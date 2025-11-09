@@ -178,7 +178,7 @@ export default async function RatingPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Рейтинг Tooba</h1>
+            <h1 className="text-2xl font-bold">Рейтинг</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Топ доноров и рефералов платформы
