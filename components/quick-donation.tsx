@@ -78,14 +78,14 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
           <span className="truncate">{amount.toLocaleString("ru-RU")} ₽</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md flex flex-col max-h-[90vh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-center">Подтверждение пожертвования</DialogTitle>
           <DialogDescription className="text-center">
             Вы хотите пожертвовать {amount.toLocaleString("ru-RU")} ₽ как садака
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 p-6 rounded-lg space-y-3 border-2 border-primary/20">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground font-medium">Сумма:</span>
@@ -97,6 +97,11 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
             </div>
           </div>
 
+          <p className="text-xs text-center text-muted-foreground">
+            Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
+          </p>
+        </div>
+        <div className="flex-shrink-0 pt-4 border-t">
           <CloudPaymentsButton
             amount={amount}
             currency="RUB"
@@ -111,10 +116,6 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
             disabled={isProcessing}
             className="w-full h-12 text-base font-semibold"
           />
-
-          <p className="text-xs text-center text-muted-foreground">
-            Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
-          </p>
         </div>
       </DialogContent>
     </Dialog>

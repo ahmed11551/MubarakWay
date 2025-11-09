@@ -243,20 +243,22 @@ export function UltraQuickDonation() {
                     </p>
                   )}
                 </div>
-
-                <CloudPaymentsButton
-                  amount={Number(amount)}
-                  description={`Пожертвование ${Number(amount).toLocaleString("ru-RU")} ₽`}
-                  onSuccess={handlePaymentSuccess}
-                  onFail={handlePaymentFail}
-                  disabled={isProcessing}
-                  className="w-full"
-                />
               </div>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex-shrink-0 pt-4 border-t space-y-2">
+            {step === 3 && (
+              <CloudPaymentsButton
+                amount={Number(amount)}
+                description={`Пожертвование ${Number(amount).toLocaleString("ru-RU")} ₽`}
+                onSuccess={handlePaymentSuccess}
+                onFail={handlePaymentFail}
+                disabled={isProcessing}
+                className="w-full"
+              />
+            )}
+            <div className="flex gap-2">
             {step > 1 && (
               <Button variant="outline" className="flex-1" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
                 Назад
