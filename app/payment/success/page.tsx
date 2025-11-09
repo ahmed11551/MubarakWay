@@ -26,7 +26,7 @@ export default function PaymentSuccessPage() {
             <CheckCircle2 className="h-8 w-8 text-green-600" />
           </div>
           <CardTitle className="text-2xl">Оплата успешна!</CardTitle>
-          <CardDescription>Спасибо за ваше пожертвование</Cardсибо за ваше пожертвование</CardDescription>
+          <CardDescription>Спасибо за ваше пожертвование</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {donationId && (
