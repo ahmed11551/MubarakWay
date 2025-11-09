@@ -251,7 +251,12 @@ export function UltraQuickDonation() {
             {step === 3 && (
               <CloudPaymentsButton
                 amount={Number(amount)}
+                currency="RUB"
                 description={`Пожертвование ${Number(amount).toLocaleString("ru-RU")} ₽`}
+                donationData={{
+                  category: "sadaqah",
+                  campaignId: selectedCampaign || undefined,
+                }}
                 onSuccess={handlePaymentSuccess}
                 onFail={handlePaymentFail}
                 disabled={isProcessing}
