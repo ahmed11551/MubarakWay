@@ -35,6 +35,9 @@ export function DonationForm() {
 
   const selectedAmount = customAmount ? Number.parseFloat(customAmount) : amount
 
+  // Validate amount
+  const isAmountValid = selectedAmount !== null && !Number.isNaN(selectedAmount) && selectedAmount > 0 && selectedAmount <= 10000000
+
   // Prefill from query params
   useEffect(() => {
     const typeParam = search.get("type") // project | target
@@ -177,12 +180,23 @@ export function DonationForm() {
             />
           </div>
 
-          {selectedAmount && (
+          {selectedAmount && isAmountValid && (
             <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
               <p className="text-sm font-medium text-primary">
                 Итого: {selectedAmount.toFixed(2)} {currency}
                 {donationType === "recurring" &&
                   ` / ${frequency === "daily" ? "день" : frequency === "weekly" ? "неделя" : frequency === "monthly" ? "месяц" : "год"}`}
+              </p>
+            </div>
+          )}
+          {selectedAmount && !isAmountValid && (
+            <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+              <p className="text-sm font-medium text-destructive">
+                {selectedAmount <= 0
+                  ? "Сумма должна быть больше 0"
+                  : selectedAmount > 10000000
+                    ? "Максимальная сумма: 10 000 000"
+                    : "Введите корректную сумму"}
               </p>
             </div>
           )}
@@ -290,13 +304,14 @@ export function DonationForm() {
           donationType,
           frequency: donationType === "recurring" ? frequency : null,
           category,
-          fundId,
-          message,
+          fundId: fundId && fundId !== "all" ? fundId : undefined,
+          campaignId: campaignId || undefined,
+          message: message?.trim() || undefined,
           isAnonymous,
         }}
         onSuccess={handlePaymentSuccess}
         onFail={handlePaymentFail}
-        disabled={!selectedAmount || selectedAmount <= 0}
+        disabled={!isAmountValid}
         className="w-full"
       />
 

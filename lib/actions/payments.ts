@@ -7,7 +7,41 @@ export type PaymentInitiateInput = DonationInput & {
   cancelUrl?: string
 }
 
+function validatePaymentInput(input: PaymentInitiateInput): string | null {
+  // Validate returnUrl format if provided
+  if (input.returnUrl) {
+    try {
+      const url = new URL(input.returnUrl)
+      if (!url.protocol.startsWith("http")) {
+        return "Return URL должен использовать протокол HTTP или HTTPS"
+      }
+    } catch {
+      return "Неверный формат Return URL"
+    }
+  }
+
+  // Validate cancelUrl format if provided
+  if (input.cancelUrl) {
+    try {
+      const url = new URL(input.cancelUrl)
+      if (!url.protocol.startsWith("http")) {
+        return "Cancel URL должен использовать протокол HTTP или HTTPS"
+      }
+    } catch {
+      return "Неверный формат Cancel URL"
+    }
+  }
+
+  return null
+}
+
 export async function initiatePayment(input: PaymentInitiateInput) {
+  // Validate payment input
+  const validationError = validatePaymentInput(input)
+  if (validationError) {
+    return { error: validationError }
+  }
+
   try {
     // Сначала создаем запись о пожертвовании
     const donationResult = await createDonation(input)

@@ -17,8 +17,74 @@ export type DonationInput = {
   isAnonymous: boolean
 }
 
+// Validation constants
+const MIN_DONATION_AMOUNT = 1
+const MAX_DONATION_AMOUNT = 10000000 // 10 million
+const MAX_MESSAGE_LENGTH = 500
+const VALID_CURRENCIES = ["RUB", "USD", "EUR"]
+const VALID_CATEGORIES = ["sadaqah", "zakat", "general"]
+const VALID_DONATION_TYPES = ["one_time", "recurring"]
+const VALID_FREQUENCIES = ["daily", "weekly", "monthly", "yearly"]
+
+function validateDonationInput(input: DonationInput): string | null {
+  // Validate amount
+  if (typeof input.amount !== "number" || Number.isNaN(input.amount)) {
+    return "Сумма пожертвования должна быть числом"
+  }
+  if (input.amount < MIN_DONATION_AMOUNT) {
+    return `Минимальная сумма пожертвования: ${MIN_DONATION_AMOUNT} ${input.currency || "RUB"}`
+  }
+  if (input.amount > MAX_DONATION_AMOUNT) {
+    return `Максимальная сумма пожертвования: ${MAX_DONATION_AMOUNT.toLocaleString("ru-RU")} ${input.currency || "RUB"}`
+  }
+
+  // Validate currency
+  if (!input.currency || !VALID_CURRENCIES.includes(input.currency)) {
+    return `Неверная валюта. Допустимые валюты: ${VALID_CURRENCIES.join(", ")}`
+  }
+
+  // Validate donation type
+  if (!VALID_DONATION_TYPES.includes(input.donationType)) {
+    return `Неверный тип пожертвования. Допустимые типы: ${VALID_DONATION_TYPES.join(", ")}`
+  }
+
+  // Validate frequency for recurring donations
+  if (input.donationType === "recurring") {
+    if (!input.frequency || !VALID_FREQUENCIES.includes(input.frequency)) {
+      return `Для регулярных пожертвований необходимо указать периодичность: ${VALID_FREQUENCIES.join(", ")}`
+    }
+  }
+
+  // Validate category
+  if (!input.category || !VALID_CATEGORIES.includes(input.category)) {
+    return `Неверная категория. Допустимые категории: ${VALID_CATEGORIES.join(", ")}`
+  }
+
+  // Validate message length
+  if (input.message && input.message.length > MAX_MESSAGE_LENGTH) {
+    return `Сообщение не должно превышать ${MAX_MESSAGE_LENGTH} символов`
+  }
+
+  // Validate fundId and campaignId format (UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (input.fundId && !uuidRegex.test(input.fundId)) {
+    return "Неверный формат ID фонда"
+  }
+  if (input.campaignId && !uuidRegex.test(input.campaignId)) {
+    return "Неверный формат ID кампании"
+  }
+
+  return null
+}
+
 export async function createDonation(input: DonationInput) {
   const supabase = await createClient()
+
+  // Validate input data
+  const validationError = validateDonationInput(input)
+  if (validationError) {
+    return { error: validationError }
+  }
 
   // Get current user
   const {

@@ -28,7 +28,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const data = JSON.parse(body)
+    let data: any
+    try {
+      data = JSON.parse(body)
+    } catch (parseError) {
+      console.error("[CloudPayments] Invalid JSON body:", parseError)
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+    }
+
+    // Validate required fields
+    if (!data.Model) {
+      console.error("[CloudPayments] Missing Model in request body")
+      return NextResponse.json({ error: "Missing Model field" }, { status: 400 })
+    }
+
+    // Validate transaction ID
+    if (!data.Model.TransactionId) {
+      console.error("[CloudPayments] Missing TransactionId")
+      return NextResponse.json({ error: "Missing TransactionId" }, { status: 400 })
+    }
+
+    // Validate InvoiceId
+    if (!data.Model.InvoiceId) {
+      console.error("[CloudPayments] Missing InvoiceId")
+      return NextResponse.json({ error: "Missing InvoiceId" }, { status: 400 })
+    }
 
     // Handle different event types
     switch (data.Model?.Status) {

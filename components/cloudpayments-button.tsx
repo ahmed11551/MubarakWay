@@ -30,6 +30,19 @@ export function CloudPaymentsButton({
   const [isLoading, setIsLoading] = useState(false)
 
   const handlePayment = async () => {
+    // Client-side validation
+    if (amount <= 0 || amount > 10000000) {
+      hapticFeedback("error")
+      onFail?.("Сумма должна быть от 1 до 10 000 000")
+      return
+    }
+
+    if (!currency || !["RUB", "USD", "EUR"].includes(currency)) {
+      hapticFeedback("error")
+      onFail?.("Неверная валюта")
+      return
+    }
+
     hapticFeedback("medium")
     setIsLoading(true)
 
