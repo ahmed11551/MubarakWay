@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe, Building2, GraduationCap, Stethoscope, Droplets, Mosque, AlertCircle, HandHeart, Coins } from "lucide-react"
+import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe, Building2, GraduationCap, Stethoscope, Droplets, Landmark, AlertCircle, HandHeart, Coins } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -368,7 +368,7 @@ export default async function FundDetailPage({
                     const text = (title + " " + description).toLowerCase()
                     if (text.includes("закят") || text.includes("zakat")) return Coins
                     if (text.includes("садака") || text.includes("sadaqa")) return HandHeart
-                    if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Mosque
+                    if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Landmark
                     if (text.includes("образование") || text.includes("хифз") || text.includes("школ")) return GraduationCap
                     if (text.includes("медицин") || text.includes("больн") || text.includes("лечен")) return Stethoscope
                     if (text.includes("вода") || text.includes("колодец")) return Droplets
@@ -438,7 +438,7 @@ export default async function FundDetailPage({
                     const text = (title + " " + description).toLowerCase()
                     if (text.includes("закят") || text.includes("zakat")) return Coins
                     if (text.includes("садака") || text.includes("sadaqa")) return HandHeart
-                    if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Mosque
+                    if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Landmark
                     if (text.includes("образование") || text.includes("хифз") || text.includes("школ")) return GraduationCap
                     if (text.includes("медицин") || text.includes("больн") || text.includes("лечен")) return Stethoscope
                     if (text.includes("вода") || text.includes("колодец")) return Droplets
