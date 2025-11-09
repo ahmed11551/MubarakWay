@@ -263,8 +263,8 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="history" className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <h3 className="text-base sm:text-lg font-bold leading-tight">История<br className="sm:hidden" /> транзакций</h3>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <h3 className="text-base sm:text-lg font-bold text-center sm:text-left w-full sm:w-auto">История транзакций</h3>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <DialogTrigger asChild>
@@ -388,8 +388,8 @@ export default function ProfilePage() {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <h3 className="text-base sm:text-lg font-bold leading-tight">Отчёты<br className="sm:hidden" /> фондов</h3>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <h3 className="text-base sm:text-lg font-bold text-center sm:text-left w-full sm:w-auto">Отчёты фондов</h3>
               <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Фильтр</span>
