@@ -179,7 +179,9 @@
     width: 100%;
     /* Ensure smooth scrolling */
     scroll-behavior: smooth;
-    /* Remove problematic optimizations that can cause stuttering */
+    /* Optimize for smooth scrolling without stuttering */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   /* Prevent pull-to-close on scrollable containers */
