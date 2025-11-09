@@ -1,9 +1,8 @@
-import { Suspense } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Loader2 } from "lucide-react"
+import { Plus } from "lucide-react"
 import Link from "next/link"
 import { CampaignsList } from "@/components/campaigns-list"
 import { getCampaigns } from "@/lib/actions/campaigns"
@@ -22,24 +21,23 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 60 // Кэшировать на 60 секунд для быстрой загрузки
 
-async function CampaignsContent() {
-  // Fetch campaigns from database with error handling
-  let activeResult, completedResult
-  
-  try {
-    activeResult = await getCampaigns("active")
-  } catch (error) {
-    console.error("Error fetching active campaigns:", error)
-    activeResult = { campaigns: [], error: "Failed to load campaigns" }
-  }
-  
-  try {
-    completedResult = await getCampaigns("completed")
-  } catch (error) {
-    console.error("Error fetching completed campaigns:", error)
-    completedResult = { campaigns: [], error: "Failed to load campaigns" }
-  }
+export default async function CampaignsPage() {
+  // Параллельная загрузка для ускорения
+  const [activeResult, completedResult] = await Promise.allSettled([
+    getCampaigns("active"),
+    getCampaigns("completed"),
+  ]).then((results) => {
+    return results.map((result) => {
+      if (result.status === "fulfilled") {
+        return result.value
+      } else {
+        console.error("Error fetching campaigns:", result.reason)
+        return { campaigns: [], error: "Failed to load campaigns" }
+      }
+    })
+  })
   
   // Handle errors
   if (activeResult.error) {
@@ -107,28 +105,5 @@ async function CampaignsContent() {
 
       <BottomNav />
     </div>
-  )
-}
-
-export default async function CampaignsPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen pb-20">
-          <AppHeader />
-          <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                <p className="text-muted-foreground">Загрузка кампаний...</p>
-              </div>
-            </div>
-          </main>
-          <BottomNav />
-        </div>
-      }
-    >
-      <CampaignsContent />
-    </Suspense>
   )
 }
