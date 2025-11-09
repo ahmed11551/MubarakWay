@@ -1,6 +1,7 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import Link from "next/link"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect } from "react"
@@ -30,40 +31,35 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
 
   // Prefetch всех страниц при монтировании
   useEffect(() => {
     navItems.forEach((item) => {
       if (item.href !== pathname) {
-        const link = document.createElement("link")
-        link.rel = "prefetch"
-        link.href = item.href
-        document.head.appendChild(link)
+        router.prefetch(item.href)
       }
     })
-  }, [pathname])
+  }, [pathname, router])
 
-  // Простой обработчик только для haptic feedback - навигация нативная
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // Haptic feedback асинхронно, не блокируя навигацию
-    if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-      // Используем requestIdleCallback для неблокирующего выполнения
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(() => {
-          try {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-          } catch {}
-        }, { timeout: 50 })
-      } else {
-        // Fallback для браузеров без requestIdleCallback
-        setTimeout(() => {
-          try {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-          } catch {}
-        }, 0)
-      }
+  // Обработчик для плавной навигации без перезагрузки
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Если уже на этой странице - блокируем
+    if (href === pathname) {
+      e.preventDefault()
+      return
     }
-    // НЕ блокируем навигацию - пусть браузер обрабатывает нативно
+
+    // Haptic feedback
+    if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
+      try {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+      } catch {}
+    }
+
+    // Плавная навигация через Next.js router без перезагрузки
+    e.preventDefault()
+    router.push(href)
   }
 
   return (
@@ -81,14 +77,15 @@ export function BottomNav() {
           const Icon = item.icon
 
           return (
-            <a
+            <Link
               key={item.href}
               href={item.href}
-              onClick={handleClick}
+              onClick={(e) => handleClick(e, item.href)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full",
                 "focus:outline-none rounded-lg select-none",
-                isActive ? "text-primary" : "text-muted-foreground",
+                "transition-colors duration-150",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
               )}
               aria-label={item.name}
               style={{ 
@@ -101,9 +98,9 @@ export function BottomNav() {
                 cursor: "pointer",
               }}
             >
-              <Icon className={cn("h-5 w-5 pointer-events-none", isActive && "drop-shadow-[0_0_8px_oklch(0.6_0.18_160/0.5)]")} />
+              <Icon className={cn("h-5 w-5 pointer-events-none transition-all duration-150", isActive && "drop-shadow-[0_0_8px_oklch(0.6_0.18_160/0.5)]")} />
               <span className="text-xs font-medium pointer-events-none">{item.name}</span>
-            </a>
+            </Link>
           )
         })}
       </div>
