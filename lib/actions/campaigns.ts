@@ -15,6 +15,7 @@ export type CampaignInput = {
   imageUrl?: string
   deadline?: Date
   fundId?: string
+  linkedProjectIds?: string[] // ID связанных проектов (кампаний)
 }
 
 export async function createCampaign(input: CampaignInput) {
@@ -51,6 +52,23 @@ export async function createCampaign(input: CampaignInput) {
     if (campaignError) {
       console.error("[v0] Campaign creation error:", campaignError)
       return { error: "Failed to create campaign" }
+    }
+
+    // Сохраняем связи с проектами, если они указаны
+    if (input.linkedProjectIds && input.linkedProjectIds.length > 0 && campaign.id) {
+      const links = input.linkedProjectIds.map((linkedId) => ({
+        campaign_id: campaign.id,
+        linked_campaign_id: linkedId,
+      }))
+
+      const { error: linksError } = await supabase
+        .from("campaign_project_links")
+        .insert(links)
+
+      if (linksError) {
+        console.error("[v0] Campaign links creation error:", linksError)
+        // Не критично, продолжаем
+      }
     }
 
     revalidatePath("/campaigns")

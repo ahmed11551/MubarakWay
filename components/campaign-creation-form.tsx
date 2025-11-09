@@ -19,6 +19,7 @@ import { createCampaign } from "@/lib/actions/campaigns"
 import { uploadImageFromBase64 } from "@/lib/actions/storage"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { CampaignProjectLinker } from "@/components/campaign-project-linker"
 
 const CATEGORIES = [
   { value: "medical", label: "Медицина" },
@@ -48,6 +49,7 @@ export function CampaignCreationForm() {
   const [funds, setFunds] = useState<any[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoadingFunds, setIsLoadingFunds] = useState(true)
+  const [linkedProjectIds, setLinkedProjectIds] = useState<string[]>([])
 
   // Fetch funds on component mount (с кэшированием)
   useEffect(() => {
@@ -217,6 +219,7 @@ export function CampaignCreationForm() {
         deadline: deadline || undefined,
         imageUrl,
         fundId: selectedFundId || undefined,
+        linkedProjectIds: linkedProjectIds.length > 0 ? linkedProjectIds : undefined,
       })
 
       if (result.error) {
@@ -236,6 +239,7 @@ export function CampaignCreationForm() {
       setImagePreview(null)
       setImageFile(null)
       setSelectedFundId("")
+      setLinkedProjectIds([])
       setErrors({})
 
       // Redirect to campaigns page after a short delay
@@ -394,6 +398,22 @@ export function CampaignCreationForm() {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Link To Projects */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Link To Projects</CardTitle>
+          <CardDescription>
+            Свяжите вашу кампанию с другими активными проектами
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CampaignProjectLinker
+            selectedProjectIds={linkedProjectIds}
+            onProjectsChange={setLinkedProjectIds}
+          />
         </CardContent>
       </Card>
 

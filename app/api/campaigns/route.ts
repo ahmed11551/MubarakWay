@@ -6,8 +6,25 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
   const status = searchParams.get("status") || "active"
   const limit = parseInt(searchParams.get("limit") || "10")
+  const ids = searchParams.get("ids") // Поддержка получения по ID
 
   try {
+    // Если запрашиваются конкретные ID
+    if (ids) {
+      const { getCampaignById } = await import("@/lib/actions/campaigns")
+      const idArray = ids.split(",").filter(Boolean)
+      const campaigns = []
+      
+      for (const id of idArray) {
+        const result = await getCampaignById(id)
+        if (result.campaign) {
+          campaigns.push(result.campaign)
+        }
+      }
+      
+      return NextResponse.json({ campaigns })
+    }
+
     // Try to fetch from bot.e-replika.ru API first
     const botApiCampaigns = await fetchBotApiCampaigns(status, limit)
     if (botApiCampaigns && Array.isArray(botApiCampaigns) && botApiCampaigns.length > 0) {
