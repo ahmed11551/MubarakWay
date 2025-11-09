@@ -50,27 +50,27 @@ export function CampaignsList({ activeCampaigns, endingCampaigns, completedCampa
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full h-auto p-1 gap-1">
+        <TabsList className="flex w-full h-auto p-1.5 gap-1.5 bg-muted/50 rounded-lg">
           <TabsTrigger 
             value="active" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs min-w-0"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm min-w-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
           >
-            <TrendingUp className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Активные</span>
+            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate font-medium">Активные</span>
           </TabsTrigger>
           <TabsTrigger 
             value="ending" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs min-w-0"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm min-w-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
           >
-            <Clock className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Скоро завершатся</span>
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate font-medium">Скоро завершатся</span>
           </TabsTrigger>
           <TabsTrigger 
             value="completed" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs min-w-0"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm min-w-0 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
           >
-            <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Завершённые</span>
+            <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate font-medium">Завершённые</span>
           </TabsTrigger>
         </TabsList>
 

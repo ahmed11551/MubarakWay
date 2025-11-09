@@ -468,9 +468,9 @@ export default function ProfilePage() {
         </Tabs>
 
         {/* Достижения */}
-        <Card className="border-2 border-accent/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-primary/5 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Award className="h-5 w-5 text-accent" />
               Достижения
             </CardTitle>
@@ -487,12 +487,16 @@ export default function ProfilePage() {
               ].map((achievement, i) => (
                 <div
                   key={i}
-                  className={`text-center p-3 rounded-lg border ${
-                    achievement.unlocked ? "bg-accent/5 border-accent/20" : "bg-muted/50 border-muted opacity-50"
+                  className={`text-center p-3.5 rounded-xl border-2 transition-all duration-200 ${
+                    achievement.unlocked 
+                      ? "bg-background/80 border-accent/30 shadow-md hover:shadow-lg hover:scale-105" 
+                      : "bg-muted/40 border-muted/50 opacity-60 grayscale"
                   }`}
                 >
-                  <div className="text-3xl mb-1">{achievement.icon}</div>
-                  <div className="text-xs font-medium">{achievement.title}</div>
+                  <div className="text-3xl mb-2 leading-none">{achievement.icon}</div>
+                  <div className="text-[10px] sm:text-xs font-medium leading-tight min-h-[2.5rem] flex items-center justify-center">
+                    {achievement.title}
+                  </div>
                 </div>
               ))}
             </div>
