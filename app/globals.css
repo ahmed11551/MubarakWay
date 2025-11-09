@@ -175,6 +175,10 @@
     width: 100%;
     /* Ensure smooth scrolling */
     scroll-behavior: smooth;
+    /* Performance optimizations */
+    will-change: scroll-position;
+    transform: translateZ(0); /* Force hardware acceleration */
+    -webkit-transform: translateZ(0);
   }
 
   /* Prevent pull-to-close on scrollable containers */

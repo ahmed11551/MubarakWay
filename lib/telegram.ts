@@ -103,9 +103,6 @@ function setupScrollPrevention(tg: any) {
 
   // Cleanup function
   return () => {
-    document.removeEventListener("touchstart", handleTouchStart, { capture: true } as any)
-    document.removeEventListener("touchmove", handleTouchMove, { capture: true } as any)
-    document.removeEventListener("touchend", handleTouchEnd, { capture: true } as any)
     if (typeof tg.offEvent === "function") {
       tg.offEvent("viewportChanged", updateViewport)
     }
