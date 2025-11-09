@@ -117,9 +117,12 @@ export default function HomePage() {
         const data = await response.json()
         setActiveCampaigns(data.campaigns || [])
         toast.success("Обновлено")
+      } else {
+        toast.error("Не удалось загрузить кампании. Попробуйте позже.")
       }
     } catch (error) {
       console.error("Failed to refresh campaigns:", error)
+      toast.error("Ошибка соединения. Проверьте интернет и попробуйте снова.")
     } finally {
       setIsLoadingCampaigns(false)
     }

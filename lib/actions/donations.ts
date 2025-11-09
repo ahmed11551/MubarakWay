@@ -93,7 +93,7 @@ export async function createDonation(input: DonationInput) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return { error: "You must be logged in to make a donation" }
+    return { error: "Для создания пожертвования необходимо войти в систему" }
   }
 
   try {
@@ -117,7 +117,7 @@ export async function createDonation(input: DonationInput) {
 
     if (donationError) {
       console.error("[v0] Donation creation error:", donationError)
-      return { error: "Failed to create donation record" }
+      return { error: "Не удалось создать пожертвование. Проверьте данные и попробуйте снова." }
     }
 
     // NOTE: Do NOT update amounts here - they will be updated in webhook after successful payment
@@ -132,7 +132,7 @@ export async function createDonation(input: DonationInput) {
     return { success: true, donation }
   } catch (error) {
     console.error("[v0] Unexpected donation error:", error)
-    return { error: "An unexpected error occurred" }
+    return { error: "Произошла непредвиденная ошибка. Пожалуйста, попробуйте позже." }
   }
 }
 

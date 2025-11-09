@@ -47,14 +47,14 @@ export async function initiatePayment(input: PaymentInitiateInput) {
     const donationResult = await createDonation(input)
 
     if (donationResult.error || !donationResult.donation) {
-      return { error: donationResult.error || "Failed to create donation" }
+      return { error: donationResult.error || "Не удалось создать пожертвование. Попробуйте снова." }
     }
 
     // Получаем URL API для создания платежа из переменных окружения
     const paymentApiUrl = process.env.PAYMENT_API_URL || process.env.NEXT_PUBLIC_PAYMENT_API_URL
 
     if (!paymentApiUrl) {
-      return { error: "Payment API URL is not configured" }
+      return { error: "Сервис оплаты временно недоступен. Пожалуйста, попробуйте позже." }
     }
 
     // Вызываем их API для создания платежа
@@ -88,7 +88,7 @@ export async function initiatePayment(input: PaymentInitiateInput) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error("[Payment] API error:", response.status, errorText)
-      return { error: `Failed to initiate payment: ${response.statusText}` }
+      return { error: "Не удалось инициировать платёж. Попробуйте снова или обратитесь в поддержку." }
     }
 
     const data = await response.json()
@@ -98,13 +98,16 @@ export async function initiatePayment(input: PaymentInitiateInput) {
 
     if (!paymentUrl) {
       console.error("[Payment] No payment URL in response:", data)
-      return { error: "Payment URL not received from API" }
+      return { error: "Не удалось получить ссылку на оплату. Попробуйте снова." }
     }
 
     return { success: true, paymentUrl, donationId: donationResult.donation.id }
   } catch (error) {
     console.error("[Payment] Unexpected error:", error)
-    return { error: error instanceof Error ? error.message : "An unexpected error occurred" }
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Произошла ошибка при инициализации платежа. Проверьте интернет-соединение и попробуйте снова."
+    return { error: errorMessage }
   }
 }
 

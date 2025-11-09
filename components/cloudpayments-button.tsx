@@ -46,6 +46,13 @@ export function CloudPaymentsButton({
     hapticFeedback("medium")
     setIsLoading(true)
 
+    // Таймаут для предотвращения зависания
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false)
+      hapticFeedback("error")
+      onFail?.("Операция заняла слишком много времени. Попробуйте снова или проверьте интернет-соединение.")
+    }, 30000) // 30 секунд
+
     try {
       // Формируем данные для создания платежа
       const paymentInput: PaymentInitiateInput = {
@@ -62,6 +69,8 @@ export function CloudPaymentsButton({
 
       // Вызываем server action для создания платежа и получения ссылки
       const result = await initiatePayment(paymentInput)
+      
+      clearTimeout(timeoutId)
 
       if (result.error) {
         console.error("[Payment] Ошибка создания платежа:", result.error)
@@ -75,7 +84,7 @@ export function CloudPaymentsButton({
         console.error("[Payment] Ссылка на оплату не получена")
         hapticFeedback("error")
         setIsLoading(false)
-        onFail?.("Ссылка на оплату не получена")
+        onFail?.("Ссылка на оплату не получена. Попробуйте снова.")
         return
       }
 
@@ -86,10 +95,14 @@ export function CloudPaymentsButton({
       // onSuccess будет вызван после возврата с платежной страницы
       // (через returnUrl)
     } catch (error) {
+      clearTimeout(timeoutId)
       console.error("[Payment] Ошибка инициализации платежа:", error)
       hapticFeedback("error")
       setIsLoading(false)
-      onFail?.(error instanceof Error ? error.message : "Не удалось инициировать платёж")
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Не удалось инициировать платёж. Проверьте интернет-соединение и попробуйте снова."
+      onFail?.(errorMessage)
     }
   }
 
