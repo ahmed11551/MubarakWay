@@ -20,12 +20,20 @@ Next.js приложение для управления благотворит�
 Создайте `.env.local`:
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # ⚠️ ВАЖНО для автоматической авторизации
+
+# API
 API_AUTH_TOKEN=test_token_123
+
+# Telegram
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 TELEGRAM_SECRET_TOKEN=your_telegram_secret_token
 NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=YourBotUsername
+
+# App
 NEXT_PUBLIC_BASE_URL=https://your-domain.com
 ```
 
