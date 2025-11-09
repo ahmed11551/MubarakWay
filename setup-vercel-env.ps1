@@ -27,7 +27,7 @@ $envVars = @(
     @{ key = "API_AUTH_TOKEN"; value = "test_token_123" },
     @{ key = "TELEGRAM_BOT_TOKEN"; value = "8417046320:AAF6TExdeJiSq3xK0Cy2GhL8KVRrvZf7UWQ" },
     @{ key = "TELEGRAM_SECRET_TOKEN"; value = "1f2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081a9b0c1d2e3f40516" },
-    @{ key = "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME"; value = "MubarakWayBot" },
+    @{ key = "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME"; value = "MubarakWayPass_bot" },
     @{ key = "BOT_API_BASE_URL"; value = "https://bot.e-replika.ru" },
     @{ key = "BOT_API_TOKEN"; value = "test_token_123" }
 )

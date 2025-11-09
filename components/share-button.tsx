@@ -20,7 +20,7 @@ export function ShareButton({ campaignId, campaignTitle, className }: ShareButto
     
     // Генерируем deep link для Telegram бота
     // Формат: t.me/bot?start=campaign_123
-    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "MubarakWayBot"
+    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "MubarakWayPass_bot"
     const telegramDeepLink = `https://t.me/${botUsername}?start=campaign_${campaignId}`
     const shareText = `${text}\n\n🔗 Ссылка: ${url}\n\n🤖 Telegram: ${telegramDeepLink}`
 
