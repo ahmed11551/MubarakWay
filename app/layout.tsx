@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { TelegramProvider } from "@/components/telegram-provider"
 import { PWAServiceWorker } from "@/components/pwa-service-worker"
+import { PrayerTimesPopup } from "@/components/prayer-times-popup"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin", "latin-ext"] })
@@ -106,6 +107,7 @@ export default function RootLayout({
         <Toaster />
         <Analytics />
         <PWAServiceWorker />
+        <PrayerTimesPopup />
       </body>
     </html>
   )
