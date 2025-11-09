@@ -15,7 +15,7 @@ export async function uploadAvatar(base64Data: string) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return { error: "You must be logged in to upload avatar" }
+    return { error: "Необходимо войти в систему для загрузки аватара. Пожалуйста, обновите страницу." }
   }
 
   try {
@@ -67,7 +67,7 @@ export async function deleteAvatar() {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return { error: "You must be logged in to delete avatar" }
+    return { error: "Необходимо войти в систему для удаления аватара. Пожалуйста, обновите страницу." }
   }
 
   try {

@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Loader2, Camera, X } from "lucide-react"
 import { uploadAvatar, deleteAvatar } from "@/lib/actions/profile"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/mobile-ux"
+import { createClient } from "@/lib/supabase/client"
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null
@@ -26,7 +27,23 @@ export function AvatarUpload({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl || null)
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Проверяем авторизацию при монтировании компонента
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const supabase = createClient()
+        const { data: { user }, error } = await supabase.auth.getUser()
+        setIsAuthenticated(!error && !!user)
+      } catch (error) {
+        console.error("Auth check error:", error)
+        setIsAuthenticated(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
   const sizeClasses = {
     sm: "h-16 w-16",
@@ -37,6 +54,13 @@ export function AvatarUpload({
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+
+    // Проверяем авторизацию перед загрузкой
+    if (isAuthenticated === false) {
+      toast.error("Необходимо войти в систему для загрузки аватара. Пожалуйста, обновите страницу.")
+      hapticFeedback("error")
+      return
+    }
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
@@ -157,28 +181,37 @@ export function AvatarUpload({
         )}
 
         {/* Upload button overlay */}
-        <div className="absolute bottom-0 right-0">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-            disabled={isUploading || isDeleting}
-          />
-          <Button
-            type="button"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading || isDeleting}
-          >
-            <Camera className="h-4 w-4" />
-          </Button>
-        </div>
+        {isAuthenticated !== false && (
+          <div className="absolute bottom-0 right-0">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={isUploading || isDeleting || isAuthenticated === false}
+            />
+            <Button
+              type="button"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+              onClick={() => {
+                if (isAuthenticated === false) {
+                  toast.error("Необходимо войти в систему для загрузки аватара. Пожалуйста, обновите страницу.")
+                  hapticFeedback("error")
+                  return
+                }
+                fileInputRef.current?.click()
+              }}
+              disabled={isUploading || isDeleting || isAuthenticated === false}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
-        {/* Delete button (only if avatar exists) */}
-        {avatarUrl && !isUploading && (
+        {/* Delete button (only if avatar exists and user is authenticated) */}
+        {avatarUrl && !isUploading && isAuthenticated !== false && (
           <div className="absolute top-0 right-0">
             <Button
               type="button"
@@ -186,7 +219,7 @@ export function AvatarUpload({
               variant="destructive"
               className="h-6 w-6 rounded-full shadow-lg"
               onClick={handleDelete}
-              disabled={isDeleting}
+              disabled={isDeleting || isAuthenticated === false}
             >
               {isDeleting ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
