@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 const navItems = [
   {
@@ -30,6 +30,7 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const navRef = useRef<HTMLElement>(null)
 
   // Prefetch всех страниц при монтировании
   useEffect(() => {
@@ -43,59 +44,53 @@ export function BottomNav() {
     })
   }, [pathname])
 
-  // Обработчик для мгновенной навигации и haptic feedback
-  const handlePointerDown = (e: React.PointerEvent<HTMLAnchorElement>, href: string) => {
-    // Если уже на этой странице - ничего не делаем
-    if (href === pathname) {
+  // Нативные обработчики событий для МАКСИМАЛЬНОЙ скорости
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+
+    const handleEvent = (e: Event) => {
+      const target = e.target as HTMLElement
+      const link = target.closest('a[data-nav-href]') as HTMLAnchorElement
+      if (!link) return
+
+      const href = link.getAttribute('data-nav-href')
+      if (!href || href === pathname) {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        return
+      }
+
+      // Блокируем все обработчики
       e.preventDefault()
-      e.stopPropagation()
-      return false
+      e.stopImmediatePropagation()
+
+      // Haptic feedback
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        try {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+        } catch {}
+      }
+
+      // МГНОВЕННАЯ навигация
+      window.location.href = href
     }
 
-    // Блокируем все дефолтные обработчики Next.js
-    e.preventDefault()
-    e.stopPropagation()
-    e.nativeEvent.stopImmediatePropagation()
+    // Используем pointerdown - самое быстрое событие
+    nav.addEventListener("pointerdown", handleEvent, { capture: true, passive: false })
+    nav.addEventListener("mousedown", handleEvent, { capture: true, passive: false })
+    nav.addEventListener("touchstart", handleEvent, { capture: true, passive: false })
 
-    // Haptic feedback МГНОВЕННО
-    if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-      try {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-      } catch {}
+    return () => {
+      nav.removeEventListener("pointerdown", handleEvent, { capture: true })
+      nav.removeEventListener("mousedown", handleEvent, { capture: true })
+      nav.removeEventListener("touchstart", handleEvent, { capture: true })
     }
-
-    // МГНОВЕННАЯ навигация - БЕЗ ЗАДЕРЖЕК
-    window.location.href = href
-
-    return false
-  }
-
-  // Также обрабатываем mousedown для десктопа
-  const handleMouseDown = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href === pathname) {
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    }
-
-    e.preventDefault()
-    e.stopPropagation()
-    e.nativeEvent.stopImmediatePropagation()
-
-    if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-      try {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-      } catch {}
-    }
-
-    // МГНОВЕННАЯ навигация - БЕЗ ЗАДЕРЖЕК
-    window.location.href = href
-
-    return false
-  }
+  }, [pathname])
 
   return (
     <nav 
+      ref={navRef}
       className="fixed bottom-0 left-0 right-0 z-[100] border-t-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] safe-area-bottom"
       style={{ 
         touchAction: "manipulation",
@@ -112,15 +107,7 @@ export function BottomNav() {
             <a
               key={item.href}
               href={item.href}
-              onPointerDown={(e) => handlePointerDown(e, item.href)}
-              onMouseDown={(e) => handleMouseDown(e, item.href)}
-              onClick={(e) => {
-                // Полностью блокируем onClick для предотвращения перехвата Next.js
-                e.preventDefault()
-                e.stopPropagation()
-                e.nativeEvent.stopImmediatePropagation()
-                return false
-              }}
+              data-nav-href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full",
                 "focus:outline-none rounded-lg select-none",
