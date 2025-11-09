@@ -146,7 +146,8 @@ export async function getUserDonations() {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return { donations: [], error: "You must be logged in to view donations" }
+      // Не авторизован - это нормальная ситуация, не ошибка
+      return { donations: [], error: null }
     }
 
     const { data: donations, error } = await supabase
@@ -160,14 +161,15 @@ export async function getUserDonations() {
       .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("[v0] Get donations error:", error)
-      return { donations: [], error: "Failed to fetch donations" }
+      console.error("[Donations] Get donations error:", error)
+      return { donations: [], error: `Ошибка загрузки: ${error.message || "Неизвестная ошибка"}` }
     }
 
-    return { donations: donations || [] }
+    return { donations: donations || [], error: null }
   } catch (error) {
-    console.error("[v0] Get donations exception:", error)
-    return { donations: [], error: "Failed to fetch donations" }
+    console.error("[Donations] Get donations exception:", error)
+    const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка"
+    return { donations: [], error: `Ошибка загрузки: ${errorMessage}` }
   }
 }
 

@@ -60,51 +60,26 @@ export default function ProfilePage() {
   // Fetch real donations data
   useEffect(() => {
     async function loadDonations() {
+      setIsLoading(true)
       try {
         const result = await getUserDonations()
+        
+        // Если есть реальная ошибка (не просто отсутствие авторизации)
         if (result.error) {
           console.error("Error loading donations:", result.error)
-          toast.error("Не удалось загрузить историю пожертвований")
-          // Use mock data as fallback
-          setTransactions([
-            {
-              id: "TXN-2025-001",
-              date: "15 янв 2025",
-              type: "Пожертвование",
-              amount: 1000,
-              fund: "Исламский фонд помощи",
-              status: "Завершено",
-            },
-            {
-              id: "TXN-2025-002",
-              date: "10 янв 2025",
-              type: "Подписка",
-              amount: 260,
-              fund: "MubarakWay",
-              status: "Завершено",
-            },
-            {
-              id: "TXN-2025-003",
-              date: "8 янв 2025",
-              type: "Кампания",
-              amount: 500,
-              fund: "Строительство колодцев",
-              status: "Завершено",
-            },
-            {
-              id: "TXN-2025-004",
-              date: "5 янв 2025",
-              type: "Закят",
-              amount: 5000,
-              fund: "Фонд помощи сиротам",
-              status: "Завершено",
-            },
-          ])
+          toast.error(result.error)
+          setTransactions([])
+          return
+        }
+
+        // Если нет пожертвований - это нормально
+        if (!result.donations || result.donations.length === 0) {
+          setTransactions([])
           return
         }
 
         // Transform donations to transactions
-        const transformed: Transaction[] = (result.donations || []).map((donation: any) => {
+        const transformed: Transaction[] = result.donations.map((donation: any) => {
           const date = new Date(donation.created_at)
           const typeMap: Record<string, string> = {
             one_time: donation.category === "zakat" ? "Закят" : "Пожертвование",
@@ -126,7 +101,9 @@ export default function ProfilePage() {
         setTransactions(transformed)
       } catch (error) {
         console.error("Failed to load donations:", error)
-        toast.error("Ошибка при загрузке данных")
+        const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка"
+        toast.error(`Ошибка при загрузке данных: ${errorMessage}`)
+        setTransactions([])
       } finally {
         setIsLoading(false)
       }
