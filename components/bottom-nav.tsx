@@ -48,8 +48,14 @@ export function BottomNav() {
     // Если уже на этой странице - ничего не делаем
     if (href === pathname) {
       e.preventDefault()
-      return
+      e.stopPropagation()
+      return false
     }
+
+    // Блокируем все дефолтные обработчики Next.js
+    e.preventDefault()
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
 
     // Haptic feedback МГНОВЕННО
     if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
@@ -58,8 +64,37 @@ export function BottomNav() {
       } catch {}
     }
 
-    // МГНОВЕННАЯ навигация - не ждем ничего
-    window.location.href = href
+    // МГНОВЕННАЯ навигация - используем setTimeout 0 для приоритета
+    setTimeout(() => {
+      window.location.href = href
+    }, 0)
+
+    return false
+  }
+
+  // Также обрабатываем mousedown для десктопа
+  const handleMouseDown = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href === pathname) {
+      e.preventDefault()
+      e.stopPropagation()
+      return false
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
+
+    if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
+      try {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+      } catch {}
+    }
+
+    setTimeout(() => {
+      window.location.href = href
+    }, 0)
+
+    return false
   }
 
   return (
@@ -81,6 +116,14 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               onPointerDown={(e) => handlePointerDown(e, item.href)}
+              onMouseDown={(e) => handleMouseDown(e, item.href)}
+              onClick={(e) => {
+                // Полностью блокируем onClick для предотвращения перехвата Next.js
+                e.preventDefault()
+                e.stopPropagation()
+                e.nativeEvent.stopImmediatePropagation()
+                return false
+              }}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full",
                 "focus:outline-none rounded-lg select-none",
