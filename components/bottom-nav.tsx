@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 
 const navItems = [
   {
@@ -30,7 +30,6 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname()
-  const navRef = useRef<HTMLElement>(null)
 
   // Prefetch всех страниц при монтировании
   useEffect(() => {
@@ -44,53 +43,31 @@ export function BottomNav() {
     })
   }, [pathname])
 
-  // Нативные обработчики событий для МАКСИМАЛЬНОЙ скорости
-  useEffect(() => {
-    const nav = navRef.current
-    if (!nav) return
-
-    const handleEvent = (e: Event) => {
-      const target = e.target as HTMLElement
-      const link = target.closest('a[data-nav-href]') as HTMLAnchorElement
-      if (!link) return
-
-      const href = link.getAttribute('data-nav-href')
-      if (!href || href === pathname) {
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        return
+  // Простой обработчик только для haptic feedback - навигация нативная
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Haptic feedback асинхронно, не блокируя навигацию
+    if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
+      // Используем requestIdleCallback для неблокирующего выполнения
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+          try {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+          } catch {}
+        }, { timeout: 50 })
+      } else {
+        // Fallback для браузеров без requestIdleCallback
+        setTimeout(() => {
+          try {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+          } catch {}
+        }, 0)
       }
-
-      // Блокируем все обработчики
-      e.preventDefault()
-      e.stopImmediatePropagation()
-
-      // Haptic feedback
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        try {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-        } catch {}
-      }
-
-      // МГНОВЕННАЯ навигация
-      window.location.href = href
     }
-
-    // Используем pointerdown - самое быстрое событие
-    nav.addEventListener("pointerdown", handleEvent, { capture: true, passive: false })
-    nav.addEventListener("mousedown", handleEvent, { capture: true, passive: false })
-    nav.addEventListener("touchstart", handleEvent, { capture: true, passive: false })
-
-    return () => {
-      nav.removeEventListener("pointerdown", handleEvent, { capture: true })
-      nav.removeEventListener("mousedown", handleEvent, { capture: true })
-      nav.removeEventListener("touchstart", handleEvent, { capture: true })
-    }
-  }, [pathname])
+    // НЕ блокируем навигацию - пусть браузер обрабатывает нативно
+  }
 
   return (
     <nav 
-      ref={navRef}
       className="fixed bottom-0 left-0 right-0 z-[100] border-t-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] safe-area-bottom"
       style={{ 
         touchAction: "manipulation",
@@ -107,7 +84,7 @@ export function BottomNav() {
             <a
               key={item.href}
               href={item.href}
-              data-nav-href={item.href}
+              onClick={handleClick}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full",
                 "focus:outline-none rounded-lg select-none",
