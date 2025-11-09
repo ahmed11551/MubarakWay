@@ -239,6 +239,17 @@ export function CampaignCreationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Cancel Button */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          disabled={isLoading || isUploadingImage}
+        >
+          Отмена
+        </Button>
+      </div>
       {/* Basic Information */}
       <Card>
         <CardHeader>

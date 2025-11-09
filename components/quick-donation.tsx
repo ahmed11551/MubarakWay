@@ -75,7 +75,7 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
             Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
           </p>
         </div>
-        <div className="flex-shrink-0 pt-4 border-t">
+        <div className="flex-shrink-0 pt-4 border-t space-y-2">
           <CloudPaymentsButton
             amount={amount}
             currency="RUB"
@@ -90,6 +90,14 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
             disabled={isProcessing}
             className="w-full h-12 text-base font-semibold"
           />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setIsOpen(false)}
+            disabled={isProcessing}
+          >
+            Отмена
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

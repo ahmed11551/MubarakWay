@@ -241,32 +241,49 @@ export function UltraQuickDonation() {
 
           <div className="flex-shrink-0 pt-4 border-t space-y-2">
             {step === 3 && (
-              <CloudPaymentsButton
-                amount={Number(amount)}
-                currency="RUB"
-                description={`Пожертвование ${Number(amount).toLocaleString("ru-RU")} ₽`}
-                donationData={{
-                  category: "sadaqah",
-                  campaignId: selectedCampaign || undefined,
-                }}
-                onSuccess={handlePaymentSuccess}
-                onFail={handlePaymentFail}
-                disabled={isProcessing}
-                className="w-full"
-              />
-            )}
-            <div className="flex gap-2">
-            {step > 1 && (
-              <Button variant="outline" className="flex-1" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
-                Назад
-              </Button>
+              <div className="space-y-2">
+                <CloudPaymentsButton
+                  amount={Number(amount)}
+                  currency="RUB"
+                  description={`Пожертвование ${Number(amount).toLocaleString("ru-RU")} ₽`}
+                  donationData={{
+                    category: "sadaqah",
+                    campaignId: selectedCampaign || undefined,
+                  }}
+                  onSuccess={handlePaymentSuccess}
+                  onFail={handlePaymentFail}
+                  disabled={isProcessing}
+                  className="w-full"
+                />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={isProcessing}
+                >
+                  Отмена
+                </Button>
+              </div>
             )}
             {step < 3 && (
-              <Button className="flex-1" onClick={handleNext} disabled={step === 2 && (!amount || Number(amount) <= 0)}>
-                Далее
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Отмена
+                </Button>
+                {step > 1 && (
+                  <Button variant="outline" className="flex-1" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
+                    Назад
+                  </Button>
+                )}
+                <Button className="flex-1" onClick={handleNext} disabled={step === 2 && (!amount || Number(amount) <= 0)}>
+                  Далее
+                </Button>
+              </div>
             )}
-          </div>
         </DialogContent>
       </Dialog>
     </>

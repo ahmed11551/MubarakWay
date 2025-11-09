@@ -231,7 +231,7 @@ export function QuickDonationBlock() {
               Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
             </p>
           </div>
-          <div className="flex-shrink-0 pt-4 border-t">
+          <div className="flex-shrink-0 pt-4 border-t space-y-2">
             <CloudPaymentsButton
               amount={selectedAmount || 0}
               currency="RUB"
@@ -246,6 +246,14 @@ export function QuickDonationBlock() {
               disabled={isProcessing}
               className="w-full h-12 text-base font-semibold"
             />
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isProcessing}
+            >
+              Отмена
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
