@@ -13,6 +13,7 @@ $vars = @{
     "API_AUTH_TOKEN" = "test_token_123"
     "TELEGRAM_BOT_TOKEN" = "8417046320:AAF6TExdeJiSq3xK0Cy2GhL8KVRrvZf7UWQ"
     "TELEGRAM_SECRET_TOKEN" = "1f2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081a9b0c1d2e3f40516"
+    "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME" = "MubarakWayBot"
     "BOT_API_BASE_URL" = "https://bot.e-replika.ru"
     "BOT_API_TOKEN" = "test_token_123"
 }
