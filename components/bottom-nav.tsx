@@ -46,9 +46,14 @@ export function BottomNav() {
       const href = button.getAttribute('data-href')
       if (!href || href === pathname) {
         e.preventDefault()
+        e.stopPropagation()
         return
       }
 
+      // Немедленная навигация при touchstart - не ждем touchend
+      e.preventDefault()
+      e.stopPropagation()
+      
       // Визуальная обратная связь мгновенно
       button.style.opacity = "0.7"
       
@@ -58,6 +63,9 @@ export function BottomNav() {
           window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
         } catch {}
       }
+      
+      // Навигация немедленно
+      router.push(href)
     }
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -65,19 +73,8 @@ export function BottomNav() {
       const button = target.closest('[data-nav-button]') as HTMLElement
       if (!button) return
 
-      const href = button.getAttribute('data-href')
-      if (!href || href === pathname) {
-        button.style.opacity = ""
-        return
-      }
-
-      // Немедленная навигация
-      e.preventDefault()
-      e.stopPropagation()
+      // Восстанавливаем opacity
       button.style.opacity = ""
-      
-      // Навигация синхронно
-      router.push(href)
     }
 
     const handleClick = (e: MouseEvent) => {
