@@ -186,7 +186,7 @@ export default async function CampaignDetailPage({
             <div className="flex items-center gap-3 pt-2">
               <Avatar>
                 <AvatarImage src={campaign.creatorAvatar || "/placeholder.svg"} />
-                <AvatarFallback>{campaign.creatorName[0]}</AvatarFallback>
+                <AvatarFallback>{(campaign.creatorName || "?")[0]}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium">{campaign.creatorName}</p>
@@ -320,7 +320,7 @@ export default async function CampaignDetailPage({
             </TabsContent>
 
             <TabsContent value="updates" className="space-y-4 mt-4">
-              {campaign.updates.map((update) => (
+              {(Array.isArray(campaign.updates) ? campaign.updates : []).map((update) => (
                 <Card key={update.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -360,10 +360,10 @@ export default async function CampaignDetailPage({
                     <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarFallback>{donor.name[0]}</AvatarFallback>
+                          <AvatarFallback>{(donor.name || "?")[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-medium">{donor.name}</p>
+                          <p className="text-sm font-medium">{donor.name || "Неизвестный донор"}</p>
                           <p className="text-xs text-muted-foreground">{donor.createdAt}</p>
                         </div>
                       </div>

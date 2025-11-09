@@ -106,14 +106,14 @@ async function handlePaymentSuccess(data: any) {
     // Update donation status if it's a donation
     if (invoiceData.donationId) {
       // First, get the donation to check if it's already completed
-      const { data: existingDonation } = await supabase
+      const { data: existingDonation, error: donationFetchError } = await supabase
         .from("donations")
-        .select("campaign_id, fund_id, amount, donor_id, status")
+        .select("campaign_id, fund_id, amount, donor_id, status, is_anonymous")
         .eq("id", invoiceData.donationId)
         .single()
 
-      if (!existingDonation) {
-        console.warn("[CloudPayments] Donation not found:", invoiceData.donationId)
+      if (donationFetchError || !existingDonation) {
+        console.warn("[CloudPayments] Donation not found or error:", invoiceData.donationId, donationFetchError)
         return
       }
 

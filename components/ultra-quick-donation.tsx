@@ -28,14 +28,31 @@ export function UltraQuickDonation() {
   // Load campaigns for step 1
   const loadCampaigns = async () => {
     setIsLoadingCampaigns(true)
+    
+    // Таймаут для предотвращения зависания
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд
+    
     try {
-      const response = await fetch("/api/campaigns?status=active&limit=5")
+      const response = await fetch("/api/campaigns?status=active&limit=5", {
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      
       if (response.ok) {
         const data = await response.json()
         setCampaigns(data.campaigns || [])
+      } else {
+        toast.error("Не удалось загрузить кампании. Попробуйте позже.")
       }
-    } catch (error) {
+    } catch (error: any) {
+      clearTimeout(timeoutId)
       console.error("Failed to load campaigns:", error)
+      if (error.name === "AbortError") {
+        toast.error("Превышено время ожидания. Проверьте интернет-соединение.")
+      } else {
+        toast.error("Не удалось загрузить кампании. Попробуйте позже.")
+      }
     } finally {
       setIsLoadingCampaigns(false)
     }
