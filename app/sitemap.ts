@@ -4,6 +4,8 @@ import { getFunds } from "@/lib/actions/funds"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
 
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
