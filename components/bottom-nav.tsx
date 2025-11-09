@@ -1,7 +1,6 @@
 "use client"
 
-import { usePathname, useRouter } from "next/navigation"
-import { startTransition } from "react"
+import { usePathname } from "next/navigation"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useRef } from "react"
@@ -31,7 +30,6 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname()
-  const router = useRouter()
   const navRef = useRef<HTMLElement>(null)
 
   // Обработка нативных событий напрямую для максимальной скорости
@@ -42,19 +40,15 @@ export function BottomNav() {
     // Агрессивный prefetch всех страниц сразу при монтировании
     navItems.forEach((item) => {
       if (item.href !== pathname) {
-        // Используем несколько методов prefetch для максимальной скорости
-        const link1 = document.createElement("link")
-        link1.rel = "prefetch"
-        link1.href = item.href
-        document.head.appendChild(link1)
-        
-        // Также prefetch через router
-        router.prefetch(item.href)
+        const link = document.createElement("link")
+        link.rel = "prefetch"
+        link.href = item.href
+        document.head.appendChild(link)
       }
     })
 
-    // Кэш для быстрого доступа
-    const navCache = new Map<string, boolean>()
+    // Минимальный кэш только для предотвращения множественных навигаций за 100ms
+    let lastNavigation = { href: "", time: 0 }
 
     const handleTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement
@@ -68,33 +62,28 @@ export function BottomNav() {
         return
       }
 
-      // Проверка кэша для предотвращения двойных кликов
-      if (navCache.get(href)) {
+      // Проверка кэша - только 100ms защита от двойных кликов
+      const now = Date.now()
+      if (lastNavigation.href === href && now - lastNavigation.time < 100) {
         e.preventDefault()
         e.stopPropagation()
         return
       }
-      navCache.set(href, true)
-      setTimeout(() => navCache.delete(href), 300)
+      lastNavigation = { href, time: now }
 
-      // Немедленная навигация при touchstart - не ждем touchend
+      // Немедленная навигация при touchstart - используем window.location для МАКСИМАЛЬНОЙ скорости
       e.preventDefault()
       e.stopPropagation()
       
-      // Навигация СИНХРОННО через startTransition для максимальной скорости
-      startTransition(() => {
-        router.push(href)
-      })
-      
-      // Haptic feedback асинхронно, не блокируя навигацию
+      // Haptic feedback СИНХРОННО перед навигацией для мгновенной обратной связи
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-        // Используем requestAnimationFrame для неблокирующего выполнения
-        requestAnimationFrame(() => {
-          try {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-          } catch {}
-        })
+        try {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+        } catch {}
       }
+      
+      // МГНОВЕННАЯ навигация через window.location - обходит весь Next.js router
+      window.location.href = href
     }
 
     const handleClick = (e: MouseEvent) => {
@@ -108,10 +97,13 @@ export function BottomNav() {
         return
       }
 
-      // Навигация через startTransition
-      startTransition(() => {
-        router.push(href)
-      })
+      // Проверка кэша
+      const now = Date.now()
+      if (lastNavigation.href === href && now - lastNavigation.time < 100) {
+        e.preventDefault()
+        return
+      }
+      lastNavigation = { href, time: now }
 
       // Haptic feedback для клика
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
@@ -119,10 +111,12 @@ export function BottomNav() {
           window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
         } catch {}
       }
+
+      // МГНОВЕННАЯ навигация
+      window.location.href = href
     }
 
     // Используем capture phase для максимальной скорости
-    // passive: false для возможности preventDefault
     nav.addEventListener("touchstart", handleTouchStart, { passive: false, capture: true })
     nav.addEventListener("click", handleClick, { passive: false, capture: true })
 
@@ -130,7 +124,7 @@ export function BottomNav() {
       nav.removeEventListener("touchstart", handleTouchStart, { capture: true })
       nav.removeEventListener("click", handleClick, { capture: true })
     }
-  }, [pathname, router])
+  }, [pathname])
 
   return (
     <nav 
