@@ -274,7 +274,7 @@ export default async function CampaignDetailPage({
                   </div>
                 </CardHeader>
                 <CardContent className="prose prose-sm max-w-none">
-                  {campaign.story.split("\n\n").map((paragraph, i) => (
+                  {(campaign.story || "").split("\n\n").filter(p => p.trim()).map((paragraph, i) => (
                     <p key={i} className="text-sm leading-relaxed mb-4 last:mb-0">
                       {paragraph}
                     </p>
