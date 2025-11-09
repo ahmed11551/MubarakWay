@@ -1,9 +1,9 @@
 "use client"
 
-import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useEffect, useRef } from "react"
 
 const navItems = [
   {
@@ -31,9 +31,89 @@ const navItems = [
 export function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const navRef = useRef<HTMLElement>(null)
+
+  // Обработка нативных событий напрямую для максимальной скорости
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement
+      const button = target.closest('[data-nav-button]') as HTMLElement
+      if (!button) return
+
+      const href = button.getAttribute('data-href')
+      if (!href || href === pathname) {
+        e.preventDefault()
+        return
+      }
+
+      // Визуальная обратная связь мгновенно
+      button.style.opacity = "0.7"
+      
+      // Haptic feedback
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
+        try {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+        } catch {}
+      }
+    }
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const target = e.target as HTMLElement
+      const button = target.closest('[data-nav-button]') as HTMLElement
+      if (!button) return
+
+      const href = button.getAttribute('data-href')
+      if (!href || href === pathname) {
+        button.style.opacity = ""
+        return
+      }
+
+      // Немедленная навигация
+      e.preventDefault()
+      e.stopPropagation()
+      button.style.opacity = ""
+      
+      // Навигация синхронно
+      router.push(href)
+    }
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const button = target.closest('[data-nav-button]') as HTMLElement
+      if (!button) return
+
+      const href = button.getAttribute('data-href')
+      if (!href || href === pathname) {
+        e.preventDefault()
+        return
+      }
+
+      // Haptic feedback для клика
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
+        try {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+        } catch {}
+      }
+    }
+
+    // Используем capture phase для максимальной скорости
+    nav.addEventListener("touchstart", handleTouchStart, { passive: false, capture: true })
+    nav.addEventListener("touchend", handleTouchEnd, { passive: false, capture: true })
+    nav.addEventListener("click", handleClick, { passive: false, capture: true })
+
+    return () => {
+      nav.removeEventListener("touchstart", handleTouchStart, { capture: true })
+      nav.removeEventListener("touchend", handleTouchEnd, { capture: true })
+      nav.removeEventListener("click", handleClick, { capture: true })
+    }
+  }, [pathname, router])
 
   return (
     <nav 
+      ref={navRef}
       className="fixed bottom-0 left-0 right-0 z-[100] border-t-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] safe-area-bottom"
       style={{ 
         touchAction: "manipulation",
@@ -47,42 +127,11 @@ export function BottomNav() {
           const Icon = item.icon
 
           return (
-            <Link
+            <a
               key={item.href}
               href={item.href}
-              prefetch={true}
-              onClick={(e) => {
-                if (isActive) {
-                  e.preventDefault()
-                  return
-                }
-                // Haptic feedback синхронно
-                if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-                  try {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-                  } catch {}
-                }
-              }}
-              onTouchStart={(e) => {
-                if (isActive) {
-                  e.preventDefault()
-                  return
-                }
-                // Визуальная обратная связь
-                e.currentTarget.style.opacity = "0.7"
-                // Haptic feedback
-                if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-                  try {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-                  } catch {}
-                }
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.opacity = ""
-              }}
-              onTouchCancel={(e) => {
-                e.currentTarget.style.opacity = ""
-              }}
+              data-nav-button
+              data-href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full",
                 "focus:outline-none rounded-lg select-none",
@@ -101,7 +150,7 @@ export function BottomNav() {
             >
               <Icon className={cn("h-5 w-5 pointer-events-none", isActive && "drop-shadow-[0_0_8px_oklch(0.6_0.18_160/0.5)]")} />
               <span className="text-xs font-medium pointer-events-none">{item.name}</span>
-            </Link>
+            </a>
           )
         })}
       </div>
