@@ -138,8 +138,8 @@ function setupScrollPrevention(tg: any) {
         const scrollHeight = document.documentElement.scrollHeight
         const clientHeight = window.innerHeight
         
-        const isAtTop = scrollTop <= 1
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+        const isAtTop = scrollTop <= 5 // Increased threshold for better detection
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5
         const isContentShort = scrollHeight <= clientHeight
         
         // If content is shorter than viewport, prevent all pull-to-close gestures
@@ -149,26 +149,26 @@ function setupScrollPrevention(tg: any) {
           return false
         }
         
-        // Prevent pull-to-close when at top and trying to scroll up (pull down)
-        // Also prevent on fast swipes down from top (velocity > 0.5 px/ms)
-        if (isAtTop && deltaY > 0) {
+        // Only prevent pull-to-close when at top and trying to scroll DOWN (pull down gesture)
+        // Don't block normal scrolling UP when at top
+        if (isAtTop && deltaY > 10) { // Only block significant pull-down gestures
           e.preventDefault()
           e.stopPropagation()
           return false
         }
         
-        // Prevent pull-to-close when at bottom and trying to scroll down (pull up)
-        // Also prevent on fast swipes up from bottom
-        if (isAtBottom && deltaY < 0) {
+        // Only prevent pull-to-close when at bottom and trying to scroll UP (pull up gesture)
+        // Don't block normal scrolling DOWN when at bottom
+        if (isAtBottom && deltaY < -10) { // Only block significant pull-up gestures
           e.preventDefault()
           e.stopPropagation()
           return false
         }
         
-        // If scrolling inside content (not at edges), always prevent WebApp gesture
-        // This is the most important case - prevent closing during normal scrolling
-        // Also prevent on fast swipes (velocity > 0.3 px/ms) to handle quick scrolls
-        if (!isAtTop && !isAtBottom) {
+        // Allow normal scrolling in the middle - don't block it!
+        // Only block if it's a very fast swipe that might trigger pull-to-close
+        if (!isAtTop && !isAtBottom && velocity > 2) {
+          // Only block very fast swipes that might be pull-to-close gestures
           e.preventDefault()
           e.stopPropagation()
           return false
@@ -179,8 +179,8 @@ function setupScrollPrevention(tg: any) {
         const scrollHeight = container.scrollHeight
         const clientHeight = container.clientHeight
         
-        const isAtTop = scrollTop <= 1
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+        const isAtTop = scrollTop <= 5
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5
         const isContentShort = scrollHeight <= clientHeight
         
         // If content is shorter than container, prevent all pull-to-close gestures
@@ -190,25 +190,22 @@ function setupScrollPrevention(tg: any) {
           return false
         }
         
-        // Prevent pull-to-close when at top and trying to scroll up
-        // Also prevent on fast swipes down from top
-        if (isAtTop && deltaY > 0) {
+        // Only prevent pull-to-close when at top and trying to scroll DOWN
+        if (isAtTop && deltaY > 10) {
           e.preventDefault()
           e.stopPropagation()
           return false
         }
         
-        // Prevent pull-to-close when at bottom and trying to scroll down
-        // Also prevent on fast swipes up from bottom
-        if (isAtBottom && deltaY < 0) {
+        // Only prevent pull-to-close when at bottom and trying to scroll UP
+        if (isAtBottom && deltaY < -10) {
           e.preventDefault()
           e.stopPropagation()
           return false
         }
         
-        // If scrolling inside content, always prevent WebApp gesture
-        // Also prevent on fast swipes to handle quick scrolls
-        if (!isAtTop && !isAtBottom) {
+        // Allow normal scrolling in the middle
+        if (!isAtTop && !isAtBottom && velocity > 2) {
           e.preventDefault()
           e.stopPropagation()
           return false
@@ -226,10 +223,11 @@ function setupScrollPrevention(tg: any) {
   }
 
   // Add event listeners
-  // Use capture phase to catch events early
-  document.addEventListener("touchstart", handleTouchStart, { passive: true, capture: true })
-  document.addEventListener("touchmove", handleTouchMove, { passive: false, capture: true })
-  document.addEventListener("touchend", handleTouchEnd, { passive: true, capture: true })
+  // Use capture phase to catch events early, but only for touchstart
+  // For touchmove, use non-capture to allow normal scroll first
+  document.addEventListener("touchstart", handleTouchStart, { passive: true, capture: false })
+  document.addEventListener("touchmove", handleTouchMove, { passive: false, capture: false })
+  document.addEventListener("touchend", handleTouchEnd, { passive: true, capture: false })
 
   // Handle viewport changes for proper height
   const updateViewport = () => {

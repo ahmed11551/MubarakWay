@@ -170,8 +170,8 @@
     -webkit-overflow-scrolling: touch;
     position: relative;
     overflow-x: hidden;
-    overflow-y: hidden; /* Prevent body scroll, let main handle it */
-    touch-action: pan-y;
+    overflow-y: auto; /* Allow body scroll for better compatibility */
+    touch-action: pan-y pan-x pinch-zoom; /* Allow all touch actions for better scroll */
     height: 100%;
     width: 100%;
     overscroll-behavior-block: contain; /* Additional protection */
@@ -191,6 +191,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     max-height: 100vh;
+    touch-action: pan-y; /* Explicitly allow vertical scrolling */
   }
 
   /* Fix for page wrappers - make them scrollable if body is not */
