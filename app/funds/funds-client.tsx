@@ -40,6 +40,9 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
   const [error, setError] = useState<string | undefined>(initialError)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
+  
+  // Debounce поискового запроса для улучшения производительности
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
   const categories = [
     { value: "all", label: "Все фонды" },
@@ -51,20 +54,22 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
     { value: "general", label: "Общее" },
   ]
 
-  // Filter funds based on search and category
-  const filteredFunds = funds.filter((fund) => {
-    const name = fund.name || fund.name_ru || ""
-    const description = fund.description || fund.description_ru || ""
-    const searchMatch = searchQuery === "" || 
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      description.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const categoryMatch = selectedCategory === "all" || 
-      fund.category === selectedCategory ||
-      fund.id === "00000000-0000-0000-0000-000000000001"
-    
-    return searchMatch && categoryMatch
-  })
+  // Filter funds based on search and category (используем debounced значение)
+  const filteredFunds = useMemo(() => {
+    return funds.filter((fund) => {
+      const name = fund.name || fund.name_ru || ""
+      const description = fund.description || fund.description_ru || ""
+      const searchMatch = debouncedSearchQuery === "" || 
+        name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        description.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+      
+      const categoryMatch = selectedCategory === "all" || 
+        fund.category === selectedCategory ||
+        fund.id === "00000000-0000-0000-0000-000000000001"
+      
+      return searchMatch && categoryMatch
+    })
+  }, [funds, debouncedSearchQuery, selectedCategory])
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
@@ -100,9 +105,12 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
           </TabsList>
 
           {categories.map((cat) => {
-            const categoryFunds = filteredFunds.filter(
-              (f) => cat.value === "all" || f.category === cat.value || f.id === "00000000-0000-0000-0000-000000000001"
-            )
+            // Фильтруем по категории (уже отфильтровано в filteredFunds)
+            const categoryFunds = cat.value === "all" 
+              ? filteredFunds 
+              : filteredFunds.filter(
+                  (f) => f.category === cat.value || f.id === "00000000-0000-0000-0000-000000000001"
+                )
             
             return (
               <TabsContent key={cat.value} value={cat.value} className="space-y-4 mt-4">

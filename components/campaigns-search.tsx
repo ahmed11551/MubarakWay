@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useDebounce } from "@/lib/hooks/use-debounce"
 
 interface Campaign {
   id: string
@@ -28,6 +29,9 @@ export function CampaignsSearch({ campaigns, onFilteredChange }: CampaignsSearch
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("newest")
+  
+  // Debounce поискового запроса для улучшения производительности
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
   const categories = [
     { value: "all", label: "Все категории" },
@@ -42,9 +46,9 @@ export function CampaignsSearch({ campaigns, onFilteredChange }: CampaignsSearch
   const filteredAndSorted = useMemo(() => {
     let filtered = [...campaigns]
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
+    // Filter by search query (используем debounced значение)
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase()
       filtered = filtered.filter(
         (campaign) =>
           campaign.title.toLowerCase().includes(query) ||
@@ -88,7 +92,7 @@ export function CampaignsSearch({ campaigns, onFilteredChange }: CampaignsSearch
     }
 
     return filtered
-  }, [campaigns, searchQuery, selectedCategory, sortBy])
+  }, [campaigns, debouncedSearchQuery, selectedCategory, sortBy])
 
   useEffect(() => {
     onFilteredChange?.(filteredAndSorted)

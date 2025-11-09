@@ -39,16 +39,30 @@ export function QuickDonationBlock() {
   const [funds, setFunds] = useState<any[]>([])
   const [isLoadingFunds, setIsLoadingFunds] = useState(false)
 
-  // Fetch funds when target donation is selected
+  // Fetch funds when target donation is selected (с кэшированием)
   useEffect(() => {
     if (donationType === "target") {
       async function loadFunds() {
+        // Проверяем кэш
+        const { cache } = await import("@/lib/cache")
+        const cached = cache.get<any[]>("funds_cache")
+        
+        if (cached) {
+          setFunds(cached)
+          setIsLoadingFunds(false)
+          return
+        }
+
         setIsLoadingFunds(true)
         try {
           const response = await fetch("/api/funds")
           if (response.ok) {
             const data = await response.json()
             if (data.funds) {
+              // Сохраняем в кэш на 5 минут
+              const { cache } = await import("@/lib/cache")
+              cache.set("funds_cache", data.funds, 5 * 60 * 1000)
+              
               setFunds(data.funds)
             }
           }

@@ -49,15 +49,29 @@ export function CampaignCreationForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoadingFunds, setIsLoadingFunds] = useState(true)
 
-  // Fetch funds on component mount
+  // Fetch funds on component mount (с кэшированием)
   useEffect(() => {
     async function loadFunds() {
+      // Проверяем кэш
+      const { cache } = await import("@/lib/cache")
+      const cached = cache.get<any[]>("funds_cache")
+      
+      if (cached) {
+        setFunds(cached)
+        setIsLoadingFunds(false)
+        return
+      }
+
       setIsLoadingFunds(true)
       try {
         const response = await fetch("/api/funds")
         if (response.ok) {
           const data = await response.json()
           if (data.funds) {
+            // Сохраняем в кэш на 5 минут
+            const { cache } = await import("@/lib/cache")
+            cache.set("funds_cache", data.funds, 5 * 60 * 1000)
+            
             setFunds(data.funds)
           }
         }
