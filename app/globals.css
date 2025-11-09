@@ -267,12 +267,25 @@
   }
 
   /* Fix for bottom navigation - ensure clicks work immediately */
+  nav[class*="fixed"][class*="bottom-0"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
   nav[class*="fixed"][class*="bottom-0"] button {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
     pointer-events: auto !important;
+    will-change: opacity;
+    /* Убираем все transitions для мгновенной реакции */
+    transition: opacity 0.05s ease-out !important;
+  }
+  
+  /* Отключаем transitions для навигации */
+  nav[class*="fixed"][class*="bottom-0"] button * {
+    transition: none !important;
   }
 
   /* Improved tap feedback */
