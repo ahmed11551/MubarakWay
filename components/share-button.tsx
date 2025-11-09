@@ -17,21 +17,27 @@ export function ShareButton({ campaignId, campaignTitle, className }: ShareButto
   const handleShare = async () => {
     const url = `${window.location.origin}/campaigns/${campaignId}`
     const text = `Поддержите кампанию: ${campaignTitle}`
+    
+    // Генерируем deep link для Telegram бота
+    // Формат: t.me/bot?start=campaign_123
+    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "MubarakWayBot"
+    const telegramDeepLink = `https://t.me/${botUsername}?start=campaign_${campaignId}`
+    const shareText = `${text}\n\n🔗 Ссылка: ${url}\n\n🤖 Telegram: ${telegramDeepLink}`
 
     try {
       // Используем Web Share API если доступен
       if (navigator.share) {
         await navigator.share({
           title: campaignTitle,
-          text: text,
+          text: shareText,
           url: url,
         })
         setIsShared(true)
         setTimeout(() => setIsShared(false), 2000)
         toast.success("Ссылка скопирована!")
       } else {
-        // Fallback: копируем в буфер обмена
-        await navigator.clipboard.writeText(url)
+        // Fallback: копируем в буфер обмена (включая deep link)
+        await navigator.clipboard.writeText(shareText)
         setIsShared(true)
         setTimeout(() => setIsShared(false), 2000)
         toast.success("Ссылка скопирована в буфер обмена!")
@@ -42,7 +48,7 @@ export function ShareButton({ campaignId, campaignTitle, className }: ShareButto
         console.error("Share error:", error)
         // Fallback: копируем в буфер обмена
         try {
-          await navigator.clipboard.writeText(url)
+          await navigator.clipboard.writeText(shareText)
           setIsShared(true)
           setTimeout(() => setIsShared(false), 2000)
           toast.success("Ссылка скопирована в буфер обмена!")

@@ -157,3 +157,74 @@ export async function getProfile() {
   }
 }
 
+/**
+ * Синхронизировать telegram_id из Telegram WebApp
+ * Вызывается при инициализации WebApp для связи профиля с Telegram
+ */
+export async function syncTelegramId(telegramId: number) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "You must be logged in to sync Telegram ID" }
+  }
+
+  if (!telegramId || telegramId <= 0) {
+    return { error: "Invalid Telegram ID" }
+  }
+
+  try {
+    // Проверяем, существует ли профиль
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from("profiles")
+      .select("telegram_id")
+      .eq("id", user.id)
+      .single()
+
+    // Если профиля нет, создаем его
+    if (fetchError && fetchError.code === "PGRST116") {
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          telegram_id: telegramId,
+          display_name: user.user_metadata?.display_name || user.email?.split("@")[0] || "User",
+          email: user.email,
+        })
+
+      if (insertError) {
+        console.error("[Profile] Failed to create profile with telegram_id:", insertError)
+        return { error: "Failed to create profile" }
+      }
+
+      return { success: true, telegramId }
+    }
+
+    // Если профиль существует, обновляем telegram_id только если его еще нет
+    if (existingProfile && !existingProfile.telegram_id) {
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ telegram_id: telegramId })
+        .eq("id", user.id)
+        .is("telegram_id", null)
+
+      if (updateError) {
+        console.error("[Profile] Failed to update telegram_id:", updateError)
+        return { error: "Failed to update Telegram ID" }
+      }
+
+      return { success: true, telegramId }
+    }
+
+    // Если telegram_id уже установлен, просто возвращаем успех
+    return { success: true, telegramId: existingProfile?.telegram_id || telegramId }
+  } catch (error) {
+    console.error("[Profile] Unexpected sync error:", error)
+    return { error: "An unexpected error occurred" }
+  }
+}
+

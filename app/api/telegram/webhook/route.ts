@@ -35,7 +35,37 @@ export async function POST(req: NextRequest) {
 
     if (chatId && text) {
       if (text.startsWith("/start")) {
-        await sendTelegramMessage(chatId, "Ассаляму алейкум! Я бот MubarakWay. Используйте /stats для статистики.")
+        // Обработка deep links: /start campaign_123 или /start donate_456
+        const params = text.split(" ")[1] // Получаем параметр после /start
+        
+        if (params) {
+          // Определяем тип deep link
+          if (params.startsWith("campaign_")) {
+            const campaignId = params.replace("campaign_", "")
+            const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
+            const deepLink = `${webAppUrl}/campaigns/${campaignId}`
+            
+            await sendTelegramMessage(
+              chatId,
+              `🎯 Открываю кампанию...\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`
+            )
+          } else if (params.startsWith("donate_")) {
+            const donationId = params.replace("donate_", "")
+            const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
+            const deepLink = `${webAppUrl}/donate?campaignId=${donationId}`
+            
+            await sendTelegramMessage(
+              chatId,
+              `💰 Быстрое пожертвование\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`
+            )
+          } else {
+            // Неизвестный параметр
+            await sendTelegramMessage(chatId, "Ассаляму алейкум! Я бот MubarakWay. Используйте /stats для статистики.")
+          }
+        } else {
+          // Обычный /start без параметров
+          await sendTelegramMessage(chatId, "Ассаляму алейкум! Я бот MubarakWay. Используйте /stats для статистики.")
+        }
       } else if (text.startsWith("/stats")) {
         const stats = await getPlatformStats()
         const formatted = [
