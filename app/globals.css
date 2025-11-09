@@ -284,6 +284,25 @@
     cursor: pointer !important;
     /* Убираем все transitions для мгновенной реакции */
     transition: none !important;
+    /* Мгновенная визуальная обратная связь через CSS */
+    will-change: opacity, transform;
+  }
+  
+  /* Мгновенная визуальная обратная связь при касании - через CSS :active */
+  nav[class*="fixed"][class*="bottom-0"] a:active,
+  nav[class*="fixed"][class*="bottom-0"] button:active {
+    opacity: 0.6 !important;
+    transform: scale(0.95) !important;
+    transition: none !important;
+  }
+  
+  /* Для touch устройств - :active срабатывает при touchstart */
+  @media (hover: none) and (pointer: coarse) {
+    nav[class*="fixed"][class*="bottom-0"] a:active,
+    nav[class*="fixed"][class*="bottom-0"] button:active {
+      opacity: 0.6 !important;
+      transform: scale(0.95) !important;
+    }
   }
   
   /* Отключаем transitions для навигации */

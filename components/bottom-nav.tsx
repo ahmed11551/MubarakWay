@@ -38,6 +38,16 @@ export function BottomNav() {
     const nav = navRef.current
     if (!nav) return
 
+    // Prefetch все страницы для мгновенной загрузки
+    navItems.forEach((item) => {
+      if (item.href !== pathname) {
+        const link = document.createElement("link")
+        link.rel = "prefetch"
+        link.href = item.href
+        document.head.appendChild(link)
+      }
+    })
+
     const handleTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement
       const button = target.closest('[data-nav-button]') as HTMLElement
@@ -54,27 +64,20 @@ export function BottomNav() {
       e.preventDefault()
       e.stopPropagation()
       
-      // Визуальная обратная связь мгновенно
-      button.style.opacity = "0.7"
-      
-      // Haptic feedback
+      // Haptic feedback асинхронно, не блокируя навигацию
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-        try {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-        } catch {}
+        // Используем setTimeout 0 для неблокирующего выполнения
+        setTimeout(() => {
+          try {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+          } catch {}
+        }, 0)
       }
       
-      // Навигация немедленно
-      router.push(href)
-    }
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const target = e.target as HTMLElement
-      const button = target.closest('[data-nav-button]') as HTMLElement
-      if (!button) return
-
-      // Восстанавливаем opacity
-      button.style.opacity = ""
+      // Навигация НЕМЕДЛЕННО - используем микротаск для приоритета
+      Promise.resolve().then(() => {
+        router.push(href)
+      })
     }
 
     const handleClick = (e: MouseEvent) => {
@@ -98,12 +101,10 @@ export function BottomNav() {
 
     // Используем capture phase для максимальной скорости
     nav.addEventListener("touchstart", handleTouchStart, { passive: false, capture: true })
-    nav.addEventListener("touchend", handleTouchEnd, { passive: false, capture: true })
     nav.addEventListener("click", handleClick, { passive: false, capture: true })
 
     return () => {
       nav.removeEventListener("touchstart", handleTouchStart, { capture: true })
-      nav.removeEventListener("touchend", handleTouchEnd, { capture: true })
       nav.removeEventListener("click", handleClick, { capture: true })
     }
   }, [pathname, router])
