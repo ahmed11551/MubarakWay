@@ -128,6 +128,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -171,7 +175,7 @@
     overflow-x: hidden;
     overflow-y: auto; /* Single scrollable container */
     touch-action: pan-y; /* Allow vertical scrolling - critical for smooth scroll */
-    height: 100%;
+    min-height: 100vh;
     width: 100%;
     /* Ensure smooth scrolling */
     scroll-behavior: smooth;
@@ -190,20 +194,20 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Ensure main content is scrollable */
+  /* Ensure main content is NOT scrollable - body handles scrolling */
   html.telegram-webapp main {
-    overflow-y: auto;
+    overflow: visible;
     -webkit-overflow-scrolling: touch;
-    max-height: 100vh;
     touch-action: pan-y; /* Explicitly allow vertical scrolling */
   }
 
-  /* Fix for page wrappers - make them scrollable if body is not */
+  /* Fix for page wrappers - ensure they don't interfere with body scrolling */
   html.telegram-webapp [class*="min-h-screen"] {
     overscroll-behavior: contain;
     overscroll-behavior-y: contain;
-    /* Allow scrolling on wrapper if it's the scrollable container */
+    /* Don't create nested scroll containers */
     position: relative;
+    overflow: visible;
   }
 
   /* Prevent pull-to-close on all scrollable areas */
@@ -218,7 +222,9 @@
   html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    height: 100%;
   }
+
 
   /* Better touch targets for mobile */
   button,
