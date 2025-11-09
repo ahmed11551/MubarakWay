@@ -263,16 +263,16 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="history" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">История транзакций</h3>
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <h3 className="text-base sm:text-lg font-bold leading-tight">История<br className="sm:hidden" /> транзакций</h3>
+              <div className="flex gap-2 w-full sm:w-auto">
                 <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Фильтр
+                    <Button variant="outline" size="sm" className="flex-1 sm:flex-initial">
+                      <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Фильтр</span>
                       {(filterType !== "all" || filterStatus !== "all") && (
-                        <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                        <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs flex-shrink-0">
                           {(filterType !== "all" ? 1 : 0) + (filterStatus !== "all" ? 1 : 0)}
                         </Badge>
                       )}
@@ -332,9 +332,10 @@ export default function ProfilePage() {
                   onClick={handleExport} 
                   disabled={transactions.length === 0}
                   title={transactions.length === 0 ? "Нет данных для экспорта" : "Экспортировать в CSV"}
+                  className="flex-1 sm:flex-initial"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Экспорт
+                  <Download className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Экспорт</span>
                 </Button>
               </div>
             </div>
@@ -381,17 +382,17 @@ export default function ProfilePage() {
 
           <TabsContent value="subscriptions" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">Мои подписки</h3>
+              <h3 className="text-base sm:text-lg font-bold">Мои подписки</h3>
             </div>
             <SubscriptionsManager />
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">Отчёты фондов</h3>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Фильтр
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <h3 className="text-base sm:text-lg font-bold leading-tight">Отчёты<br className="sm:hidden" /> фондов</h3>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Фильтр</span>
               </Button>
             </div>
 
