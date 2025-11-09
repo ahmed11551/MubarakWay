@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2 } from "lucide-react"
 import { hapticFeedback } from "@/lib/mobile-ux"
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -50,6 +50,22 @@ export default function PaymentSuccessPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 max-w-md">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">Загрузка...</div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }
 

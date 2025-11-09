@@ -53,46 +53,37 @@ export function CampaignProjectLinker({
     loadSelectedProjects()
   }, [selectedProjectIds])
 
-  // Поиск проектов
-  const handleSearch = async (query: string) => {
-    if (query.length < 2) {
+  // Debounce поиска
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
       setSearchResults([])
       return
     }
 
-    setIsSearching(true)
-    try {
-      const response = await fetch(`/api/campaigns/search?q=${encodeURIComponent(query)}&status=active&limit=10`)
-      if (response.ok) {
-        const data = await response.json()
-        // Фильтруем уже выбранные и текущую кампанию
-        const filtered = (data.campaigns || []).filter(
-          (campaign: Campaign) =>
-            !selectedProjectIds.includes(campaign.id) &&
-            campaign.id !== excludeCampaignId
-        )
-        setSearchResults(filtered)
-      }
-    } catch (error) {
-      console.error("Search error:", error)
-      toast.error("Не удалось выполнить поиск")
-    } finally {
-      setIsSearching(false)
-    }
-  }
-
-  // Debounce поиска
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery) {
-        handleSearch(searchQuery)
-      } else {
-        setSearchResults([])
+    const timer = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const response = await fetch(`/api/campaigns/search?q=${encodeURIComponent(searchQuery)}&status=active&limit=10`)
+        if (response.ok) {
+          const data = await response.json()
+          // Фильтруем уже выбранные и текущую кампанию
+          const filtered = (data.campaigns || []).filter(
+            (campaign: Campaign) =>
+              !selectedProjectIds.includes(campaign.id) &&
+              campaign.id !== excludeCampaignId
+          )
+          setSearchResults(filtered)
+        }
+      } catch (error) {
+        console.error("Search error:", error)
+        toast.error("Не удалось выполнить поиск")
+      } finally {
+        setIsSearching(false)
       }
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [searchQuery])
+  }, [searchQuery, selectedProjectIds, excludeCampaignId])
 
   const handleAddProject = (campaign: Campaign) => {
     if (selectedProjectIds.includes(campaign.id)) {

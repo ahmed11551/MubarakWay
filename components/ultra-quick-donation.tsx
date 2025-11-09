@@ -284,6 +284,7 @@ export function UltraQuickDonation() {
                 </Button>
               </div>
             )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
