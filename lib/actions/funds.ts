@@ -63,6 +63,8 @@ export async function getFunds(category?: string) {
       if (data.length > 0) {
         console.log("[v0] Funds loaded successfully via regular client:", data.length)
         funds = data
+        // Ранний возврат при успехе - не пытаемся дальше
+        return { funds: funds || [] }
       } else {
         console.warn("[v0] Regular client returned empty array")
         lastError = "No funds found in database"
