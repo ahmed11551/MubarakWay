@@ -3,6 +3,9 @@ const BOT_API_BASE = process.env.BOT_API_BASE_URL || "https://bot.e-replika.ru"
 const BOT_API_TOKEN = process.env.BOT_API_TOKEN || "test_token_123"
 
 export async function fetchBotApiStats() {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд
+  
   try {
     const response = await fetch(`${BOT_API_BASE}/api/stats`, {
       headers: {
@@ -10,7 +13,10 @@ export async function fetchBotApiStats() {
         "Content-Type": "application/json",
       },
       cache: "no-store",
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       throw new Error(`Bot API returned ${response.status}`)
@@ -23,8 +29,13 @@ export async function fetchBotApiStats() {
       activeCampaigns: Number(data.active_campaigns || 0),
       averageCheck: Number(data.average_check || 0),
     }
-  } catch (error) {
-    console.error("[Bot API] Error fetching stats:", error)
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === "AbortError") {
+      console.error("[Bot API] Request timeout for stats")
+    } else {
+      console.error("[Bot API] Error fetching stats:", error)
+    }
     // Fallback to Supabase if Bot API fails
     return null
   }
@@ -32,16 +43,31 @@ export async function fetchBotApiStats() {
 
 export async function fetchBotApi(endpoint: string, options: RequestInit = {}) {
   const url = endpoint.startsWith("http") ? endpoint : `${BOT_API_BASE}${endpoint}`
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд
   
-  return fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${BOT_API_TOKEN}`,
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    cache: "no-store",
-  })
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${BOT_API_TOKEN}`,
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    })
+    
+    clearTimeout(timeoutId)
+    return response
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === "AbortError") {
+      console.error("[Bot API] Request timeout for", endpoint)
+      throw new Error("Request timeout")
+    }
+    throw error
+  }
 }
 
 export async function fetchBotApiFunds(category?: string) {
@@ -58,8 +84,12 @@ export async function fetchBotApiFunds(category?: string) {
 
     const data = await response.json()
     return data.funds || data.organizations || data || []
-  } catch (error) {
-    console.error("[Bot API] Error fetching funds:", error)
+  } catch (error: any) {
+    if (error.message === "Request timeout") {
+      console.error("[Bot API] Timeout fetching funds")
+    } else {
+      console.error("[Bot API] Error fetching funds:", error)
+    }
     return null
   }
 }
@@ -79,8 +109,12 @@ export async function fetchBotApiCampaigns(status?: string, limit?: number) {
 
     const data = await response.json()
     return data.campaigns || data || []
-  } catch (error) {
-    console.error("[Bot API] Error fetching campaigns:", error)
+  } catch (error: any) {
+    if (error.message === "Request timeout") {
+      console.error("[Bot API] Timeout fetching campaigns")
+    } else {
+      console.error("[Bot API] Error fetching campaigns:", error)
+    }
     return null
   }
 }

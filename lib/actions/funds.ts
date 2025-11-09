@@ -82,8 +82,14 @@ export async function getFunds(category?: string) {
   }
 
   // Approach 2: Try public client as fallback (only if first approach failed)
-  if (funds.length === 0) {
+  if (funds.length === 0 && Date.now() - startTime < MAX_TIME) {
     try {
+      // Проверяем, не превышен ли общий таймаут
+      if (Date.now() - startTime > MAX_TIME) {
+        console.warn("[v0] Timeout before trying public client")
+        return { funds: [], error: "Timeout loading funds" }
+      }
+      
       console.log("[v0] Trying public client as fallback...")
       const supabase = createPublicClient()
       
