@@ -288,23 +288,10 @@
     will-change: opacity, transform;
   }
   
-  /* Мгновенная визуальная обратная связь при касании - через CSS :active */
+  /* Убраны все :active эффекты для предотвращения мигания */
   nav[class*="fixed"][class*="bottom-0"] a:active,
   nav[class*="fixed"][class*="bottom-0"] button:active {
-    opacity: 0.5 !important;
-    transform: scale(0.92) !important;
-    transition: none !important;
-    background-color: rgba(0, 0, 0, 0.05) !important;
-  }
-  
-  /* Для touch устройств - :active срабатывает при touchstart */
-  @media (hover: none) and (pointer: coarse) {
-    nav[class*="fixed"][class*="bottom-0"] a:active,
-    nav[class*="fixed"][class*="bottom-0"] button:active {
-      opacity: 0.5 !important;
-      transform: scale(0.92) !important;
-      background-color: rgba(0, 0, 0, 0.05) !important;
-    }
+    /* Никаких визуальных изменений при нажатии */
   }
   
   /* Дополнительная оптимизация для touch - убираем все задержки */
