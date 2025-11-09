@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
+import { startTransition } from "react"
 import { Home, Heart, Users, User, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useRef } from "react"
@@ -38,15 +39,22 @@ export function BottomNav() {
     const nav = navRef.current
     if (!nav) return
 
-    // Prefetch все страницы для мгновенной загрузки
+    // Агрессивный prefetch всех страниц сразу при монтировании
     navItems.forEach((item) => {
       if (item.href !== pathname) {
-        const link = document.createElement("link")
-        link.rel = "prefetch"
-        link.href = item.href
-        document.head.appendChild(link)
+        // Используем несколько методов prefetch для максимальной скорости
+        const link1 = document.createElement("link")
+        link1.rel = "prefetch"
+        link1.href = item.href
+        document.head.appendChild(link1)
+        
+        // Также prefetch через router
+        router.prefetch(item.href)
       }
     })
+
+    // Кэш для быстрого доступа
+    const navCache = new Map<string, boolean>()
 
     const handleTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement
@@ -60,24 +68,33 @@ export function BottomNav() {
         return
       }
 
+      // Проверка кэша для предотвращения двойных кликов
+      if (navCache.get(href)) {
+        e.preventDefault()
+        e.stopPropagation()
+        return
+      }
+      navCache.set(href, true)
+      setTimeout(() => navCache.delete(href), 300)
+
       // Немедленная навигация при touchstart - не ждем touchend
       e.preventDefault()
       e.stopPropagation()
       
+      // Навигация СИНХРОННО через startTransition для максимальной скорости
+      startTransition(() => {
+        router.push(href)
+      })
+      
       // Haptic feedback асинхронно, не блокируя навигацию
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
-        // Используем setTimeout 0 для неблокирующего выполнения
-        setTimeout(() => {
+        // Используем requestAnimationFrame для неблокирующего выполнения
+        requestAnimationFrame(() => {
           try {
             window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
           } catch {}
-        }, 0)
+        })
       }
-      
-      // Навигация НЕМЕДЛЕННО - используем микротаск для приоритета
-      Promise.resolve().then(() => {
-        router.push(href)
-      })
     }
 
     const handleClick = (e: MouseEvent) => {
@@ -91,6 +108,11 @@ export function BottomNav() {
         return
       }
 
+      // Навигация через startTransition
+      startTransition(() => {
+        router.push(href)
+      })
+
       // Haptic feedback для клика
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
         try {
@@ -100,6 +122,7 @@ export function BottomNav() {
     }
 
     // Используем capture phase для максимальной скорости
+    // passive: false для возможности preventDefault
     nav.addEventListener("touchstart", handleTouchStart, { passive: false, capture: true })
     nav.addEventListener("click", handleClick, { passive: false, capture: true })
 
