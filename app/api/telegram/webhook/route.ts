@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getPlatformStats } from "@/lib/stats"
-
-const TELEGRAM_API_BASE = "https://api.telegram.org"
+import {
+  sendTelegramMessage,
+  answerCallbackQuery,
+  editMessageText,
+  createMainMenuKeyboard,
+  createSubscriptionPlansKeyboard,
+  createSubscriptionPeriodsKeyboard,
+  createDonationTypeKeyboard,
+  createFundsKeyboard,
+  createCampaignsKeyboard,
+  createDonationAmountKeyboard,
+  createPaymentKeyboard,
+  createZakatCalculatorKeyboard,
+} from "@/lib/telegram-bot"
+import { getFunds } from "@/lib/actions/funds"
+import { getCampaigns } from "@/lib/actions/campaigns"
 
 function verifySecret(req: NextRequest) {
   const incoming = req.headers.get("x-telegram-bot-api-secret-token") || ""
@@ -9,15 +23,461 @@ function verifySecret(req: NextRequest) {
   return expected && incoming === expected
 }
 
-async function sendTelegramMessage(chatId: number, text: string) {
-  const token = process.env.TELEGRAM_BOT_TOKEN
-  if (!token) return
-  await fetch(`${TELEGRAM_API_BASE}/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text }),
-    cache: "no-store",
-  })
+// Subscription plans data
+const SUBSCRIPTION_PLANS = {
+  muslim: {
+    name: "Муслим",
+    subtitle: "Базовый",
+    tier: null,
+    free: true,
+    description: "Начните свой путь садака-джария",
+    features: [
+      "Доступ к базовым функциям",
+      "История пожертвований",
+      "Уведомления о кампаниях",
+      "Поддержка сообщества",
+    ],
+  },
+  mutahsin: {
+    name: "Мутахсин",
+    subtitle: "Pro",
+    tier: "mutahsin_pro",
+    free: false,
+    description: "Для тех, кто стремится к большему",
+    features: [
+      "Все функции Базового",
+      "Приоритетная поддержка",
+      "Расширенная аналитика",
+      "Эксклюзивный контент",
+      "5% в благотворительность",
+    ],
+    prices: {
+      "1month": { price: 260, charity: 13, period: "1 месяц" },
+      "6months": { price: 1300, charity: 65, period: "6 месяцев", bonus: "+1 мес в подарок" },
+      "12months": { price: 2340, charity: 234, period: "12 месяцев", bonus: "+3 мес в подарок" },
+    },
+  },
+  premium: {
+    name: "Сахиб аль-Вакф",
+    subtitle: "Premium",
+    tier: "sahib_al_waqf_premium",
+    free: false,
+    description: "Максимальный вклад в умму",
+    features: [
+      "Все функции Pro",
+      "VIP поддержка 24/7",
+      "Персональный менеджер",
+      "Доступ к закрытым мероприятиям",
+      "Именной сертификат",
+      "10% в благотворительность",
+    ],
+    prices: {
+      "1month": { price: 550, charity: 55, period: "1 месяц" },
+      "6months": { price: 2750, charity: 137.5, period: "6 месяцев", bonus: "+1 мес в подарок" },
+      "12months": { price: 4950, charity: 495, period: "12 месяцев", bonus: "+3 мес в подарок" },
+    },
+  },
+}
+
+// Handle callback queries (inline button clicks)
+async function handleCallbackQuery(callbackQuery: any) {
+  const chatId = callbackQuery.message?.chat?.id
+  const messageId = callbackQuery.message?.message_id
+  const callbackData = callbackQuery.data
+  const callbackQueryId = callbackQuery.id
+
+  if (!chatId || !callbackData) {
+    return
+  }
+
+  const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
+
+  // Main menu
+  if (callbackData === "menu:main") {
+    await answerCallbackQuery(callbackQueryId, { text: "Главное меню" })
+    const keyboard = createMainMenuKeyboard()
+    await editMessageText(
+      chatId,
+      messageId,
+      "🌙 <b>Ассаляму алейкум!</b>\n\nДобро пожаловать в MubarakWay — платформу для садака-джария.\n\nВыберите действие:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Subscription menu
+  if (callbackData === "menu:subscription") {
+    await answerCallbackQuery(callbackQueryId, { text: "Выбор тарифа" })
+    const keyboard = createSubscriptionPlansKeyboard()
+    await editMessageText(
+      chatId,
+      messageId,
+      "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Subscription plan selection
+  if (callbackData.startsWith("subscription:plan:")) {
+    const planKey = callbackData.replace("subscription:plan:", "")
+    const plan = SUBSCRIPTION_PLANS[planKey as keyof typeof SUBSCRIPTION_PLANS]
+
+    if (!plan) {
+      await answerCallbackQuery(callbackQueryId, { text: "Тариф не найден", show_alert: true })
+      return
+    }
+
+    if (plan.free) {
+      await answerCallbackQuery(callbackQueryId, { text: "Это ваш текущий бесплатный тариф" })
+      return
+    }
+
+    await answerCallbackQuery(callbackQueryId, { text: `Выбран тариф: ${plan.name}` })
+    const keyboard = createSubscriptionPeriodsKeyboard(planKey)
+    
+    const featuresText = plan.features.map((f) => `✓ ${f}`).join("\n")
+    const message = `💎 <b>${plan.name}</b> — ${plan.subtitle}\n\n${plan.description}\n\n<b>Преимущества:</b>\n${featuresText}\n\nВыберите период подписки:`
+    
+    await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
+    return
+  }
+
+  // Subscription period selection
+  if (callbackData.startsWith("subscription:period:")) {
+    const parts = callbackData.split(":")
+    const planKey = parts[2]
+    const periodKey = parts[3]
+    const plan = SUBSCRIPTION_PLANS[planKey as keyof typeof SUBSCRIPTION_PLANS]
+
+    if (!plan || plan.free || !plan.prices) {
+      await answerCallbackQuery(callbackQueryId, { text: "Ошибка выбора периода", show_alert: true })
+      return
+    }
+
+    const priceInfo = plan.prices[periodKey as keyof typeof plan.prices]
+    if (!priceInfo) {
+      await answerCallbackQuery(callbackQueryId, { text: "Период не найден", show_alert: true })
+      return
+    }
+
+    await answerCallbackQuery(callbackQueryId, { text: "Перенаправление на оплату..." })
+    
+    // Create payment URL for subscription - opens Mini App with checkout page
+    // Full payment integration will be added later
+    const paymentUrl = `${webAppUrl}/subscription/checkout?plan=${plan.name}&period=${encodeURIComponent(priceInfo.period)}`
+    
+    const keyboard = createPaymentKeyboard(paymentUrl)
+    const bonusText = priceInfo.bonus ? `\n🎁 ${priceInfo.bonus}` : ""
+    const message = `💎 <b>${plan.name}</b> — ${priceInfo.period}\n\n💰 <b>Сумма:</b> ${priceInfo.price} ₽\n💝 <b>В благотворительность:</b> ${priceInfo.charity} ₽${bonusText}\n\nНажмите кнопку ниже для оплаты:`
+    
+    await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
+    return
+  }
+
+  // Donation menu
+  if (callbackData === "menu:donate") {
+    await answerCallbackQuery(callbackQueryId, { text: "Выбор типа пожертвования" })
+    const keyboard = createDonationTypeKeyboard()
+    await editMessageText(
+      chatId,
+      messageId,
+      "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Donation type: fund
+  if (callbackData === "donate:type:fund") {
+    await answerCallbackQuery(callbackQueryId, { text: "Загрузка фондов..." })
+    const fundsResult = await getFunds()
+    const funds = fundsResult.funds || []
+
+    if (funds.length === 0) {
+      await answerCallbackQuery(callbackQueryId, { text: "Фонды не найдены", show_alert: true })
+      return
+    }
+
+    const keyboard = createFundsKeyboard(funds, 0)
+    await editMessageText(
+      chatId,
+      messageId,
+      "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Donation type: campaign
+  if (callbackData === "donate:type:campaign") {
+    await answerCallbackQuery(callbackQueryId, { text: "Загрузка проектов..." })
+    const campaignsResult = await getCampaigns("active")
+    const campaigns = (campaignsResult.campaigns || []).slice(0, 20) // Limit to 20
+
+    if (campaigns.length === 0) {
+      await answerCallbackQuery(callbackQueryId, { text: "Проекты не найдены", show_alert: true })
+      return
+    }
+
+    const keyboard = createCampaignsKeyboard(campaigns, 0)
+    await editMessageText(
+      chatId,
+      messageId,
+      "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Funds pagination
+  if (callbackData.startsWith("donate:funds:page:")) {
+    const page = parseInt(callbackData.replace("donate:funds:page:", ""))
+    const fundsResult = await getFunds()
+    const funds = fundsResult.funds || []
+
+    const keyboard = createFundsKeyboard(funds, page)
+    await editMessageText(
+      chatId,
+      messageId,
+      "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Campaigns pagination
+  if (callbackData.startsWith("donate:campaigns:page:")) {
+    const page = parseInt(callbackData.replace("donate:campaigns:page:", ""))
+    const campaignsResult = await getCampaigns("active")
+    const campaigns = (campaignsResult.campaigns || []).slice(0, 20)
+
+    const keyboard = createCampaignsKeyboard(campaigns, page)
+    await editMessageText(
+      chatId,
+      messageId,
+      "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Fund selection
+  if (callbackData.startsWith("donate:fund:")) {
+    const fundId = callbackData.replace("donate:fund:", "")
+    await answerCallbackQuery(callbackQueryId, { text: "Выбор суммы" })
+    const keyboard = createDonationAmountKeyboard(fundId, "fund")
+    await editMessageText(
+      chatId,
+      messageId,
+      "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Campaign selection
+  if (callbackData.startsWith("donate:campaign:")) {
+    const campaignId = callbackData.replace("donate:campaign:", "")
+    await answerCallbackQuery(callbackQueryId, { text: "Выбор суммы" })
+    const keyboard = createDonationAmountKeyboard(campaignId, "campaign")
+    await editMessageText(
+      chatId,
+      messageId,
+      "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Donation amount selection
+  if (callbackData.startsWith("donate:amount:")) {
+    const parts = callbackData.split(":")
+    const targetType = parts[2] as "fund" | "campaign"
+    const targetId = parts[3]
+    const amount = parseInt(parts[4])
+
+    await answerCallbackQuery(callbackQueryId, { text: "Перенаправление на оплату..." })
+    
+    // Create payment URL for donation - opens Mini App with donation form
+    // Full payment integration will be added later
+    const params = new URLSearchParams({
+      amount: amount.toString(),
+      currency: "RUB",
+      category: "sadaqah",
+      donationType: "one_time",
+      isAnonymous: "false",
+    })
+
+    if (targetType === "fund") {
+      params.append("fundId", targetId)
+    } else {
+      params.append("campaignId", targetId)
+    }
+
+    const paymentUrl = `${webAppUrl}/donate?${params.toString()}`
+    const keyboard = createPaymentKeyboard(paymentUrl)
+    
+    await editMessageText(
+      chatId,
+      messageId,
+      `💰 <b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Custom donation amount
+  if (callbackData.startsWith("donate:custom:")) {
+    const parts = callbackData.split(":")
+    const targetType = parts[2] as "fund" | "campaign"
+    const targetId = parts[3]
+    
+    await answerCallbackQuery(callbackQueryId, { 
+      text: "Введите сумму в следующем сообщении (например: 1500)", 
+      show_alert: true 
+    })
+    
+    // Store state for next message (in a real implementation, you'd use a database or cache)
+    // For now, we'll just send instructions
+    await sendTelegramMessage(
+      chatId,
+      `💰 <b>Введите сумму пожертвования</b>\n\nОтправьте число в следующем сообщении (например: 1500)\n\nМинимум: 1 ₽\nМаксимум: 10 000 000 ₽`,
+      { reply_markup: createMainMenuKeyboard() }
+    )
+    return
+  }
+
+  // Zakat calculator
+  if (callbackData === "menu:zakat") {
+    await answerCallbackQuery(callbackQueryId, { text: "Калькулятор закята" })
+    const keyboard = createZakatCalculatorKeyboard()
+    await editMessageText(
+      chatId,
+      messageId,
+      "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // Zakat info
+  if (callbackData === "zakat:info") {
+    await answerCallbackQuery(callbackQueryId, {
+      text: "Закят — обязательная милостыня в исламе, составляющая 2.5% от накопленного имущества при достижении нисаба.",
+      show_alert: true,
+    })
+    return
+  }
+
+  // Stats
+  if (callbackData === "menu:stats") {
+    await answerCallbackQuery(callbackQueryId, { text: "Загрузка статистики..." })
+    const stats = await getPlatformStats()
+    const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
+    
+    const keyboard = createMainMenuKeyboard()
+    await editMessageText(chatId, messageId, formatted, { reply_markup: keyboard })
+    return
+  }
+}
+
+// Handle text messages
+async function handleMessage(message: any) {
+  const chatId = message?.chat?.id
+  const text = message?.text
+
+  if (!chatId || !text) {
+    return
+  }
+
+  const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
+
+  // /start command
+  if (text.startsWith("/start")) {
+    const params = text.split(" ")[1]
+
+    if (params) {
+      if (params.startsWith("campaign_")) {
+        const campaignId = params.replace("campaign_", "")
+        const deepLink = `${webAppUrl}/campaigns/${campaignId}`
+        await sendTelegramMessage(
+          chatId,
+          `🎯 <b>Открываю кампанию...</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
+          { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
+        )
+        return
+      } else if (params.startsWith("donate_")) {
+        const donationId = params.replace("donate_", "")
+        const deepLink = `${webAppUrl}/donate?campaignId=${donationId}`
+        await sendTelegramMessage(
+          chatId,
+          `💰 <b>Быстрое пожертвование</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
+          { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
+        )
+        return
+      }
+    }
+
+    // Default /start - show main menu
+    const keyboard = createMainMenuKeyboard()
+    await sendTelegramMessage(
+      chatId,
+      "🌙 <b>Ассаляму алейкум!</b>\n\nДобро пожаловать в MubarakWay — платформу для садака-джария.\n\nВыберите действие:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // /subscription command
+  if (text.startsWith("/subscription") || text.startsWith("/подписка")) {
+    const keyboard = createSubscriptionPlansKeyboard()
+    await sendTelegramMessage(
+      chatId,
+      "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // /donate command
+  if (text.startsWith("/donate") || text.startsWith("/пожертвовать")) {
+    const keyboard = createDonationTypeKeyboard()
+    await sendTelegramMessage(
+      chatId,
+      "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // /zakat command
+  if (text.startsWith("/zakat") || text.startsWith("/закят")) {
+    const keyboard = createZakatCalculatorKeyboard()
+    await sendTelegramMessage(
+      chatId,
+      "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // /stats command
+  if (text.startsWith("/stats") || text.startsWith("/статистика")) {
+    const stats = await getPlatformStats()
+    const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
+    const keyboard = createMainMenuKeyboard()
+    await sendTelegramMessage(chatId, formatted, { reply_markup: keyboard })
+    return
+  }
+
+  // Unknown command - show help
+  const keyboard = createMainMenuKeyboard()
+  await sendTelegramMessage(
+    chatId,
+    "❓ <b>Команда не распознана</b>\n\nДоступные команды:\n/start - Главное меню\n/subscription - Подписка\n/donate - Пожертвование\n/zakat - Калькулятор закята\n/stats - Статистика",
+    { reply_markup: keyboard }
+  )
 }
 
 export async function POST(req: NextRequest) {
@@ -29,58 +489,20 @@ export async function POST(req: NextRequest) {
   if (!update) return NextResponse.json({ ok: true })
 
   try {
-    const message = update?.message
-    const chatId: number | undefined = message?.chat?.id
-    const text: string | undefined = message?.text
-
-    if (chatId && text) {
-      if (text.startsWith("/start")) {
-        // Обработка deep links: /start campaign_123 или /start donate_456
-        const params = text.split(" ")[1] // Получаем параметр после /start
-        
-        if (params) {
-          // Определяем тип deep link
-          if (params.startsWith("campaign_")) {
-            const campaignId = params.replace("campaign_", "")
-            const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
-            const deepLink = `${webAppUrl}/campaigns/${campaignId}`
-            
-            await sendTelegramMessage(
-              chatId,
-              `🎯 Открываю кампанию...\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`
-            )
-          } else if (params.startsWith("donate_")) {
-            const donationId = params.replace("donate_", "")
-            const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
-            const deepLink = `${webAppUrl}/donate?campaignId=${donationId}`
-            
-            await sendTelegramMessage(
-              chatId,
-              `💰 Быстрое пожертвование\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`
-            )
-          } else {
-            // Неизвестный параметр
-            await sendTelegramMessage(chatId, "Ассаляму алейкум! Я бот MubarakWay. Используйте /stats для статистики.")
-          }
-        } else {
-          // Обычный /start без параметров
-          await sendTelegramMessage(chatId, "Ассаляму алейкум! Я бот MubarakWay. Используйте /stats для статистики.")
-        }
-      } else if (text.startsWith("/stats")) {
-        const stats = await getPlatformStats()
-        const formatted = [
-          `Всего собрано: ${Math.round(stats.totalCollected)}`,
-          `Активных доноров: ${stats.activeDonors}`,
-          `Активных кампаний: ${stats.activeCampaigns}`,
-          `Средний чек: ${Math.round(stats.averageCheck)}`,
-        ].join("\n")
-        await sendTelegramMessage(chatId, formatted)
-      } else {
-        await sendTelegramMessage(chatId, "Команда не распознана. Доступно: /stats")
-      }
+    // Handle callback queries (inline button clicks)
+    if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query)
+      return NextResponse.json({ ok: true })
     }
-  } catch (e) {
-    // swallow
+
+    // Handle messages
+    if (update.message) {
+      await handleMessage(update.message)
+      return NextResponse.json({ ok: true })
+    }
+  } catch (error) {
+    console.error("[Telegram Webhook] Error:", error)
+    // Don't fail the webhook - Telegram will retry
   }
 
   return NextResponse.json({ ok: true })
