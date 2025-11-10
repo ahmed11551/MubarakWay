@@ -86,7 +86,14 @@ async function handleCallbackQuery(callbackQuery: any) {
   const callbackData = callbackQuery.data
   const callbackQueryId = callbackQuery.id
 
-  if (!chatId || !callbackData) {
+  if (!chatId || !callbackData || !callbackQueryId) {
+    console.warn("[Telegram Webhook] Invalid callback query:", { chatId, callbackData, callbackQueryId })
+    return
+  }
+  
+  // Handle inline queries (without message)
+  if (!messageId) {
+    await answerCallbackQuery(callbackQueryId, { text: "Эта команда недоступна в inline режиме", show_alert: true })
     return
   }
 
@@ -191,74 +198,128 @@ async function handleCallbackQuery(callbackQuery: any) {
   // Donation type: fund
   if (callbackData === "donate:type:fund") {
     await answerCallbackQuery(callbackQueryId, { text: "Загрузка фондов..." })
-    const fundsResult = await getFunds()
-    const funds = fundsResult.funds || []
+    try {
+      const fundsResult = await getFunds()
+      const funds = fundsResult.funds || []
 
-    if (funds.length === 0) {
-      await answerCallbackQuery(callbackQueryId, { text: "Фонды не найдены", show_alert: true })
-      return
+      if (funds.length === 0) {
+        await answerCallbackQuery(callbackQueryId, { text: "Фонды не найдены", show_alert: true })
+        return
+      }
+
+      const keyboard = createFundsKeyboard(funds, 0)
+      const result = await editMessageText(
+        chatId,
+        messageId,
+        "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+        { reply_markup: keyboard }
+      )
+      
+      if (!result.success) {
+        // If edit fails, send new message
+        await sendTelegramMessage(
+          chatId,
+          "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+          { reply_markup: keyboard }
+        )
+      }
+    } catch (error) {
+      console.error("[Telegram Webhook] Error loading funds:", error)
+      await answerCallbackQuery(callbackQueryId, { text: "Ошибка загрузки фондов", show_alert: true })
     }
-
-    const keyboard = createFundsKeyboard(funds, 0)
-    await editMessageText(
-      chatId,
-      messageId,
-      "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
-      { reply_markup: keyboard }
-    )
     return
   }
 
   // Donation type: campaign
   if (callbackData === "donate:type:campaign") {
     await answerCallbackQuery(callbackQueryId, { text: "Загрузка проектов..." })
-    const campaignsResult = await getCampaigns("active")
-    const campaigns = (campaignsResult.campaigns || []).slice(0, 20) // Limit to 20
+    try {
+      const campaignsResult = await getCampaigns("active")
+      const campaigns = (campaignsResult.campaigns || []).slice(0, 20) // Limit to 20
 
-    if (campaigns.length === 0) {
-      await answerCallbackQuery(callbackQueryId, { text: "Проекты не найдены", show_alert: true })
-      return
+      if (campaigns.length === 0) {
+        await answerCallbackQuery(callbackQueryId, { text: "Проекты не найдены", show_alert: true })
+        return
+      }
+
+      const keyboard = createCampaignsKeyboard(campaigns, 0)
+      const result = await editMessageText(
+        chatId,
+        messageId,
+        "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+        { reply_markup: keyboard }
+      )
+      
+      if (!result.success) {
+        // If edit fails, send new message
+        await sendTelegramMessage(
+          chatId,
+          "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+          { reply_markup: keyboard }
+        )
+      }
+    } catch (error) {
+      console.error("[Telegram Webhook] Error loading campaigns:", error)
+      await answerCallbackQuery(callbackQueryId, { text: "Ошибка загрузки проектов", show_alert: true })
     }
-
-    const keyboard = createCampaignsKeyboard(campaigns, 0)
-    await editMessageText(
-      chatId,
-      messageId,
-      "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
-      { reply_markup: keyboard }
-    )
     return
   }
 
   // Funds pagination
   if (callbackData.startsWith("donate:funds:page:")) {
     const page = parseInt(callbackData.replace("donate:funds:page:", ""))
-    const fundsResult = await getFunds()
-    const funds = fundsResult.funds || []
+    try {
+      const fundsResult = await getFunds()
+      const funds = fundsResult.funds || []
 
-    const keyboard = createFundsKeyboard(funds, page)
-    await editMessageText(
-      chatId,
-      messageId,
-      "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
-      { reply_markup: keyboard }
-    )
+      const keyboard = createFundsKeyboard(funds, page)
+      const result = await editMessageText(
+        chatId,
+        messageId,
+        "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+        { reply_markup: keyboard }
+      )
+      
+      if (!result.success) {
+        await sendTelegramMessage(
+          chatId,
+          "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+          { reply_markup: keyboard }
+        )
+      }
+    } catch (error) {
+      console.error("[Telegram Webhook] Error loading funds page:", error)
+      await answerCallbackQuery(callbackQueryId, { text: "Ошибка загрузки", show_alert: true })
+    }
     return
   }
 
   // Campaigns pagination
   if (callbackData.startsWith("donate:campaigns:page:")) {
     const page = parseInt(callbackData.replace("donate:campaigns:page:", ""))
-    const campaignsResult = await getCampaigns("active")
-    const campaigns = (campaignsResult.campaigns || []).slice(0, 20)
+    try {
+      const campaignsResult = await getCampaigns("active")
+      const campaigns = (campaignsResult.campaigns || []).slice(0, 20)
 
-    const keyboard = createCampaignsKeyboard(campaigns, page)
-    await editMessageText(
-      chatId,
-      messageId,
-      "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
-      { reply_markup: keyboard }
-    )
+      const keyboard = createCampaignsKeyboard(campaigns, page)
+      const result = await editMessageText(
+        chatId,
+        messageId,
+        "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+        { reply_markup: keyboard }
+      )
+      
+      if (!result.success) {
+        await sendTelegramMessage(
+          chatId,
+          "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+          { reply_markup: keyboard }
+        )
+      }
+    } catch (error) {
+      console.error("[Telegram Webhook] Error loading campaigns page:", error)
+      await answerCallbackQuery(callbackQueryId, { text: "Ошибка загрузки", show_alert: true })
+    }
     return
   }
 
@@ -373,11 +434,20 @@ async function handleCallbackQuery(callbackQuery: any) {
   // Stats
   if (callbackData === "menu:stats") {
     await answerCallbackQuery(callbackQueryId, { text: "Загрузка статистики..." })
-    const stats = await getPlatformStats()
-    const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
-    
-    const keyboard = createMainMenuKeyboard()
-    await editMessageText(chatId, messageId, formatted, { reply_markup: keyboard })
+    try {
+      const stats = await getPlatformStats()
+      const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
+      
+      const keyboard = createMainMenuKeyboard()
+      const result = await editMessageText(chatId, messageId, formatted, { reply_markup: keyboard })
+      
+      if (!result.success) {
+        await sendTelegramMessage(chatId, formatted, { reply_markup: keyboard })
+      }
+    } catch (error) {
+      console.error("[Telegram Webhook] Error loading stats:", error)
+      await answerCallbackQuery(callbackQueryId, { text: "Ошибка загрузки статистики", show_alert: true })
+    }
     return
   }
 
@@ -474,10 +544,15 @@ async function handleMessage(message: any) {
 
   // /stats command
   if (text.startsWith("/stats") || text.startsWith("/статистика")) {
-    const stats = await getPlatformStats()
-    const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
-    const keyboard = createMainMenuKeyboard()
-    await sendTelegramMessage(chatId, formatted, { reply_markup: keyboard })
+    try {
+      const stats = await getPlatformStats()
+      const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
+      const keyboard = createMainMenuKeyboard()
+      await sendTelegramMessage(chatId, formatted, { reply_markup: keyboard })
+    } catch (error) {
+      console.error("[Telegram Webhook] Error loading stats:", error)
+      await sendTelegramMessage(chatId, "❌ Ошибка загрузки статистики. Попробуйте позже.", { reply_markup: createMainMenuKeyboard() })
+    }
     return
   }
 
