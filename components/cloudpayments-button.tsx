@@ -81,6 +81,7 @@ export function CloudPaymentsButton({
       }
 
       if (!result.paymentUrl) {
+        clearTimeout(timeoutId)
         console.error("[Payment] Ссылка на оплату не получена")
         hapticFeedback("error")
         setIsLoading(false)
@@ -88,6 +89,9 @@ export function CloudPaymentsButton({
         return
       }
 
+      // Очищаем таймаут перед редиректом
+      clearTimeout(timeoutId)
+      
       // Редиректим пользователя на страницу оплаты
       console.log("[Payment] Редирект на оплату:", result.paymentUrl)
       window.location.href = result.paymentUrl

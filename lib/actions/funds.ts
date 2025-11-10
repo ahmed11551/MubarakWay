@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { isAdmin } from "@/lib/utils/admin"
 
 // Create a simple client for public data (bypasses cookie issues)
 function createPublicClient() {
@@ -271,8 +272,11 @@ export async function deleteFund(fundId: string) {
     return { error: "You must be logged in to delete funds" }
   }
 
-  // TODO: Check if user is admin
-  // For now, allow any logged-in user to delete
+  // Check if user is admin
+  const userIsAdmin = await isAdmin()
+  if (!userIsAdmin) {
+    return { error: "You must be an admin to delete funds" }
+  }
 
   try {
     // Soft delete: set is_active to false instead of actually deleting

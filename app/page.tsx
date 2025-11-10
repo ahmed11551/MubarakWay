@@ -35,6 +35,8 @@ export default function HomePage() {
           setActiveCampaigns(data.campaigns || [])
         } else {
           console.error("Failed to fetch campaigns:", response.status, response.statusText)
+          // Не показываем toast при первой загрузке, чтобы не раздражать пользователя
+          // Ошибка будет видна по отсутствию кампаний
         }
       } catch (error) {
         console.error("Failed to fetch active campaigns:", error)

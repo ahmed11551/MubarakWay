@@ -66,7 +66,13 @@ export function BottomNav() {
     if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
       try {
         window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-      } catch {}
+      } catch (error) {
+        // Haptic feedback не критичен, просто игнорируем ошибку
+        // В dev режиме можно залогировать для отладки
+        if (process.env.NODE_ENV === "development") {
+          console.debug("[BottomNav] Haptic feedback failed:", error)
+        }
+      }
     }
 
     // Навигация - все страницы одинаково быстро

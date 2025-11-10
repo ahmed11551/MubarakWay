@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { isAdmin } from "@/lib/utils/admin"
 import { sendEmail, getDonationConfirmationEmail, getCampaignDonationNotificationEmail } from "@/lib/email"
 import { sendTelegramMessage, getCampaignDonationNotificationMessage } from "@/lib/telegram"
 
@@ -185,8 +186,11 @@ export async function getAllDonations() {
     return { error: "You must be logged in to view all donations" }
   }
 
-  // TODO: Check if user is admin
-  // For now, allow any logged-in user to view all donations
+  // Check if user is admin
+  const userIsAdmin = await isAdmin()
+  if (!userIsAdmin) {
+    return { error: "You must be an admin to view all donations" }
+  }
 
   try {
     const { data: donations, error } = await supabase

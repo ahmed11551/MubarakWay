@@ -160,21 +160,45 @@ export function CampaignCreationForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
+    // Validate title
     if (!title.trim()) {
       newErrors.title = "Название кампании обязательно"
+    } else if (title.trim().length > 100) {
+      newErrors.title = "Название не должно превышать 100 символов"
     }
+
+    // Validate description
     if (!description.trim()) {
       newErrors.description = "Описание обязательно"
+    } else if (description.trim().length > 200) {
+      newErrors.description = "Описание не должно превышать 200 символов"
     }
+
+    // Validate story
     if (!story.trim()) {
       newErrors.story = "История кампании обязательна"
+    } else if (story.trim().length > 2000) {
+      newErrors.story = "История не должна превышать 2000 символов"
     }
-    if (!goalAmount || Number.parseFloat(goalAmount) <= 0) {
+
+    // Validate goal amount
+    const parsedAmount = Number.parseFloat(goalAmount)
+    if (!goalAmount || isNaN(parsedAmount)) {
       newErrors.goalAmount = "Укажите корректную сумму цели"
+    } else if (parsedAmount <= 0) {
+      newErrors.goalAmount = "Сумма должна быть положительным числом"
+    } else if (parsedAmount > 1000000000) {
+      newErrors.goalAmount = "Максимальная сумма цели: 1 000 000 000"
+    } else if (goalAmount.includes('.') && goalAmount.split('.')[1]?.length > 2) {
+      newErrors.goalAmount = "Сумма не должна содержать более 2 знаков после запятой"
     }
+
+    // Validate category
     if (!category) {
       newErrors.category = "Выберите категорию"
     }
+
+    // Validate fund
     if (!selectedFundId) {
       newErrors.fundId = "Выберите фонд-партнёр"
     }

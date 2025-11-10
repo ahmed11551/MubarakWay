@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { sendEmail, getCampaignApprovalEmail } from "@/lib/email"
 import { sendTelegramMessage, getCampaignModerationNotificationMessage } from "@/lib/telegram"
+import { isAdmin } from "@/lib/utils/admin"
 
 export type CampaignInput = {
   title: string
@@ -231,8 +232,11 @@ export async function approveCampaign(campaignId: string) {
     return { error: "You must be logged in to approve campaigns" }
   }
 
-  // TODO: Check if user is admin
-  // For now, allow any logged-in user to approve
+  // Check if user is admin
+  const userIsAdmin = await isAdmin()
+  if (!userIsAdmin) {
+    return { error: "You must be an admin to approve campaigns" }
+  }
 
   try {
     // Get campaign with creator info before updating
@@ -289,8 +293,11 @@ export async function rejectCampaign(campaignId: string, reason?: string) {
     return { error: "You must be logged in to reject campaigns" }
   }
 
-  // TODO: Check if user is admin
-  // For now, allow any logged-in user to reject
+  // Check if user is admin
+  const userIsAdmin = await isAdmin()
+  if (!userIsAdmin) {
+    return { error: "You must be an admin to reject campaigns" }
+  }
 
   try {
     // Get campaign with creator info before updating

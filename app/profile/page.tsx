@@ -45,11 +45,16 @@ export default function ProfilePage() {
         const result = await getProfile()
         if (result.error) {
           console.error("Error loading profile:", result.error)
+          // Показываем ошибку только если это не проблема авторизации
+          if (!result.error.includes("logged in") && !result.error.includes("authenticated")) {
+            toast.error("Не удалось загрузить профиль. Попробуйте обновить страницу.")
+          }
         } else {
           setProfile(result.profile)
         }
       } catch (error) {
         console.error("Failed to load profile:", error)
+        toast.error("Ошибка при загрузке профиля. Попробуйте обновить страницу.")
       } finally {
         setIsLoadingProfile(false)
       }
