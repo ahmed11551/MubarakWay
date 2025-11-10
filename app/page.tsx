@@ -285,49 +285,53 @@ export default function HomePage() {
             >
               {urgentCampaigns.map((campaign) => (
                 <div key={campaign.id} className="min-w-full">
-                  <Card className="border bg-gradient-to-br from-red-500/5 to-orange-500/5 overflow-hidden">
-                    {/* Reduce banner height from 16/9 to slimmer 16/7 */}
-                    <div className="aspect-[16/7] relative overflow-hidden">
-                      <Image
-                        src={campaign.image || "/placeholder.svg"}
-                        alt={campaign.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
-                        {campaign.daysLeft} дней
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-2 left-3 right-3">
-                        <h4 className="text-white font-bold text-base mb-0.5 line-clamp-1">{campaign.title}</h4>
-                        <p className="text-white/90 text-xs line-clamp-1">{campaign.description}</p>
-                      </div>
-                    </div>
-                    <CardContent className="pt-3 space-y-2">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Собрано</span>
-                          <span className="font-bold text-primary">{campaign.raised.toLocaleString("ru-RU")} ₽</span>
+                  <Link href={`/campaigns/${campaign.id}`} className="block">
+                    <Card className="border bg-gradient-to-br from-red-500/5 to-orange-500/5 overflow-hidden hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200 cursor-pointer group">
+                      {/* Reduce banner height from 16/9 to slimmer 16/7 */}
+                      <div className="aspect-[16/7] relative overflow-hidden">
+                        <Image
+                          src={campaign.image || "/placeholder.svg"}
+                          alt={campaign.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
+                          {campaign.daysLeft} дней
                         </div>
-                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
-                            style={{ width: `${(campaign.raised / campaign.goal) * 100}%` }}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-2 left-3 right-3">
+                          <h4 className="text-white font-bold text-base mb-0.5 line-clamp-1 group-hover:text-primary-foreground transition-colors">{campaign.title}</h4>
+                          <p className="text-white/90 text-xs line-clamp-1">{campaign.description}</p>
+                        </div>
+                      </div>
+                      <CardContent className="pt-3 space-y-2">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Собрано</span>
+                            <span className="font-bold text-primary">{campaign.raised.toLocaleString("ru-RU")} ₽</span>
+                          </div>
+                          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
+                              style={{ width: `${(campaign.raised / campaign.goal) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{campaign.donors} жертвователей</span>
+                            <span>Цель: {campaign.goal.toLocaleString("ru-RU")} ₽</span>
+                          </div>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <QuickDonation
+                            amount={500}
+                            campaignId={campaign.id.toString()}
+                            category={campaign.category}
                           />
                         </div>
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{campaign.donors} жертвователей</span>
-                          <span>Цель: {campaign.goal.toLocaleString("ru-RU")} ₽</span>
-                        </div>
-                      </div>
-                      <QuickDonation
-                        amount={500}
-                        campaignId={campaign.id.toString()}
-                        category={campaign.category}
-                      />
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </div>
               ))}
             </div>
