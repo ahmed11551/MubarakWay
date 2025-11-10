@@ -103,12 +103,20 @@ async function handleCallbackQuery(callbackQuery: any) {
   if (callbackData === "menu:main") {
     await answerCallbackQuery(callbackQueryId, { text: "Главное меню" })
     const keyboard = createMainMenuKeyboard()
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       "🌙 <b>Ассаляму алейкум!</b>\n\nДобро пожаловать в MubarakWay — платформу для садака-джария.\n\nВыберите действие:",
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        "🌙 <b>Ассаляму алейкум!</b>\n\nДобро пожаловать в MubarakWay — платформу для садака-джария.\n\nВыберите действие:",
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
@@ -116,12 +124,20 @@ async function handleCallbackQuery(callbackQuery: any) {
   if (callbackData === "menu:subscription") {
     await answerCallbackQuery(callbackQueryId, { text: "Выбор тарифа" })
     const keyboard = createSubscriptionPlansKeyboard()
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
@@ -146,13 +162,22 @@ async function handleCallbackQuery(callbackQuery: any) {
     const featuresText = plan.features.map((f) => `✓ ${f}`).join("\n")
     const message = `💎 <b>${plan.name}</b> — ${plan.subtitle}\n\n${plan.description}\n\n<b>Преимущества:</b>\n${featuresText}\n\nВыберите период подписки:`
     
-    await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
+    const result = await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
+    
+    if (!result.success) {
+      await sendTelegramMessage(chatId, message, { reply_markup: keyboard })
+    }
     return
   }
 
   // Subscription period selection
   if (callbackData.startsWith("subscription:period:")) {
     const parts = callbackData.split(":")
+    if (parts.length < 4) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат команды", show_alert: true })
+      return
+    }
+    
     const planKey = parts[2]
     const periodKey = parts[3]
     const plan = SUBSCRIPTION_PLANS[planKey as keyof typeof SUBSCRIPTION_PLANS]
@@ -172,13 +197,17 @@ async function handleCallbackQuery(callbackQuery: any) {
     
     // Create payment URL for subscription - opens Mini App with checkout page
     // Full payment integration will be added later
-    const paymentUrl = `${webAppUrl}/subscription/checkout?plan=${plan.name}&period=${encodeURIComponent(priceInfo.period)}`
+    const paymentUrl = `${webAppUrl}/subscription/checkout?plan=${encodeURIComponent(plan.name)}&period=${encodeURIComponent(priceInfo.period)}`
     
     const keyboard = createPaymentKeyboard(paymentUrl)
     const bonusText = priceInfo.bonus ? `\n🎁 ${priceInfo.bonus}` : ""
     const message = `💎 <b>${plan.name}</b> — ${priceInfo.period}\n\n💰 <b>Сумма:</b> ${priceInfo.price} ₽\n💝 <b>В благотворительность:</b> ${priceInfo.charity} ₽${bonusText}\n\nНажмите кнопку ниже для оплаты:`
     
-    await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
+    const result = await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
+    
+    if (!result.success) {
+      await sendTelegramMessage(chatId, message, { reply_markup: keyboard })
+    }
     return
   }
 
@@ -186,12 +215,20 @@ async function handleCallbackQuery(callbackQuery: any) {
   if (callbackData === "menu:donate") {
     await answerCallbackQuery(callbackQueryId, { text: "Выбор типа пожертвования" })
     const keyboard = createDonationTypeKeyboard()
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
@@ -267,7 +304,12 @@ async function handleCallbackQuery(callbackQuery: any) {
 
   // Funds pagination
   if (callbackData.startsWith("donate:funds:page:")) {
-    const page = parseInt(callbackData.replace("donate:funds:page:", ""))
+    const pageStr = callbackData.replace("donate:funds:page:", "")
+    const page = parseInt(pageStr, 10)
+    if (isNaN(page) || page < 0) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный номер страницы", show_alert: true })
+      return
+    }
     try {
       const fundsResult = await getFunds()
       const funds = fundsResult.funds || []
@@ -296,7 +338,12 @@ async function handleCallbackQuery(callbackQuery: any) {
 
   // Campaigns pagination
   if (callbackData.startsWith("donate:campaigns:page:")) {
-    const page = parseInt(callbackData.replace("donate:campaigns:page:", ""))
+    const pageStr = callbackData.replace("donate:campaigns:page:", "")
+    const page = parseInt(pageStr, 10)
+    if (isNaN(page) || page < 0) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный номер страницы", show_alert: true })
+      return
+    }
     try {
       const campaignsResult = await getCampaigns("active")
       const campaigns = (campaignsResult.campaigns || []).slice(0, 20)
@@ -326,37 +373,87 @@ async function handleCallbackQuery(callbackQuery: any) {
   // Fund selection
   if (callbackData.startsWith("donate:fund:")) {
     const fundId = callbackData.replace("donate:fund:", "")
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(fundId)) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат ID фонда", show_alert: true })
+      return
+    }
+    
     await answerCallbackQuery(callbackQueryId, { text: "Выбор суммы" })
     const keyboard = createDonationAmountKeyboard(fundId, "fund")
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
   // Campaign selection
   if (callbackData.startsWith("donate:campaign:")) {
     const campaignId = callbackData.replace("donate:campaign:", "")
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(campaignId)) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат ID проекта", show_alert: true })
+      return
+    }
+    
     await answerCallbackQuery(callbackQueryId, { text: "Выбор суммы" })
     const keyboard = createDonationAmountKeyboard(campaignId, "campaign")
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
   // Donation amount selection
   if (callbackData.startsWith("donate:amount:")) {
     const parts = callbackData.split(":")
+    if (parts.length < 5) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат команды", show_alert: true })
+      return
+    }
+    
     const targetType = parts[2] as "fund" | "campaign"
     const targetId = parts[3]
-    const amount = parseInt(parts[4])
+    const amount = parseInt(parts[4], 10)
+    
+    // Validate amount
+    if (isNaN(amount) || amount <= 0 || amount > 10000000) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверная сумма. Минимум: 1 ₽, максимум: 10 000 000 ₽", show_alert: true })
+      return
+    }
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(targetId)) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат ID", show_alert: true })
+      return
+    }
 
     await answerCallbackQuery(callbackQueryId, { text: "Перенаправление на оплату..." })
     
@@ -379,20 +476,40 @@ async function handleCallbackQuery(callbackQuery: any) {
     const paymentUrl = `${webAppUrl}/donate?${params.toString()}`
     const keyboard = createPaymentKeyboard(paymentUrl)
     
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       `💰 <b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        `💰 <b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
   // Custom donation amount
   if (callbackData.startsWith("donate:custom:")) {
     const parts = callbackData.split(":")
+    if (parts.length < 4) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат команды", show_alert: true })
+      return
+    }
+    
     const targetType = parts[2] as "fund" | "campaign"
     const targetId = parts[3]
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(targetId)) {
+      await answerCallbackQuery(callbackQueryId, { text: "Неверный формат ID", show_alert: true })
+      return
+    }
     
     await answerCallbackQuery(callbackQueryId, { 
       text: "Введите сумму в следующем сообщении (например: 1500)", 
@@ -403,7 +520,7 @@ async function handleCallbackQuery(callbackQuery: any) {
     // For now, we'll just send instructions
     await sendTelegramMessage(
       chatId,
-      `💰 <b>Введите сумму пожертвования</b>\n\nОтправьте число в следующем сообщении (например: 1500)\n\nМинимум: 1 ₽\nМаксимум: 10 000 000 ₽`,
+      `💰 <b>Введите сумму пожертвования</b>\n\nОтправьте число в следующем сообщении (например: 1500)\n\nМинимум: 1 ₽\nМаксимум: 10 000 000 ₽\n\n⚠️ <i>Примечание: функция произвольной суммы будет реализована позже. Пока используйте кнопки с фиксированными суммами.</i>`,
       { reply_markup: createMainMenuKeyboard() }
     )
     return
@@ -413,12 +530,20 @@ async function handleCallbackQuery(callbackQuery: any) {
   if (callbackData === "menu:zakat") {
     await answerCallbackQuery(callbackQueryId, { text: "Калькулятор закята" })
     const keyboard = createZakatCalculatorKeyboard()
-    await editMessageText(
+    const result = await editMessageText(
       chatId,
       messageId,
       "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
       { reply_markup: keyboard }
     )
+    
+    if (!result.success) {
+      await sendTelegramMessage(
+        chatId,
+        "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
+        { reply_markup: keyboard }
+      )
+    }
     return
   }
 
@@ -454,12 +579,20 @@ async function handleCallbackQuery(callbackQuery: any) {
   // Unknown callback - show error and return to main menu
   await answerCallbackQuery(callbackQueryId, { text: "Неизвестная команда", show_alert: false })
   const keyboard = createMainMenuKeyboard()
-  await editMessageText(
+  const result = await editMessageText(
     chatId,
     messageId,
     "❓ <b>Неизвестная команда</b>\n\nВозвращаемся в главное меню:",
     { reply_markup: keyboard }
   )
+  
+  if (!result.success) {
+    await sendTelegramMessage(
+      chatId,
+      "❓ <b>Неизвестная команда</b>\n\nВозвращаемся в главное меню:",
+      { reply_markup: keyboard }
+    )
+  }
 }
 
 // Handle text messages
@@ -480,21 +613,33 @@ async function handleMessage(message: any) {
     if (params) {
       if (params.startsWith("campaign_")) {
         const campaignId = params.replace("campaign_", "")
-        const deepLink = `${webAppUrl}/campaigns/${campaignId}`
-        await sendTelegramMessage(
-          chatId,
-          `🎯 <b>Открываю кампанию...</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
-          { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
-        )
+        // Validate UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        if (uuidRegex.test(campaignId)) {
+          const deepLink = `${webAppUrl}/campaigns/${campaignId}`
+          await sendTelegramMessage(
+            chatId,
+            `🎯 <b>Открываю кампанию...</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
+            { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
+          )
+        } else {
+          await sendTelegramMessage(chatId, "❌ Неверный формат ID кампании", { reply_markup: createMainMenuKeyboard() })
+        }
         return
       } else if (params.startsWith("donate_")) {
         const donationId = params.replace("donate_", "")
-        const deepLink = `${webAppUrl}/donate?campaignId=${donationId}`
-        await sendTelegramMessage(
-          chatId,
-          `💰 <b>Быстрое пожертвование</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
-          { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
-        )
+        // Validate UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        if (uuidRegex.test(donationId)) {
+          const deepLink = `${webAppUrl}/donate?campaignId=${donationId}`
+          await sendTelegramMessage(
+            chatId,
+            `💰 <b>Быстрое пожертвование</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
+            { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
+          )
+        } else {
+          await sendTelegramMessage(chatId, "❌ Неверный формат ID", { reply_markup: createMainMenuKeyboard() })
+        }
         return
       }
     }
