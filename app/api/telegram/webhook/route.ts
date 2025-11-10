@@ -380,6 +380,16 @@ async function handleCallbackQuery(callbackQuery: any) {
     await editMessageText(chatId, messageId, formatted, { reply_markup: keyboard })
     return
   }
+
+  // Unknown callback - show error and return to main menu
+  await answerCallbackQuery(callbackQueryId, { text: "Неизвестная команда", show_alert: false })
+  const keyboard = createMainMenuKeyboard()
+  await editMessageText(
+    chatId,
+    messageId,
+    "❓ <b>Неизвестная команда</b>\n\nВозвращаемся в главное меню:",
+    { reply_markup: keyboard }
+  )
 }
 
 // Handle text messages
