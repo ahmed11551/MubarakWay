@@ -13,6 +13,7 @@ import {
   createDonationAmountKeyboard,
   createPaymentKeyboard,
   createZakatCalculatorKeyboard,
+  createQuickSupportKeyboard,
 } from "@/lib/telegram-bot"
 import { getFunds } from "@/lib/actions/funds"
 import { getCampaigns } from "@/lib/actions/campaigns"
@@ -676,6 +677,53 @@ async function handleMessage(message: any) {
     return
   }
 
+  // /sadaqa command - открыть вкладку «Пожертвовать»
+  if (text.startsWith("/sadaqa") || text.startsWith("/садака")) {
+    const donateUrl = `${webAppUrl}/donate`
+    await sendTelegramMessage(
+      chatId,
+      "💚 <b>Садака</b>\n\nОткройте Mini App для пожертвования:",
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🌐 Открыть пожертвование", web_app: { url: donateUrl } }],
+            [{ text: "◀️ Главное меню", callback_data: "menu:main" }],
+          ],
+        },
+      }
+    )
+    return
+  }
+
+  // /support command - быстрые донаты (500 / 1000 / 2500 ₽)
+  if (text.startsWith("/support") || text.startsWith("/поддержать")) {
+    const keyboard = createQuickSupportKeyboard()
+    await sendTelegramMessage(
+      chatId,
+      "💝 <b>Быстрая садака</b>\n\nВыберите сумму для быстрого пожертвования:",
+      { reply_markup: keyboard }
+    )
+    return
+  }
+
+  // /partners command - каталог фондов
+  if (text.startsWith("/partners") || text.startsWith("/партнеры") || text.startsWith("/фонды")) {
+    const partnersUrl = `${webAppUrl}/funds`
+    await sendTelegramMessage(
+      chatId,
+      "🏛️ <b>Фонды-партнёры</b>\n\nОткройте каталог фондов:",
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🌐 Открыть каталог фондов", web_app: { url: partnersUrl } }],
+            [{ text: "◀️ Главное меню", callback_data: "menu:main" }],
+          ],
+        },
+      }
+    )
+    return
+  }
+
   // /zakat command
   if (text.startsWith("/zakat") || text.startsWith("/закят")) {
     const keyboard = createZakatCalculatorKeyboard()
@@ -705,7 +753,7 @@ async function handleMessage(message: any) {
   const keyboard = createMainMenuKeyboard()
   await sendTelegramMessage(
     chatId,
-    "❓ <b>Команда не распознана</b>\n\nДоступные команды:\n/start - Главное меню\n/subscription - Подписка\n/donate - Пожертвование\n/zakat - Калькулятор закята\n/stats - Статистика",
+    "❓ <b>Команда не распознана</b>\n\nДоступные команды:\n/start - Главное меню\n/sadaqa - Пожертвование\n/support - Быстрая садака\n/partners - Фонды-партнёры\n/subscription - Подписка\n/donate - Пожертвование\n/zakat - Калькулятор закята\n/stats - Статистика",
     { reply_markup: keyboard }
   )
 }

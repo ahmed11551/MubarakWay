@@ -15,6 +15,7 @@ import Link from "next/link"
 import { getUserDonations } from "@/lib/actions/donations"
 import { SubscriptionsManager } from "@/components/subscriptions-manager"
 import { AvatarUpload } from "@/components/avatar-upload"
+import { FundReportsTab } from "@/components/fund-reports-tab"
 import { getProfile } from "@/lib/actions/profile"
 import { toast } from "sonner"
 
@@ -393,82 +394,7 @@ export default function ProfilePage() {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <h3 className="text-base sm:text-lg font-bold text-center sm:text-left w-full sm:w-auto">Отчёты фондов</h3>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Фильтр</span>
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                {
-                  fund: "Исламский фонд помощи",
-                  period: "Декабрь 2024",
-                  collected: 2450000,
-                  distributed: 2300000,
-                  status: "Подтверждено",
-                  reportUrl: "#",
-                },
-                {
-                  fund: "Фонд помощи сиротам",
-                  period: "Декабрь 2024",
-                  collected: 1890000,
-                  distributed: 1850000,
-                  status: "Подтверждено",
-                  reportUrl: "#",
-                },
-                {
-                  fund: "Строительство колодцев",
-                  period: "Январь 2025",
-                  collected: 745000,
-                  distributed: 0,
-                  status: "В процессе",
-                  reportUrl: null,
-                },
-              ].map((report, i) => (
-                <Card key={i} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{report.fund}</CardTitle>
-                        <CardDescription>{report.period}</CardDescription>
-                      </div>
-                      <Badge
-                        className={
-                          report.status === "Подтверждено"
-                            ? "bg-green-500/10 text-green-600"
-                            : "bg-yellow-500/10 text-yellow-600"
-                        }
-                      >
-                        {report.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Собрано</p>
-                        <p className="font-bold text-primary">{report.collected.toLocaleString("ru-RU")} RUB</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Распределено</p>
-                        <p className="font-bold text-accent">{report.distributed.toLocaleString("ru-RU")} RUB</p>
-                      </div>
-                    </div>
-                    {report.reportUrl && (
-                      <Button variant="outline" className="w-full bg-transparent" size="sm" asChild>
-                        <Link href={report.reportUrl}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Скачать отчёт (PDF)
-                        </Link>
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <FundReportsTab />
           </TabsContent>
         </Tabs>
 

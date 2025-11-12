@@ -277,6 +277,28 @@ export function createDonationTypeKeyboard(): TelegramInlineKeyboard {
 }
 
 /**
+ * Create inline keyboard for quick support donations (500 / 1000 / 2500 ₽)
+ */
+export function createQuickSupportKeyboard(): TelegramInlineKeyboard {
+  const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarak-way.vercel.app"
+  
+  return {
+    inline_keyboard: [
+      [
+        { text: "500 ₽", web_app: { url: `${webAppUrl}/donate?amount=500&type=project` } },
+        { text: "1000 ₽", web_app: { url: `${webAppUrl}/donate?amount=1000&type=project` } },
+      ],
+      [
+        { text: "2500 ₽", web_app: { url: `${webAppUrl}/donate?amount=2500&type=project` } },
+      ],
+      [
+        { text: "◀️ Главное меню", callback_data: "menu:main" },
+      ],
+    ],
+  }
+}
+
+/**
  * Create inline keyboard for funds list
  */
 export function createFundsKeyboard(funds: Array<{ id: string; name: string }>, page: number = 0, pageSize: number = 5): TelegramInlineKeyboard {
