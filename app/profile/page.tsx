@@ -48,15 +48,20 @@ export default function ProfilePage() {
         if (result.error) {
           console.error("Error loading profile:", result.error)
           // Показываем ошибку только если это не проблема авторизации
+          // И только один раз, чтобы не дублировать уведомления
           if (!result.error.includes("logged in") && !result.error.includes("authenticated")) {
-            toast.error("Не удалось загрузить профиль. Попробуйте обновить страницу.")
+            toast.error("Не удалось загрузить профиль. Попробуйте обновить страницу.", {
+              id: "profile-load-error", // Уникальный ID для предотвращения дубликатов
+            })
           }
         } else {
           setProfile(result.profile)
         }
       } catch (error) {
         console.error("Failed to load profile:", error)
-        toast.error("Ошибка при загрузке профиля. Попробуйте обновить страницу.")
+        toast.error("Ошибка при загрузке профиля. Попробуйте обновить страницу.", {
+          id: "profile-load-error", // Уникальный ID для предотвращения дубликатов
+        })
       } finally {
         setIsLoadingProfile(false)
       }
@@ -74,7 +79,9 @@ export default function ProfilePage() {
         // Если есть реальная ошибка (не просто отсутствие авторизации)
         if (result.error) {
           console.error("Error loading donations:", result.error)
-          toast.error(result.error)
+          toast.error(result.error, {
+            id: "donations-load-error", // Уникальный ID для предотвращения дубликатов
+          })
           setTransactions([])
           return
         }
@@ -109,7 +116,9 @@ export default function ProfilePage() {
       } catch (error) {
         console.error("Failed to load donations:", error)
         const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка"
-        toast.error(`Ошибка при загрузке данных: ${errorMessage}`)
+        toast.error(`Ошибка при загрузке данных: ${errorMessage}`, {
+          id: "donations-load-error", // Уникальный ID для предотвращения дубликатов
+        })
         setTransactions([])
       } finally {
         setIsLoading(false)

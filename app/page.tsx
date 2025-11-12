@@ -41,9 +41,12 @@ export default function HomePage() {
       } catch (error) {
         console.error("Failed to fetch active campaigns:", error)
         // Don't show toast on initial load errors to prevent client-side exceptions
-        if (typeof window !== "undefined") {
-          toast.error("Не удалось загрузить активные кампании")
-        }
+        // И не показываем при первой загрузке, чтобы не раздражать пользователя
+        // if (typeof window !== "undefined") {
+        //   toast.error("Не удалось загрузить активные кампании", {
+        //     id: "campaigns-load-error",
+        //   })
+        // }
       } finally {
         setIsLoadingCampaigns(false)
       }
@@ -120,11 +123,15 @@ export default function HomePage() {
         setActiveCampaigns(data.campaigns || [])
         toast.success("Обновлено")
       } else {
-        toast.error("Не удалось загрузить кампании. Попробуйте позже.")
+        toast.error("Не удалось загрузить кампании. Попробуйте позже.", {
+          id: "campaigns-refresh-error",
+        })
       }
     } catch (error) {
       console.error("Failed to refresh campaigns:", error)
-      toast.error("Ошибка соединения. Проверьте интернет и попробуйте снова.")
+      toast.error("Ошибка соединения. Проверьте интернет и попробуйте снова.", {
+        id: "connection-error",
+      })
     } finally {
       setIsLoadingCampaigns(false)
     }

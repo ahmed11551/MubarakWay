@@ -10,6 +10,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps['theme']}
       className="toaster group"
+      position="top-center"
+      richColors
+      closeButton
+      duration={4000}
+      maxVisibleToasts={3}
       style={
         {
           '--normal-bg': 'var(--popover)',
