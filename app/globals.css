@@ -310,12 +310,50 @@
     pointer-events: none !important;
   }
 
-  /* Improved tap feedback */
+  /* Improved tap feedback - fixed to prevent sticking */
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    transition: transform 0.1s ease-out;
+    transform: scale(1);
+    will-change: transform;
+  }
+
   button:active,
   a:active,
-  [role="button"]:active {
+  [role="button"]:active,
+  input[type="button"]:active,
+  input[type="submit"]:active {
     transform: scale(0.98);
-    transition: transform 0.1s ease;
+  }
+
+  /* Fix for touch devices - ensure buttons reset properly */
+  @media (hover: none) and (pointer: coarse) {
+    button,
+    a,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"] {
+      /* Force reset on touch devices */
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus,
+    a:focus,
+    [role="button"]:focus,
+    input[type="button"]:focus,
+    input[type="submit"]:focus {
+      transform: scale(1);
+    }
+
+    /* Ensure disabled buttons don't stick */
+    button:disabled:active,
+    a:disabled:active,
+    [role="button"]:disabled:active {
+      transform: scale(1);
+    }
   }
 
   /* Better form inputs on mobile */

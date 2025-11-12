@@ -41,6 +41,7 @@ function Button({
   variant,
   size,
   asChild = false,
+  onTouchEnd,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
@@ -48,10 +49,30 @@ function Button({
   }) {
   const Comp = asChild ? Slot : 'button'
 
+  // Fix for button sticking on touch devices
+  const handleTouchEnd = React.useCallback((e: React.TouchEvent<HTMLButtonElement>) => {
+    // Call original handler if provided
+    onTouchEnd?.(e)
+    
+    // Force reset transform to prevent sticking
+    // Works for both regular buttons and asChild (Slot) components
+    const target = e.currentTarget as HTMLElement
+    if (target) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        // Reset transform to prevent sticking
+        target.style.transform = 'scale(1)'
+        // Also remove any lingering active state classes if needed
+        target.classList.remove('active')
+      })
+    }
+  }, [onTouchEnd])
+
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      onTouchEnd={handleTouchEnd}
       {...props}
     />
   )
