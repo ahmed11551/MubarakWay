@@ -5,9 +5,19 @@ import { AdminCampaignsTable } from "@/components/admin/campaigns-table"
 import { AdminFundsTable } from "@/components/admin/funds-table"
 import { AdminDonationsTable } from "@/components/admin/donations-table"
 import { AdminStats } from "@/components/admin/stats"
+import { FundReportsUpload } from "@/components/admin/fund-reports-upload"
+import { getFunds } from "@/lib/actions/funds"
 import { Shield } from "lucide-react"
 
-export default function AdminPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function AdminPage() {
+  // Fetch funds for the upload component
+  const fundsResult = await getFunds()
+  const funds = (fundsResult.funds || []).map((fund: any) => ({
+    id: fund.id,
+    name: fund.name || fund.name_ru || "Без названия",
+  }))
   return (
     <div className="min-h-screen pb-20">
       <AppHeader />
@@ -58,6 +68,8 @@ export default function AdminPage() {
                   <AdminFundsTable />
                 </CardContent>
               </Card>
+              
+              <FundReportsUpload funds={funds} />
             </TabsContent>
 
             <TabsContent value="donations" className="space-y-4">

@@ -16,6 +16,7 @@ import { getUserDonations } from "@/lib/actions/donations"
 import { SubscriptionsManager } from "@/components/subscriptions-manager"
 import { AvatarUpload } from "@/components/avatar-upload"
 import { FundReportsTab } from "@/components/fund-reports-tab"
+import { DonationsChart } from "@/components/donations-chart"
 import { getProfile } from "@/lib/actions/profile"
 import { toast } from "sonner"
 
@@ -269,6 +270,8 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="history" className="space-y-4">
+            <DonationsChart />
+            
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <h3 className="text-base sm:text-lg font-bold text-center sm:text-left w-full sm:w-auto">История транзакций</h3>
               <div className="flex gap-2 w-full sm:w-auto">
