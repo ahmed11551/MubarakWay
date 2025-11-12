@@ -174,6 +174,47 @@ export async function getUserDonations() {
   }
 }
 
+export async function getDonationById(donationId: string) {
+  try {
+    const supabase = await createClient()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return { error: "You must be logged in to view donations" }
+    }
+
+    const { data: donation, error } = await supabase
+      .from("donations")
+      .select(`
+        *,
+        funds:fund_id (name, logo_url),
+        campaigns:campaign_id (title, image_url)
+      `)
+      .eq("id", donationId)
+      .eq("donor_id", user.id) // Ensure user can only view their own donations
+      .single()
+
+    if (error) {
+      console.error("[Donations] Get donation error:", error)
+      return { error: "Donation not found" }
+    }
+
+    if (!donation) {
+      return { error: "Donation not found" }
+    }
+
+    return { donation, error: null }
+  } catch (error) {
+    console.error("[Donations] Get donation exception:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    return { error: errorMessage }
+  }
+}
+
 export async function getAllDonations() {
   const supabase = await createClient()
 

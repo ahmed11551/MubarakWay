@@ -31,6 +31,7 @@ const SUBSCRIPTION_PLANS: Record<string, any> = {
     free: false,
     prices: {
       "1 месяц": { price: 260, charity: 13 },
+      "3 месяца": { price: 780, charity: 39 },
       "6 месяцев": { price: 1300, charity: 65 },
       "12 месяцев": { price: 2340, charity: 234 },
     },
@@ -43,6 +44,7 @@ const SUBSCRIPTION_PLANS: Record<string, any> = {
     free: false,
     prices: {
       "1 месяц": { price: 550, charity: 55 },
+      "3 месяца": { price: 1650, charity: 165 },
       "6 месяцев": { price: 2750, charity: 137.5 },
       "12 месяцев": { price: 4950, charity: 495 },
     },

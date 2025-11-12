@@ -245,13 +245,21 @@ export function createSubscriptionPeriodsKeyboard(plan: string): TelegramInlineK
   
   const periods = [
     { text: "1 месяц", callback_data: `subscription:period:${plan}:1month` },
+    { text: "3 месяца", callback_data: `subscription:period:${plan}:3months` },
     { text: "6 месяцев", callback_data: `subscription:period:${plan}:6months` },
     { text: "12 месяцев", callback_data: `subscription:period:${plan}:12months` },
   ]
   
   return {
     inline_keyboard: [
-      periods.map(period => [period]),
+      [
+        { text: "1 месяц", callback_data: `subscription:period:${plan}:1month` },
+        { text: "3 месяца", callback_data: `subscription:period:${plan}:3months` },
+      ],
+      [
+        { text: "6 месяцев", callback_data: `subscription:period:${plan}:6months` },
+        { text: "12 месяцев", callback_data: `subscription:period:${plan}:12months` },
+      ],
       [
         { text: "◀️ Назад к тарифам", callback_data: "menu:subscription" },
       ],

@@ -54,6 +54,7 @@ const SUBSCRIPTION_PLANS = {
     ],
     prices: {
       "1month": { price: 260, charity: 13, period: "1 месяц" },
+      "3months": { price: 780, charity: 39, period: "3 месяца" },
       "6months": { price: 1300, charity: 65, period: "6 месяцев", bonus: "+1 мес в подарок" },
       "12months": { price: 2340, charity: 234, period: "12 месяцев", bonus: "+3 мес в подарок" },
     },
@@ -74,6 +75,7 @@ const SUBSCRIPTION_PLANS = {
     ],
     prices: {
       "1month": { price: 550, charity: 55, period: "1 месяц" },
+      "3months": { price: 1650, charity: 165, period: "3 месяца" },
       "6months": { price: 2750, charity: 137.5, period: "6 месяцев", bonus: "+1 мес в подарок" },
       "12months": { price: 4950, charity: 495, period: "12 месяцев", bonus: "+3 мес в подарок" },
     },

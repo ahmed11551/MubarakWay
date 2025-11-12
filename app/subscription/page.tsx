@@ -38,6 +38,7 @@ export default function SubscriptionPage() {
       ],
       prices: [
         { period: "1 месяц", price: 260, charity: 13 },
+        { period: "3 месяца", price: 780, charity: 39 },
         {
           period: "6 месяцев",
           price: 1300,
@@ -72,6 +73,7 @@ export default function SubscriptionPage() {
       ],
       prices: [
         { period: "1 месяц", price: 550, charity: 55 },
+        { period: "3 месяца", price: 1650, charity: 165 },
         {
           period: "6 месяцев",
           price: 2750,
