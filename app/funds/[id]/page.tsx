@@ -406,22 +406,18 @@ export default async function FundDetailPage({
                           </div>
 
                           {/* Button on the right */}
-                          <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                          <div className="flex-shrink-0 flex items-center">
                             {project.url ? (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
-                                  asChild
-                                >
-                                  <a href={project.url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                                <span className="text-[10px] text-muted-foreground text-center leading-tight max-w-[60px]">
-                                  Перейти на сайт
-                                </span>
-                              </>
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white h-8 px-3 text-xs flex items-center gap-1.5"
+                                asChild
+                              >
+                                <a href={project.url} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  <span>Перейти</span>
+                                </a>
+                              </Button>
                             ) : project.defaultAmount ? (
                               <Button 
                                 size="sm" 
