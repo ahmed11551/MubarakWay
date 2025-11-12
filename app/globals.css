@@ -274,11 +274,17 @@
     cursor: pointer;
   }
 
-  /* Optimize clickable cards wrapped in links */
+  /* Optimize clickable cards wrapped in links - remove transitions for instant response */
   a[href] > [data-card],
   a[href] > [data-slot="card"] {
-    transition-duration: 75ms !important;
+    transition-duration: 0ms !important;
+    transition-property: none !important;
     touch-action: manipulation;
+  }
+  
+  /* Instant navigation - no delays */
+  a[href] {
+    transition: none !important;
   }
 
   /* Fix for bottom navigation - ensure clicks work immediately */

@@ -24,13 +24,14 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
     <Link 
       href={`/campaigns/${campaign.id}`}
+      prefetch={true}
       className="block"
       style={{ 
         touchAction: 'manipulation',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-75">
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-0">
         <div className="aspect-video bg-muted relative">
           <Image
             src={campaign.imageUrl || "/placeholder.svg"}

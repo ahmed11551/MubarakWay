@@ -54,7 +54,7 @@ export function BottomNav() {
     })
   }, [pathname, router])
 
-  // Обработчик для плавной навигации без перезагрузки
+  // Обработчик для мгновенной навигации
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     // Если уже на этой странице - блокируем
     if (href === pathname) {
@@ -62,22 +62,29 @@ export function BottomNav() {
       return
     }
 
-    // Haptic feedback - синхронно для мгновенной обратной связи
+    // Навигация через startTransition для немедленного отклика UI
+    e.preventDefault()
+    startTransition(() => {
+      router.push(href)
+    })
+
+    // Haptic feedback - асинхронно, не блокируем навигацию
     if (typeof window !== "undefined" && window.Telegram?.WebApp?.HapticFeedback) {
       try {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
-      } catch (error) {
-        // Haptic feedback не критичен, просто игнорируем ошибку
-        // В dev режиме можно залогировать для отладки
-        if (process.env.NODE_ENV === "development") {
-          console.debug("[BottomNav] Haptic feedback failed:", error)
+        // Используем requestIdleCallback для неблокирующего haptic feedback
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+          })
+        } else {
+          setTimeout(() => {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+          }, 0)
         }
+      } catch (error) {
+        // Игнорируем ошибки haptic feedback
       }
     }
-
-    // Навигация - все страницы одинаково быстро
-    e.preventDefault()
-    router.push(href)
   }
 
   return (
@@ -98,11 +105,12 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               onClick={(e) => handleClick(e, item.href)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full",
                 "focus:outline-none rounded-lg select-none",
-                "transition-colors duration-150",
+                "transition-colors duration-0",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
               )}
               aria-label={item.name}
@@ -116,7 +124,7 @@ export function BottomNav() {
                 cursor: "pointer",
               }}
             >
-              <Icon className={cn("h-5 w-5 pointer-events-none transition-all duration-150", isActive && "drop-shadow-[0_0_8px_oklch(0.6_0.18_160/0.5)]")} />
+              <Icon className={cn("h-5 w-5 pointer-events-none transition-none", isActive && "drop-shadow-[0_0_8px_oklch(0.6_0.18_160/0.5)]")} />
               <span className="text-xs font-medium pointer-events-none">{item.name}</span>
             </Link>
           )
