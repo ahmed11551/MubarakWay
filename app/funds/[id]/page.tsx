@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe, Building2, GraduationCap, Stethoscope, Droplets, Landmark, AlertCircle, HandHeart, Coins } from "lucide-react"
+import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe, Building2, GraduationCap, Stethoscope, Droplets, Landmark, HandHeart, Coins, ShoppingCart, Home, Package, Baby, UtensilsCrossed } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -366,13 +366,25 @@ export default async function FundDetailPage({
                   // Determine icon based on project title/description
                   const getProjectIcon = (title: string, description: string) => {
                     const text = (title + " " + description).toLowerCase()
+                    // Специфичные категории
                     if (text.includes("закят") || text.includes("zakat")) return Coins
-                    if (text.includes("садака") || text.includes("sadaqa")) return HandHeart
+                    if (text.includes("садака") || text.includes("sadaqa") || text.includes("милостыня")) return HandHeart
                     if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Landmark
                     if (text.includes("образование") || text.includes("хифз") || text.includes("школ")) return GraduationCap
                     if (text.includes("медицин") || text.includes("больн") || text.includes("лечен")) return Stethoscope
                     if (text.includes("вода") || text.includes("колодец")) return Droplets
-                    if (text.includes("экстрен") || text.includes("помощь")) return AlertCircle
+                    // Помощь продуктами
+                    if (text.includes("продукт") || text.includes("еда") || text.includes("питание") || text.includes("продукты")) return ShoppingCart
+                    // Строительство и жилье
+                    if (text.includes("дом") || text.includes("жилье") || text.includes("строительств") || text.includes("ремонт")) return Home
+                    // Сироты и опека
+                    if (text.includes("сирот") || text.includes("опекун") || text.includes("дет") || text.includes("ребенок")) return Baby
+                    // Общая помощь нуждающимся
+                    if (text.includes("нуждающ") || text.includes("пострадавш") || text.includes("семь")) return HandHeart
+                    // Экстренная помощь
+                    if (text.includes("экстрен") || text.includes("срочн")) return Heart
+                    // Общая помощь
+                    if (text.includes("помощь")) return HandHeart
                     return Building2
                   }
 
@@ -441,13 +453,25 @@ export default async function FundDetailPage({
                 fundCampaigns.map((campaign: any) => {
                   const getCampaignIcon = (title: string, description: string) => {
                     const text = (title + " " + description).toLowerCase()
+                    // Специфичные категории
                     if (text.includes("закят") || text.includes("zakat")) return Coins
-                    if (text.includes("садака") || text.includes("sadaqa")) return HandHeart
+                    if (text.includes("садака") || text.includes("sadaqa") || text.includes("милостыня")) return HandHeart
                     if (text.includes("мечеть") || text.includes("медресе") || text.includes("духовн")) return Landmark
                     if (text.includes("образование") || text.includes("хифз") || text.includes("школ")) return GraduationCap
                     if (text.includes("медицин") || text.includes("больн") || text.includes("лечен")) return Stethoscope
                     if (text.includes("вода") || text.includes("колодец")) return Droplets
-                    if (text.includes("экстрен") || text.includes("помощь")) return AlertCircle
+                    // Помощь продуктами
+                    if (text.includes("продукт") || text.includes("еда") || text.includes("питание") || text.includes("продукты")) return ShoppingCart
+                    // Строительство и жилье
+                    if (text.includes("дом") || text.includes("жилье") || text.includes("строительств") || text.includes("ремонт")) return Home
+                    // Сироты и опека
+                    if (text.includes("сирот") || text.includes("опекун") || text.includes("дет") || text.includes("ребенок")) return Baby
+                    // Общая помощь нуждающимся
+                    if (text.includes("нуждающ") || text.includes("пострадавш") || text.includes("семь")) return HandHeart
+                    // Экстренная помощь
+                    if (text.includes("экстрен") || text.includes("срочн")) return Heart
+                    // Общая помощь
+                    if (text.includes("помощь")) return HandHeart
                     return Building2
                   }
 
