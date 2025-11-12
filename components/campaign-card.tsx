@@ -22,8 +22,15 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
   const isCompleted = campaign.currentAmount >= campaign.goalAmount
 
   return (
-    <Link href={`/campaigns/${campaign.id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+    <Link 
+      href={`/campaigns/${campaign.id}`}
+      className="block"
+      style={{ 
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-75">
         <div className="aspect-video bg-muted relative">
           <Image
             src={campaign.imageUrl || "/placeholder.svg"}

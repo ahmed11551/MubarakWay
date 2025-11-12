@@ -27,9 +27,10 @@ function TabsList({
       data-slot="tabs-list"
       className={cn(
         'bg-muted/50 text-muted-foreground inline-flex h-auto w-fit items-center justify-center rounded-lg p-1.5 gap-1',
-        'transition-all duration-200',
+        'transition-all duration-75',
         className,
       )}
+      style={{ touchAction: 'manipulation' }}
       {...props}
     />
   )
@@ -44,7 +45,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
         "inline-flex h-auto flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent px-4 py-2.5 text-sm font-medium whitespace-nowrap",
-        "transition-all duration-200",
+        "transition-all duration-75",
         "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
         "data-[state=inactive]:text-muted-foreground",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -52,6 +53,10 @@ function TabsTrigger({
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
+      style={{ 
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+      }}
       {...props}
     />
   )

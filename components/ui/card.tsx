@@ -9,10 +9,11 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
       data-card
       className={cn(
         'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
-        'transition-all duration-200 hover:shadow-md hover:border-primary/20',
+        'transition-all duration-75 hover:shadow-md hover:border-primary/20',
         'active:scale-[0.98]',
         className,
       )}
+      style={{ touchAction: 'manipulation' }}
       {...props}
     />
   )
