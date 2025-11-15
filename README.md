@@ -4,16 +4,12 @@ Next.js приложение для управления благотворит�
 
 ## 🚀 Быстрый старт
 
-### API Endpoints
+### Установка
 
-- **GET `/api/stats`** - Статистика платформы (требует Bearer токен)
-  ```bash
-  curl -H "Authorization: Bearer test_token_123" https://your-domain.com/api/stats
-  ```
-
-- **POST `/api/telegram/webhook`** - Webhook для Telegram бота
-  - Проверяет секретный токен из заголовка `X-Telegram-Bot-Api-Secret-Token`
-  - Команды: `/start`, `/stats`
+```bash
+pnpm install
+pnpm dev
+```
 
 ### Переменные окружения
 
@@ -23,10 +19,10 @@ Next.js приложение для управления благотворит�
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # ⚠️ ВАЖНО для автоматической авторизации
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # API
-API_AUTH_TOKEN=test_token_123
+API_AUTH_TOKEN=your_api_token
 
 # Telegram
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
@@ -35,40 +31,6 @@ NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=YourBotUsername
 
 # App
 NEXT_PUBLIC_BASE_URL=https://your-domain.com
-```
-
-### Деплой на Vercel
-
-1. Добавьте секреты в GitHub: https://github.com/ahmed11551/SadakaPass/settings/secrets/actions
-2. См. `DEPLOY_SETUP.md` для детальных инструкций
-
-**Ссылка на деплой**: https://sadaka-pass.vercel.app
-
-## 📚 Документация
-
-- [Инструкция по деплою](./DEPLOY_SETUP.md)
-
-## 🤖 Telegram Bot
-
-После деплоя установите webhook:
-
-```powershell
-$body = @{
-  url = "https://sadaka-pass.vercel.app/api/telegram/webhook"
-  secret_token = "your_secret_token"
-} | ConvertTo-Json
-
-Invoke-RestMethod -Method Post `
-  -Uri "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" `
-  -ContentType "application/json" `
-  -Body $body
-```
-
-## 🛠️ Разработка
-
-```bash
-pnpm install
-pnpm dev
 ```
 
 ## 📝 Лицензия
