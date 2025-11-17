@@ -17,6 +17,7 @@ import {
 } from "@/lib/telegram-bot"
 import { getFunds } from "@/lib/actions/funds"
 import { getCampaigns } from "@/lib/actions/campaigns"
+import { handleApiError } from "@/lib/error-handler"
 
 function verifySecret(req: NextRequest) {
   const incoming = req.headers.get("x-telegram-bot-api-secret-token") || ""
@@ -82,8 +83,37 @@ const SUBSCRIPTION_PLANS = {
   },
 }
 
+// Telegram types
+interface TelegramCallbackQuery {
+  id: string
+  from: {
+    id: number
+    first_name?: string
+    last_name?: string
+    username?: string
+  }
+  message?: {
+    chat: { id: number }
+    message_id: number
+  }
+  data: string
+}
+
+interface TelegramMessage {
+  message_id: number
+  from: {
+    id: number
+    first_name?: string
+    last_name?: string
+    username?: string
+  }
+  chat: { id: number; type: string }
+  text?: string
+  date: number
+}
+
 // Handle callback queries (inline button clicks)
-async function handleCallbackQuery(callbackQuery: any) {
+async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
   const chatId = callbackQuery.message?.chat?.id
   const messageId = callbackQuery.message?.message_id
   const callbackData = callbackQuery.data
@@ -599,7 +629,7 @@ async function handleCallbackQuery(callbackQuery: any) {
 }
 
 // Handle text messages
-async function handleMessage(message: any) {
+async function handleMessage(message: TelegramMessage) {
   const chatId = message?.chat?.id
   const text = message?.text
 
@@ -781,7 +811,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
   } catch (error) {
-    console.error("[Telegram Webhook] Error:", error)
+    // Логируем ошибку через handleApiError, но не возвращаем ошибку
+    // чтобы Telegram не повторял запрос бесконечно
+    handleApiError(error)
     // Don't fail the webhook - Telegram will retry
   }
 

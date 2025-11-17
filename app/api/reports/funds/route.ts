@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getFundReports } from "@/lib/actions/fund-reports"
+import { handleApiError } from "@/lib/error-handler"
+import type { Donation } from "@/types"
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,7 +24,8 @@ export async function GET(req: NextRequest) {
       const result = await getFundReports(fundId)
       
       if (result.error) {
-        return NextResponse.json({ error: result.error }, { status: 404 })
+        const apiError = handleApiError(new Error(result.error))
+        return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
       }
 
       // Filter by date range if provided
@@ -31,7 +34,7 @@ export async function GET(req: NextRequest) {
         const fromDate = from ? new Date(from) : null
         const toDate = to ? new Date(to) : null
         
-        filteredDonations = filteredDonations.filter((donation: any) => {
+        filteredDonations = filteredDonations.filter((donation: Donation) => {
           const donationDate = new Date(donation.created_at)
           if (fromDate && donationDate < fromDate) return false
           if (toDate && donationDate > toDate) return false
@@ -56,7 +59,8 @@ export async function GET(req: NextRequest) {
       .order("name")
 
     if (fundsError) {
-      return NextResponse.json({ error: "Failed to fetch funds" }, { status: 500 })
+      const apiError = handleApiError(fundsError)
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     // Get statistics for each fund
@@ -74,7 +78,7 @@ export async function GET(req: NextRequest) {
           const fromDate = from ? new Date(from) : null
           const toDate = to ? new Date(to) : null
           
-          filteredDonations = filteredDonations.filter((donation: any) => {
+          filteredDonations = filteredDonations.filter((donation: Donation) => {
             const donationDate = new Date(donation.created_at)
             if (fromDate && donationDate < fromDate) return false
             if (toDate && donationDate > toDate) return false
@@ -103,8 +107,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ funds: fundsWithStats })
   } catch (error) {
-    console.error("[Reports API] Error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const apiError = handleApiError(error)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

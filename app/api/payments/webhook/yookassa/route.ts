@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { verifyYooKassaSignature } from "@/lib/yookassa"
+import { handleApiError } from "@/lib/error-handler"
 import crypto from "crypto"
 
 /**
@@ -18,8 +19,8 @@ export async function POST(req: NextRequest) {
     // Verify signature
     const secretKey = process.env.YOOKASSA_SECRET_KEY
     if (!secretKey) {
-      console.error("[YooKassa] Secret key not configured")
-      return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+      const apiError = handleApiError(new Error("YOOKASSA_SECRET_KEY not configured"))
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     if (!verifyYooKassaSignature(body, signature, secretKey)) {
@@ -27,7 +28,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
 
-    let data: any
+    interface YooKassaWebhookData {
+      type: string
+      event: string
+      object?: {
+        id?: string
+        status?: string
+        amount?: { value: string; currency: string }
+        metadata?: Record<string, string>
+        [key: string]: unknown
+      }
+      [key: string]: unknown
+    }
+    
+    let data: YooKassaWebhookData
     try {
       data = JSON.parse(body)
     } catch (parseError) {
@@ -64,8 +78,8 @@ export async function POST(req: NextRequest) {
           .single()
 
         if (donationFetchError || !existingDonation) {
-          console.warn("[YooKassa] Donation not found:", donationId, donationFetchError)
-          return NextResponse.json({ error: "Donation not found" }, { status: 404 })
+          const apiError = handleApiError(donationFetchError || new Error("Donation not found"))
+          return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
         }
 
         // Only update if status is pending (prevent double processing)
@@ -81,8 +95,8 @@ export async function POST(req: NextRequest) {
             .eq("id", donationId)
 
           if (donationError) {
-            console.error("[YooKassa] Error updating donation:", donationError)
-            return NextResponse.json({ error: "Database error" }, { status: 500 })
+            const apiError = handleApiError(donationError)
+            return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
           }
 
           // Update campaign or fund amounts
@@ -136,8 +150,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true })
     }
   } catch (error) {
-    console.error("[YooKassa] Webhook error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const apiError = handleApiError(error)
+    // Для webhooks важно вернуть 200, чтобы провайдер не повторял запрос
+    // Но логируем ошибку для мониторинга
+    return NextResponse.json({ error: "Internal server error" }, { status: 200 })
   }
 }
 

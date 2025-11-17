@@ -6,6 +6,7 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 import { CampaignsList } from "@/components/campaigns-list"
 import { getCampaigns } from "@/lib/actions/campaigns"
+import { transformCampaigns, filterEndingCampaigns, filterActiveCampaigns } from "@/lib/transformers/campaign"
 import type { Metadata } from "next"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
@@ -48,35 +49,14 @@ export default async function CampaignsPage() {
   }
 
   // Transform database format to component format
-  const transformCampaign = (campaign: any) => {
-    const deadline = campaign.deadline ? new Date(campaign.deadline) : null
-    const now = new Date()
-    const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : null
-
-    return {
-      id: campaign.id,
-      title: campaign.title,
-      description: campaign.description,
-      goalAmount: Number(campaign.goal_amount || 0),
-      currentAmount: Number(campaign.current_amount || 0),
-      category: campaign.category || "other",
-      imageUrl: campaign.image_url || "/placeholder.svg",
-      donorCount: Number(campaign.donor_count || 0),
-      daysLeft: daysLeft ?? 0,
-      creatorName: campaign.profiles?.display_name || "Неизвестный автор",
-    }
-  }
-
-  const activeCampaigns = (activeResult.campaigns || []).map(transformCampaign)
-  const completedCampaigns = (completedResult.campaigns || []).map(transformCampaign)
+  const activeCampaigns = transformCampaigns(activeResult.campaigns || [])
+  const completedCampaigns = transformCampaigns(completedResult.campaigns || [])
   
   // Ending soon: active campaigns with deadline <= 7 days
-  const endingCampaigns = activeCampaigns.filter((c) => c.daysLeft > 0 && c.daysLeft <= 7)
+  const endingCampaigns = filterEndingCampaigns(activeCampaigns)
   
   // Active: campaigns that are not completed and not ending soon
-  const trulyActiveCampaigns = activeCampaigns.filter(
-    (c) => c.currentAmount < c.goalAmount && c.daysLeft > 7
-  )
+  const trulyActiveCampaigns = filterActiveCampaigns(activeCampaigns)
 
   return (
     <div className="min-h-screen pb-20">

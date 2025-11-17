@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { handleApiError } from "@/lib/error-handler"
+import { z } from "zod"
+
+const donationsChartQuerySchema = z.object({
+  period: z.enum(["6months", "12months", "all"]).optional().default("6months"),
+})
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,14 +19,25 @@ export async function GET(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams
     const period = searchParams.get("period") || "6months"
+    
+    // Валидация параметров
+    const validationResult = donationsChartQuerySchema.safeParse({ period })
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Invalid query parameters", details: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+    
+    const validatedPeriod = validationResult.data.period
 
     // Calculate date range
     const now = new Date()
     let startDate: Date | null = null
 
-    if (period === "6months") {
+    if (validatedPeriod === "6months") {
       startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1)
-    } else if (period === "12months") {
+    } else if (validatedPeriod === "12months") {
       startDate = new Date(now.getFullYear(), now.getMonth() - 12, 1)
     }
     // "all" - no date filter
@@ -39,8 +56,8 @@ export async function GET(req: NextRequest) {
     const { data: donations, error } = await query.order("created_at", { ascending: true })
 
     if (error) {
-      console.error("[Donations Chart] Error:", error)
-      return NextResponse.json({ error: "Failed to fetch donations" }, { status: 500 })
+      const apiError = handleApiError(error)
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     // Group by month
@@ -60,8 +77,8 @@ export async function GET(req: NextRequest) {
       counts: countsByMonth,
     })
   } catch (error) {
-    console.error("[Donations Chart] Unexpected error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const apiError = handleApiError(error)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

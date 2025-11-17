@@ -1,28 +1,57 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCampaigns } from "@/lib/actions/campaigns"
 import { fetchBotApiCampaigns } from "@/lib/bot-api"
+import { handleApiError } from "@/lib/error-handler"
+import { getCampaignsQuerySchema } from "@/lib/schemas/api"
 
 export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams
-  const status = searchParams.get("status") || "active"
-  const limit = parseInt(searchParams.get("limit") || "10")
-  const ids = searchParams.get("ids") // Поддержка получения по ID
-
   try {
-    // Если запрашиваются конкретные ID
+    const searchParams = req.nextUrl.searchParams
+    
+    // Валидация параметров запроса с помощью Zod
+    const queryParams = {
+      status: searchParams.get("status") || undefined,
+      limit: searchParams.get("limit") || undefined,
+      ids: searchParams.get("ids") || undefined,
+    }
+    
+    const validationResult = getCampaignsQuerySchema.safeParse(queryParams)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Invalid query parameters", details: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+    
+    const { status, limit, ids } = validationResult.data
+
+    // Если запрашиваются конкретные ID - используем batch-запрос вместо цикла
     if (ids) {
-      const { getCampaignById } = await import("@/lib/actions/campaigns")
+      const { createClient } = await import("@/lib/supabase/server")
+      const supabase = await createClient()
       const idArray = ids.split(",").filter(Boolean)
-      const campaigns = []
       
-      for (const id of idArray) {
-        const result = await getCampaignById(id)
-        if (result.campaign) {
-          campaigns.push(result.campaign)
-        }
+      if (idArray.length === 0) {
+        return NextResponse.json({ error: "No valid IDs provided" }, { status: 400 })
       }
       
-      return NextResponse.json({ campaigns })
+      // Batch-запрос с .in() вместо цикла
+      const { data: campaigns, error } = await supabase
+        .from("campaigns")
+        .select(`
+          *,
+          profiles:creator_id (display_name, avatar_url),
+          campaign_updates (*)
+        `)
+        .in("id", idArray)
+      
+      if (error) {
+        const apiError = handleApiError(error)
+        return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
+      }
+      
+      return NextResponse.json({ campaigns: campaigns || [] })
     }
 
     // Try to fetch from bot.e-replika.ru API first
@@ -35,7 +64,8 @@ export async function GET(req: NextRequest) {
     const result = await getCampaigns(status)
     
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
+      const apiError = handleApiError(new Error(result.error))
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     // Limit results
@@ -43,8 +73,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ campaigns })
   } catch (err) {
-    console.error("/api/campaigns error", err)
-    return NextResponse.json({ error: "Failed to fetch campaigns" }, { status: 500 })
+    const apiError = handleApiError(err)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

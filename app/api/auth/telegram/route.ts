@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { handleApiError } from "@/lib/error-handler"
+import { z } from "zod"
+
+const telegramAuthBodySchema = z.object({
+  telegramId: z.string().min(1, "Telegram ID is required"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  username: z.string().optional(),
+  photoUrl: z.string().url().optional().nullable(),
+})
 
 /**
  * Автоматическая авторизация через Telegram WebApp
@@ -10,14 +20,18 @@ import { createAdminClient } from "@/lib/supabase/admin"
  */
 export async function POST(req: NextRequest) {
   try {
-    const { telegramId, firstName, lastName, username, photoUrl } = await req.json()
-
-    if (!telegramId) {
+    const body = await req.json()
+    
+    // Валидация с помощью Zod
+    const validationResult = telegramAuthBodySchema.safeParse(body)
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Telegram ID is required" },
+        { error: "Invalid request data", details: validationResult.error.errors },
         { status: 400 }
       )
     }
+    
+    const { telegramId, firstName, lastName, username, photoUrl } = validationResult.data
 
     const adminClient = createAdminClient()
 
@@ -60,10 +74,10 @@ export async function POST(req: NextRequest) {
       })
 
       if (authError || !authData?.user) {
-        console.error("[Auth] Failed to create user:", authError)
+        const apiError = handleApiError(authError || new Error("Failed to create user account"))
         return NextResponse.json(
-          { error: "Failed to create user account" },
-          { status: 500 }
+          { error: apiError.message },
+          { status: apiError.statusCode }
         )
       }
 
@@ -87,10 +101,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (tokenError) {
-      console.error("[Auth] Failed to generate token:", tokenError)
+      const apiError = handleApiError(tokenError)
       return NextResponse.json(
-        { error: "Failed to create session" },
-        { status: 500 }
+        { error: apiError.message },
+        { status: apiError.statusCode }
       )
     }
 
@@ -103,11 +117,8 @@ export async function POST(req: NextRequest) {
       actionLink: tokenData.properties?.action_link,
     })
   } catch (error) {
-    console.error("[Auth] Error:", error)
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+    const apiError = handleApiError(error)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

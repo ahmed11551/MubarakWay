@@ -2,24 +2,32 @@
  * Centralized error handling for better error tracking
  */
 
-export interface AppError {
-  message: string
-  code?: string
-  statusCode?: number
-  context?: Record<string, unknown>
-}
+import type { ApiError } from "@/types"
 
 export class AppError extends Error {
   code?: string
-  statusCode?: number
+  statusCode: number
   context?: Record<string, unknown>
 
-  constructor(message: string, code?: string, statusCode?: number, context?: Record<string, unknown>) {
+  constructor(message: string, code?: string, statusCode: number = 500, context?: Record<string, unknown>) {
     super(message)
     this.name = "AppError"
     this.code = code
     this.statusCode = statusCode
     this.context = context
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, AppError)
+    }
+  }
+
+  toApiError(): ApiError {
+    return {
+      message: this.message,
+      code: this.code,
+      statusCode: this.statusCode,
+      context: this.context,
+    }
   }
 }
 
@@ -37,8 +45,30 @@ export function logError(error: unknown, context?: Record<string, unknown>) {
     timestamp: new Date().toISOString(),
   })
 
-  // In production, you might want to send to error tracking service
-  // e.g., Sentry, LogRocket, etc.
+  // Send to Sentry if available
+  if (typeof window !== "undefined") {
+    // Client-side
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error, {
+        contexts: {
+          custom: context || {},
+        },
+      })
+    }).catch(() => {
+      // Sentry not available, ignore
+    })
+  } else {
+    // Server-side
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error, {
+        contexts: {
+          custom: context || {},
+        },
+      })
+    }).catch(() => {
+      // Sentry not available, ignore
+    })
+  }
 }
 
 /**
@@ -85,6 +115,44 @@ export async function safeAsync<T>(
   } catch (error) {
     logError(error, context)
     return fallback
+  }
+}
+
+/**
+ * Обработчик ошибок для API routes
+ * Преобразует любую ошибку в безопасный ответ API
+ */
+export function handleApiError(error: unknown): { message: string; statusCode: number; code?: string } {
+  // Если это уже AppError, используем его
+  if (error instanceof AppError) {
+    logError(error, error.context)
+    return {
+      message: error.message,
+      statusCode: error.statusCode,
+      code: error.code,
+    }
+  }
+
+  // Если это Supabase ошибка
+  if (error && typeof error === "object" && "message" in error) {
+    const supabaseError = handleSupabaseError(error)
+    return {
+      message: supabaseError.message,
+      statusCode: supabaseError.statusCode,
+      code: supabaseError.code,
+    }
+  }
+
+  // Неизвестная ошибка - не раскрываем детали в production
+  const isDevelopment = process.env.NODE_ENV === "development"
+  const errorMessage = error instanceof Error ? error.message : String(error)
+  
+  logError(error)
+  
+  return {
+    message: isDevelopment ? errorMessage : "Внутренняя ошибка сервера",
+    statusCode: 500,
+    code: "INTERNAL_ERROR",
   }
 }
 

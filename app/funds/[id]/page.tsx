@@ -97,8 +97,17 @@ export default async function FundDetailPage({
     }
 
     // Fetch projects/programs for this fund
-    let fundProjects: any[] = []
-    let fundCampaigns: any[] = []
+    let fundProjects: Array<{
+      id: string
+      title: string
+      description: string
+      imageUrl: string
+      url?: string
+      defaultAmount?: number
+      created?: string
+      beneficiaries: number
+    }> = []
+    let fundCampaigns: Campaign[] = []
     
     // For Insan fund, fetch programs from fondinsan.ru API
     if (id === "00000000-0000-0000-0000-000000000001") {
@@ -118,8 +127,9 @@ export default async function FundDetailPage({
             beneficiaries: 0, // API doesn't provide this
           }))
         }
-      } catch (error: any) {
-        console.warn("Error fetching fondinsan programs:", error?.message)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.warn("Error fetching fondinsan programs:", errorMessage)
       }
     }
     
@@ -136,16 +146,17 @@ export default async function FundDetailPage({
         console.warn("Error fetching campaigns (fund_id column might not exist):", campaignsError.message)
         fundCampaigns = []
       } else {
-        fundCampaigns = data || []
+        fundCampaigns = (data as Campaign[]) || []
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle case where fund_id column doesn't exist
-      console.warn("Campaigns query failed (fund_id column might not exist):", error?.message)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.warn("Campaigns query failed (fund_id column might not exist):", errorMessage)
       fundCampaigns = []
     }
 
     // Calculate fund statistics
-    let allDonations: any[] = []
+    let allDonations: Donation[] = []
     try {
       const { data, error: donationsStatsError } = await supabase
         .from("donations")
@@ -157,10 +168,11 @@ export default async function FundDetailPage({
         console.warn("Error fetching donation stats:", donationsStatsError.message)
         allDonations = []
       } else {
-        allDonations = data || []
+        allDonations = (data as Donation[]) || []
       }
-    } catch (error: any) {
-      console.warn("Donation stats query failed:", error?.message)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.warn("Donation stats query failed:", errorMessage)
       allDonations = []
     }
 
@@ -182,7 +194,7 @@ export default async function FundDetailPage({
       return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
     }
 
-    const recentDonations = (donations || []).map((donation: any) => ({
+    const recentDonations = (donations || []).map((donation: Donation) => ({
       name: donation.is_anonymous
         ? "Анонимно"
         : donation.profiles?.display_name || "Неизвестный донор",
@@ -361,8 +373,8 @@ export default async function FundDetailPage({
 
             <TabsContent value="projects" className="space-y-3 mt-4">
               {/* Show projects from API (for Insan fund) or campaigns */}
-              {fund.projects.length > 0 ? (
-                fund.projects.map((project: any) => {
+              {fundProjects.length > 0 ? (
+                fundProjects.map((project) => {
                   // Determine icon based on project title/description
                   const getProjectIcon = (title: string, description: string) => {
                     const text = (title + " " + description).toLowerCase()
@@ -446,7 +458,7 @@ export default async function FundDetailPage({
                   )
                 })
               ) : fundCampaigns.length > 0 ? (
-                fundCampaigns.map((campaign: any) => {
+                fundCampaigns.map((campaign) => {
                   const getCampaignIcon = (title: string, description: string) => {
                     const text = (title + " " + description).toLowerCase()
                     // Специфичные категории
@@ -629,7 +641,7 @@ export default async function FundDetailPage({
                     <div className="space-y-3">
                       {(() => {
                         // Group donations by month
-                        const monthlyStats = allDonations.reduce((acc: any, donation: any) => {
+                        const monthlyStats = allDonations.reduce((acc: Record<string, { total: number; count: number; monthName: string }>, donation: Donation) => {
                           const date = new Date(donation.created_at)
                           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
                           const monthName = date.toLocaleDateString("ru-RU", { month: "long", year: "numeric" })

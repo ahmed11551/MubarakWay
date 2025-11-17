@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isAdmin } from "@/lib/utils/admin"
+import { handleApiError } from "@/lib/error-handler"
+import { uploadReportBodySchema } from "@/lib/schemas/api"
 
 /**
  * Upload PDF report for a fund
@@ -28,8 +30,9 @@ export async function POST(req: NextRequest) {
     const periodStart = formData.get("periodStart") as string
     const periodEnd = formData.get("periodEnd") as string
 
+    // Валидация с помощью Zod (частично, так как formData требует особой обработки)
     if (!file || !fundId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ error: "Missing required fields: file and fundId are required" }, { status: 400 })
     }
 
     // Validate file type
@@ -41,6 +44,15 @@ export async function POST(req: NextRequest) {
     const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
       return NextResponse.json({ error: "File size must be less than 10MB" }, { status: 400 })
+    }
+
+    // Валидация fundId через Zod
+    const validationResult = uploadReportBodySchema.pick({ fundId: true }).safeParse({ fundId })
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Invalid fund ID", details: validationResult.error.errors },
+        { status: 400 }
+      )
     }
 
     // Verify fund exists
@@ -72,8 +84,8 @@ export async function POST(req: NextRequest) {
       })
 
     if (uploadError) {
-      console.error("[Reports Upload] Storage error:", uploadError)
-      return NextResponse.json({ error: "Failed to upload file" }, { status: 500 })
+      const apiError = handleApiError(uploadError)
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     // Get public URL
@@ -81,7 +93,8 @@ export async function POST(req: NextRequest) {
     const fileUrl = urlData?.publicUrl
 
     if (!fileUrl) {
-      return NextResponse.json({ error: "Failed to get file URL" }, { status: 500 })
+      const apiError = handleApiError(new Error("Failed to get file URL"))
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     // Create report record in database
@@ -102,10 +115,10 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (reportError) {
-      console.error("[Reports Upload] Database error:", reportError)
       // Try to delete uploaded file
       await supabase.storage.from("reports").remove([filePath])
-      return NextResponse.json({ error: "Failed to create report record" }, { status: 500 })
+      const apiError = handleApiError(reportError)
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     return NextResponse.json({
@@ -114,8 +127,8 @@ export async function POST(req: NextRequest) {
       fileUrl,
     })
   } catch (error) {
-    console.error("[Reports Upload] Unexpected error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const apiError = handleApiError(error)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

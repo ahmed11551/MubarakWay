@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getPlatformStats } from "@/lib/stats"
+import { handleApiError } from "@/lib/error-handler"
+import { getStatsQuerySchema } from "@/lib/schemas/api"
 
 function isAuthorized(req: NextRequest) {
   const authHeader = req.headers.get("authorization") || ""
@@ -20,6 +22,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const searchParams = req.nextUrl.searchParams
+    const period = searchParams.get("period") || "month"
+    
+    // Валидация параметров
+    const validationResult = getStatsQuerySchema.safeParse({ period })
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Invalid query parameters", details: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+    
     const stats = await getPlatformStats()
     return NextResponse.json({
       total_collected: stats.totalCollected,
@@ -28,8 +42,8 @@ export async function GET(req: NextRequest) {
       average_check: stats.averageCheck,
     })
   } catch (err) {
-    console.error("/api/stats error", err)
-    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 })
+    const apiError = handleApiError(err)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

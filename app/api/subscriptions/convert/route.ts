@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { handleApiError } from "@/lib/error-handler"
+import { z } from "zod"
+
+const convertSubscriptionSchema = z.object({
+  donationId: z.string().uuid("Invalid donation ID"),
+  amount: z.number().positive("Amount must be positive"),
+  currency: z.string().length(3, "Currency must be 3 characters"),
+  frequency: z.enum(["weekly", "monthly"], { errorMap: () => ({ message: "Frequency must be weekly or monthly" }) }),
+})
 
 /**
  * Convert one-time donation to recurring subscription
@@ -15,15 +24,17 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { donationId, amount, currency, frequency } = body
-
-    if (!donationId || !amount || !currency || !frequency) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    
+    // Валидация с помощью Zod
+    const validationResult = convertSubscriptionSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Invalid request data", details: validationResult.error.errors },
+        { status: 400 }
+      )
     }
-
-    if (!["weekly", "monthly"].includes(frequency)) {
-      return NextResponse.json({ error: "Invalid frequency" }, { status: 400 })
-    }
+    
+    const { donationId, amount, currency, frequency } = validationResult.data
 
     // Get donation to verify ownership
     const { data: donation, error: donationError } = await supabase
@@ -34,7 +45,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (donationError || !donation) {
-      return NextResponse.json({ error: "Donation not found" }, { status: 404 })
+      const apiError = handleApiError(donationError || new Error("Donation not found"))
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     // Check if subscription already exists for this donation
@@ -71,14 +83,14 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (subscriptionError || !subscription) {
-      console.error("[Convert Subscription] Error:", subscriptionError)
-      return NextResponse.json({ error: "Failed to create subscription" }, { status: 500 })
+      const apiError = handleApiError(subscriptionError || new Error("Failed to create subscription"))
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     return NextResponse.json({ subscription })
   } catch (error) {
-    console.error("[Convert Subscription] Unexpected error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const apiError = handleApiError(error)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 

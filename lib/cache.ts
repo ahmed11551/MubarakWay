@@ -73,9 +73,30 @@ class SimpleCache {
 export const cache = new SimpleCache()
 
 // Очищаем устаревшие записи каждые 5 минут
+// Сохраняем ссылку на interval для очистки при необходимости
+let cleanupInterval: NodeJS.Timeout | null = null
+
 if (typeof window !== "undefined") {
-  setInterval(() => {
+  cleanupInterval = setInterval(() => {
     cache.cleanup()
   }, 5 * 60 * 1000)
+  
+  // Очистка при размонтировании (для SSR/SSG)
+  if (typeof window !== "undefined" && window.addEventListener) {
+    window.addEventListener("beforeunload", () => {
+      if (cleanupInterval) {
+        clearInterval(cleanupInterval)
+        cleanupInterval = null
+      }
+    })
+  }
+}
+
+// Функция для ручной очистки интервала (для тестов или явной очистки)
+export function clearCacheCleanupInterval() {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval)
+    cleanupInterval = null
+  }
 }
 

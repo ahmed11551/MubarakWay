@@ -97,10 +97,9 @@ export default async function CampaignDetailPage({
       console.error("Error fetching donations:", donationsError)
     }
 
-    // Transform database format to component format
-    const deadline = campaignData.deadline ? new Date(campaignData.deadline) : null
-    const now = new Date()
-    const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : null
+    // Import transformer
+    const { calculateDaysLeft } = await import("@/lib/transformers/campaign")
+    const daysLeft = calculateDaysLeft(campaignData.deadline)
 
     // Format recent donors from donations
     const formatRelativeTime = (date: Date) => {
@@ -114,7 +113,7 @@ export default async function CampaignDetailPage({
       return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
     }
 
-    const recentDonors = (donations || []).map((donation: any) => ({
+    const recentDonors = (donations || []).map((donation: Donation) => ({
       name: donation.is_anonymous
         ? "Аноним"
         : donation.profiles?.display_name || "Неизвестный донор",
@@ -124,7 +123,8 @@ export default async function CampaignDetailPage({
     }))
 
     // Format campaign updates
-    const updates = ((campaignData.campaign_updates as any[]) || []).map((update: any) => ({
+    const campaignUpdates = (campaignData as Campaign).campaign_updates || []
+    const updates = campaignUpdates.map((update) => ({
       id: update.id,
       title: update.title,
       content: update.content,
@@ -143,7 +143,7 @@ export default async function CampaignDetailPage({
       story: campaignData.story || "",
       goalAmount: Number(campaignData.goal_amount || 0),
       currentAmount: Number(campaignData.current_amount || 0),
-      documents: (campaignData.documents as any[]) || [],
+      documents: (campaignData.documents as Array<{ name: string; url: string }>) || [],
       category: campaignData.category || "other",
       imageUrl: campaignData.image_url || "/placeholder.svg",
       donorCount: Number(campaignData.donor_count || 0),
@@ -297,7 +297,7 @@ export default async function CampaignDetailPage({
                     <CardDescription>Подтверждающие документы для прозрачности</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {campaign.documents.map((doc: any, i: number) => (
+                    {campaign.documents.map((doc: { name: string; url: string }, i: number) => (
                       <Link
                         key={i}
                         href={doc.url || "#"}

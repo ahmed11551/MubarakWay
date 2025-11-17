@@ -17,36 +17,38 @@ import { toast } from "sonner"
 import { SkeletonCampaignCard } from "@/components/skeleton-campaign-card"
 import { PrayerTimesPopup } from "@/components/prayer-times-popup"
 
+import { transformCampaign, filterUrgentCampaigns } from "@/lib/transformers/campaign"
+import type { Campaign, TransformedCampaign } from "@/types"
+
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const autoplayRef = useRef<NodeJS.Timeout | null>(null)
   const touchStartX = useRef<number | null>(null)
-  const [activeCampaigns, setActiveCampaigns] = useState<any[]>([])
+  const [activeCampaigns, setActiveCampaigns] = useState<TransformedCampaign[]>([])
+  const [urgentCampaigns, setUrgentCampaigns] = useState<TransformedCampaign[]>([])
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true)
 
-  // Fetch active campaigns from database
+  // Fetch active campaigns and urgent campaigns from database
   useEffect(() => {
-    async function fetchActiveCampaigns() {
+    async function fetchCampaigns() {
       setIsLoadingCampaigns(true)
       try {
-        const response = await fetch("/api/campaigns?status=active&limit=3")
-        if (response.ok) {
-          const data = await response.json()
-          setActiveCampaigns(data.campaigns || [])
+        // Fetch active campaigns
+        const activeResponse = await fetch("/api/campaigns?status=active&limit=10")
+        if (activeResponse.ok) {
+          const activeData = await activeResponse.json()
+          const campaigns = (activeData.campaigns || []) as Campaign[]
+          const transformed = campaigns.map(transformCampaign)
+          setActiveCampaigns(transformed.slice(0, 3))
+          
+          // Filter urgent campaigns (ending within 7 days)
+          const urgent = filterUrgentCampaigns(transformed)
+          setUrgentCampaigns(urgent.slice(0, 3)) // Limit to 3 for carousel
         } else {
-          console.error("Failed to fetch campaigns:", response.status, response.statusText)
-          // Не показываем toast при первой загрузке, чтобы не раздражать пользователя
-          // Ошибка будет видна по отсутствию кампаний
+          console.error("Failed to fetch campaigns:", activeResponse.status, activeResponse.statusText)
         }
       } catch (error) {
-        console.error("Failed to fetch active campaigns:", error)
-        // Don't show toast on initial load errors to prevent client-side exceptions
-        // И не показываем при первой загрузке, чтобы не раздражать пользователя
-        // if (typeof window !== "undefined") {
-        //   toast.error("Не удалось загрузить активные кампании", {
-        //     id: "campaigns-load-error",
-        //   })
-        // }
+        console.error("Failed to fetch campaigns:", error)
       } finally {
         setIsLoadingCampaigns(false)
       }
@@ -54,73 +56,47 @@ export default function HomePage() {
     
     // Only fetch on client side
     if (typeof window !== "undefined") {
-      fetchActiveCampaigns()
+      fetchCampaigns()
     }
   }, [])
 
-  const urgentCampaigns = [
-    {
-      id: 1,
-      title: "Срочная операция для ребёнка",
-      description: "Требуется срочная операция на сердце",
-      category: "healthcare",
-      raised: 450000,
-      goal: 800000,
-      donors: 156,
-      daysLeft: 3,
-      image: "/children-medical-care.jpg",
-      urgent: true,
-    },
-    {
-      id: 2,
-      title: "Помощь семье после пожара",
-      description: "Семья из 6 человек осталась без крова",
-      category: "emergency",
-      raised: 280000,
-      goal: 500000,
-      donors: 98,
-      daysLeft: 5,
-      image: "/charity-campaign-.jpg",
-      urgent: true,
-    },
-    {
-      id: 3,
-      title: "Экстренная гуманитарная помощь",
-      description: "Продукты и медикаменты для пострадавших",
-      category: "general",
-      raised: 620000,
-      goal: 1000000,
-      donors: 234,
-      daysLeft: 7,
-      image: "/charity-campaign-.jpg",
-      urgent: true,
-    },
-  ]
-
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % urgentCampaigns.length)
+    if (urgentCampaigns.length > 0) {
+      setCurrentSlide((prev) => (prev + 1) % urgentCampaigns.length)
+    }
   }
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + urgentCampaigns.length) % urgentCampaigns.length)
+    if (urgentCampaigns.length > 0) {
+      setCurrentSlide((prev) => (prev - 1 + urgentCampaigns.length) % urgentCampaigns.length)
+    }
   }
 
   // Autoplay every 4 seconds
   useEffect(() => {
+    if (urgentCampaigns.length === 0) return
+    
     if (autoplayRef.current) clearInterval(autoplayRef.current)
     autoplayRef.current = setInterval(() => nextSlide(), 4000)
     return () => {
       if (autoplayRef.current) clearInterval(autoplayRef.current)
     }
-  }, [currentSlide])
+  }, [urgentCampaigns.length])
 
   const handleRefresh = async () => {
     setIsLoadingCampaigns(true)
     try {
-      const response = await fetch("/api/campaigns?status=active&limit=3")
+      const response = await fetch("/api/campaigns?status=active&limit=10")
       if (response.ok) {
         const data = await response.json()
-        setActiveCampaigns(data.campaigns || [])
+        const campaigns = (data.campaigns || []) as Campaign[]
+        const transformed = campaigns.map(transformCampaign)
+        setActiveCampaigns(transformed.slice(0, 3))
+        
+        // Filter urgent campaigns
+        const urgent = filterUrgentCampaigns(transformed)
+        setUrgentCampaigns(urgent.slice(0, 3))
+        
         toast.success("Обновлено")
       } else {
         toast.error("Не удалось загрузить кампании. Попробуйте позже.", {
@@ -292,57 +268,67 @@ export default function HomePage() {
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
-              {urgentCampaigns.map((campaign) => (
-                <div key={campaign.id} className="min-w-full">
-                  <Link href={`/campaigns/${campaign.id}`} className="block">
-                    <Card className="border bg-gradient-to-br from-red-500/5 to-orange-500/5 overflow-hidden hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200 cursor-pointer group">
-                      {/* Reduce banner height from 16/9 to slimmer 16/7 */}
-                      <div className="aspect-[16/7] relative overflow-hidden">
-                        <Image
-                          src={campaign.image || "/placeholder.svg"}
-                          alt={campaign.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                        <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
-                          {campaign.daysLeft} дней
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-2 left-3 right-3">
-                          <h4 className="text-white font-bold text-base mb-0.5 line-clamp-1 group-hover:text-primary-foreground transition-colors">{campaign.title}</h4>
-                          <p className="text-white/90 text-xs line-clamp-1">{campaign.description}</p>
-                        </div>
-                      </div>
-                      <CardContent className="pt-3 space-y-2">
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Собрано</span>
-                            <span className="font-bold text-primary">{campaign.raised.toLocaleString("ru-RU")} ₽</span>
+              {urgentCampaigns.length > 0 ? (
+                urgentCampaigns.map((campaign) => (
+                  <div key={campaign.id} className="min-w-full">
+                    <Link href={`/campaigns/${campaign.id}`} className="block">
+                      <Card className="border bg-gradient-to-br from-red-500/5 to-orange-500/5 overflow-hidden hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200 cursor-pointer group">
+                        {/* Reduce banner height from 16/9 to slimmer 16/7 */}
+                        <div className="aspect-[16/7] relative overflow-hidden">
+                          <Image
+                            src={campaign.imageUrl || "/placeholder.svg"}
+                            alt={campaign.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
+                            {campaign.daysLeft} дней
                           </div>
-                          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
-                              style={{ width: `${(campaign.raised / campaign.goal) * 100}%` }}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-2 left-3 right-3">
+                            <h4 className="text-white font-bold text-base mb-0.5 line-clamp-1 group-hover:text-primary-foreground transition-colors">{campaign.title}</h4>
+                            <p className="text-white/90 text-xs line-clamp-1">{campaign.description}</p>
+                          </div>
+                        </div>
+                        <CardContent className="pt-3 space-y-2">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Собрано</span>
+                              <span className="font-bold text-primary">{campaign.currentAmount.toLocaleString("ru-RU")} ₽</span>
+                            </div>
+                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
+                                style={{ width: `${campaign.goalAmount > 0 ? (campaign.currentAmount / campaign.goalAmount) * 100 : 0}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>{campaign.donorCount} жертвователей</span>
+                              <span>Цель: {campaign.goalAmount.toLocaleString("ru-RU")} ₽</span>
+                            </div>
+                          </div>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <QuickDonation
+                              amount={500}
+                              campaignId={campaign.id}
+                              category={campaign.category}
                             />
                           </div>
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{campaign.donors} жертвователей</span>
-                            <span>Цель: {campaign.goal.toLocaleString("ru-RU")} ₽</span>
-                          </div>
-                        </div>
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <QuickDonation
-                            amount={500}
-                            campaignId={campaign.id.toString()}
-                            category={campaign.category}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </div>
+                ))
+              ) : (
+                <div className="min-w-full">
+                  <Card className="border-dashed">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      <p>Срочные кампании появятся здесь</p>
+                    </CardContent>
+                  </Card>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -381,7 +367,7 @@ export default function HomePage() {
               </div>
             ) : activeCampaigns.length > 0 ? (
               activeCampaigns.map((campaign) => {
-                const progress = campaign.goal_amount > 0 ? (campaign.current_amount / campaign.goal_amount) * 100 : 0
+                const progress = campaign.goalAmount > 0 ? (campaign.currentAmount / campaign.goalAmount) * 100 : 0
                 return (
                   <Card
                     key={campaign.id}
@@ -391,7 +377,7 @@ export default function HomePage() {
                     <Link href={`/campaigns/${campaign.id}`}>
                       <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative overflow-hidden">
                         <Image
-                          src={campaign.image_url || "/placeholder.svg"}
+                          src={campaign.imageUrl || "/placeholder.svg"}
                           alt={campaign.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -409,7 +395,7 @@ export default function HomePage() {
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Собрано</span>
                             <span className="font-bold text-primary">
-                              {Number(campaign.current_amount || 0).toLocaleString("ru-RU")} ₽
+                              {campaign.currentAmount.toLocaleString("ru-RU")} ₽
                             </span>
                           </div>
                           <div className="h-2.5 bg-muted rounded-full overflow-hidden">
@@ -421,7 +407,7 @@ export default function HomePage() {
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">
-                            <span className="text-foreground font-bold">{campaign.donor_count || 0}</span> жертвователей
+                            <span className="text-foreground font-bold">{campaign.donorCount}</span> жертвователей
                           </span>
                           <span className="px-2 py-1 rounded-md bg-accent/10 text-accent font-semibold">
                             {Math.round(progress)}%

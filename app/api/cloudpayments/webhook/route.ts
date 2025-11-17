@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { handleApiError } from "@/lib/error-handler"
 import crypto from "crypto"
+
+interface CloudPaymentsWebhookData {
+  Model?: {
+    TransactionId?: number
+    InvoiceId?: string
+    Amount?: number
+    Currency?: string
+    RecurringId?: string
+    Status?: string
+    Reason?: string
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
 
 /**
  * Webhook для обработки уведомлений от CloudPayments
@@ -28,9 +43,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let data: any
+    let data: CloudPaymentsWebhookData
     try {
-      data = JSON.parse(body)
+      data = JSON.parse(body) as CloudPaymentsWebhookData
     } catch (parseError) {
       console.error("[CloudPayments] Invalid JSON body:", parseError)
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
@@ -75,15 +90,17 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[CloudPayments] Webhook error:", error)
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 })
+    const apiError = handleApiError(error)
+    // Для webhooks важно вернуть 200, чтобы провайдер не повторял запрос
+    // Но логируем ошибку для мониторинга
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 200 })
   }
 }
 
 /**
  * Обработать успешный платеж
  */
-async function handlePaymentSuccess(data: any) {
+async function handlePaymentSuccess(data: CloudPaymentsWebhookData) {
   const supabase = await createClient()
   const transactionId = data.Model?.TransactionId
   const invoiceId = data.Model?.InvoiceId
@@ -95,7 +112,7 @@ async function handlePaymentSuccess(data: any) {
 
   try {
     // Parse invoice data to get donation/subscription info
-    let invoiceData: any = {}
+    let invoiceData: Record<string, unknown> = {}
     try {
       invoiceData = JSON.parse(invoiceId)
     } catch {
@@ -246,7 +263,7 @@ async function handlePaymentSuccess(data: any) {
 /**
  * Обработать неудачный платеж
  */
-async function handlePaymentFailed(data: any) {
+async function handlePaymentFailed(data: CloudPaymentsWebhookData) {
   const supabase = await createClient()
   const transactionId = data.Model?.TransactionId
   const invoiceId = data.Model?.InvoiceId
@@ -254,7 +271,7 @@ async function handlePaymentFailed(data: any) {
   if (!transactionId || !invoiceId) return
 
   try {
-    let invoiceData: any = {}
+    let invoiceData: Record<string, unknown> = {}
     try {
       invoiceData = JSON.parse(invoiceId)
     } catch {
@@ -286,7 +303,7 @@ async function handlePaymentFailed(data: any) {
 /**
  * Обработать регулярный платеж
  */
-async function handleRecurringPayment(data: any) {
+async function handleRecurringPayment(data: CloudPaymentsWebhookData) {
   const supabase = await createClient()
   const recurringId = data.Model?.RecurringId
   const transactionId = data.Model?.TransactionId
@@ -353,7 +370,7 @@ async function handleRecurringPayment(data: any) {
 /**
  * Обработать платеж по подписке
  */
-async function handleSubscriptionPayment(subscriptionId: string, paymentData: any) {
+async function handleSubscriptionPayment(subscriptionId: string, paymentData: CloudPaymentsWebhookData) {
   const supabase = await createClient()
 
   try {
@@ -391,7 +408,7 @@ async function handleSubscriptionPayment(subscriptionId: string, paymentData: an
 /**
  * Обработать неудачный платеж по подписке
  */
-async function handleSubscriptionPaymentFailure(subscriptionId: string, paymentData: any) {
+async function handleSubscriptionPaymentFailure(subscriptionId: string, paymentData: CloudPaymentsWebhookData) {
   const supabase = await createClient()
 
   try {

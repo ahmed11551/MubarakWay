@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getFunds } from "@/lib/actions/funds"
 import { createClient } from "@/lib/supabase/server"
+import { handleApiError } from "@/lib/error-handler"
+import { getFundsQuerySchema } from "@/lib/schemas/api"
 
 export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams
-  const category = searchParams.get("category") || undefined
-  const debug = searchParams.get("debug") === "true"
-
   try {
+    const searchParams = req.nextUrl.searchParams
+    const category = searchParams.get("category") || undefined
+    const debug = searchParams.get("debug") === "true"
+
+    // Валидация параметров
+    if (category) {
+      const validationResult = getFundsQuerySchema.safeParse({ category })
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: "Invalid query parameters", details: validationResult.error.errors },
+          { status: 400 }
+        )
+      }
+    }
     // Direct Supabase query for debugging
     if (debug) {
       try {
@@ -51,11 +63,13 @@ export async function GET(req: NextRequest) {
             keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 30) || "missing",
           },
         })
-      } catch (debugError: any) {
+      } catch (debugError) {
+        const errorMessage = debugError instanceof Error ? debugError.message : String(debugError)
+        const errorStack = debugError instanceof Error ? debugError.stack : undefined
         return NextResponse.json({
           debug: true,
-          debugError: debugError.message,
-          stack: debugError.stack,
+          debugError: errorMessage,
+          stack: errorStack,
           getFundsResult: await getFunds(category),
         }, { status: 500 })
       }
@@ -65,16 +79,14 @@ export async function GET(req: NextRequest) {
     const result = await getFunds(category)
     
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
+      const apiError = handleApiError(new Error(result.error))
+      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
     }
 
     return NextResponse.json({ funds: result.funds || [] })
-  } catch (err: any) {
-    console.error("/api/funds error", err)
-    return NextResponse.json({ 
-      error: "Failed to fetch funds",
-      details: err.message 
-    }, { status: 500 })
+  } catch (err) {
+    const apiError = handleApiError(err)
+    return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }
 
