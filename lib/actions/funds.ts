@@ -10,13 +10,7 @@ function createPublicClient() {
   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Hardcoded fallback values from MCP (if env vars not available)
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("[Funds] Environment variables not available, using fallback values")
-    // Use values from MCP as fallback
-    supabaseUrl = supabaseUrl || "https://fvxkywczuqincnjilgzd.supabase.co"
-    supabaseAnonKey = supabaseAnonKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2eGt5d2N6dXFpbmNuamlsZ3pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNDgwNTYsImV4cCI6MjA3NzkyNDA1Nn0.jBvLDl0T2u-slvf4Uu4oZj7yRWMQCKmiln0mXRU0q54"
-  }
+  // Environment variables are required - no fallback for security
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("[Funds] Missing Supabase environment variables:", {

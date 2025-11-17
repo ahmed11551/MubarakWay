@@ -42,9 +42,16 @@ export function PlatformStats() {
   useEffect(() => {
     async function fetchStats() {
       try {
+        const authToken = process.env.NEXT_PUBLIC_API_AUTH_TOKEN
+        if (!authToken) {
+          console.warn("[Platform Stats] NEXT_PUBLIC_API_AUTH_TOKEN not configured")
+          setIsLoading(false)
+          return
+        }
+        
         const response = await fetch("/api/stats", {
           headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_AUTH_TOKEN || "test_token_123"}`,
+            Authorization: `Bearer ${authToken}`,
           },
         })
 

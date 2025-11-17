@@ -1,8 +1,17 @@
 // Client for bot.e-replika.ru API
 const BOT_API_BASE = process.env.BOT_API_BASE_URL || "https://bot.e-replika.ru"
-const BOT_API_TOKEN = process.env.BOT_API_TOKEN || "test_token_123"
+const BOT_API_TOKEN = process.env.BOT_API_TOKEN
+
+if (!BOT_API_TOKEN) {
+  console.warn("[Bot API] BOT_API_TOKEN not configured")
+}
 
 export async function fetchBotApiStats() {
+  if (!BOT_API_TOKEN) {
+    console.warn("[Bot API] BOT_API_TOKEN not configured, skipping stats fetch")
+    return null
+  }
+  
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд
   
@@ -42,6 +51,11 @@ export async function fetchBotApiStats() {
 }
 
 export async function fetchBotApi(endpoint: string, options: RequestInit = {}) {
+  if (!BOT_API_TOKEN) {
+    console.warn("[Bot API] BOT_API_TOKEN not configured")
+    throw new Error("BOT_API_TOKEN not configured")
+  }
+  
   const url = endpoint.startsWith("http") ? endpoint : `${BOT_API_BASE}${endpoint}`
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд

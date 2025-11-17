@@ -4,7 +4,13 @@ import { getPlatformStats } from "@/lib/stats"
 function isAuthorized(req: NextRequest) {
   const authHeader = req.headers.get("authorization") || ""
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : undefined
-  const expected = process.env.API_AUTH_TOKEN || "test_token_123"
+  const expected = process.env.API_AUTH_TOKEN
+  
+  if (!expected) {
+    console.error("[Stats API] API_AUTH_TOKEN not configured")
+    return false
+  }
+  
   return token === expected
 }
 

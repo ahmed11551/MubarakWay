@@ -1,6 +1,10 @@
 // Client for fondinsan.ru API
 const FONDINSAN_API_BASE = process.env.FONDINSAN_API_BASE_URL || "https://fondinsan.ru/api/v1"
-const FONDINSAN_ACCESS_TOKEN = process.env.FONDINSAN_ACCESS_TOKEN || "0xRs6obpvPOx4lkGLYxepBOcMju"
+const FONDINSAN_ACCESS_TOKEN = process.env.FONDINSAN_ACCESS_TOKEN
+
+if (!FONDINSAN_ACCESS_TOKEN) {
+  console.warn("[Fondinsan API] FONDINSAN_ACCESS_TOKEN not configured")
+}
 
 export type FondinsanProgram = {
   id: number
@@ -23,6 +27,11 @@ export type FondinsanApiResponse = {
  * Fetch programs from Fondinsan API
  */
 export async function fetchFondinsanPrograms(): Promise<FondinsanProgram[] | null> {
+  if (!FONDINSAN_ACCESS_TOKEN) {
+    console.warn("[Fondinsan API] FONDINSAN_ACCESS_TOKEN not configured, skipping fetch")
+    return null
+  }
+  
   try {
     const url = `${FONDINSAN_API_BASE}/programs?access-token=${FONDINSAN_ACCESS_TOKEN}`
     
@@ -76,6 +85,11 @@ export async function fetchFondinsanPrograms(): Promise<FondinsanProgram[] | nul
  * Fetch a single program by ID
  */
 export async function fetchFondinsanProgramById(id: number): Promise<FondinsanProgram | null> {
+  if (!FONDINSAN_ACCESS_TOKEN) {
+    console.warn("[Fondinsan API] FONDINSAN_ACCESS_TOKEN not configured, skipping fetch")
+    return null
+  }
+  
   try {
     const url = `${FONDINSAN_API_BASE}/program/by-id/${id}?access-token=${FONDINSAN_ACCESS_TOKEN}`
     
