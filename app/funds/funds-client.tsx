@@ -56,19 +56,29 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
   ]
 
   // Filter funds based on search and category (используем debounced значение)
+  // Если есть поисковый запрос, показываем результаты из всех категорий
+  // Если поискового запроса нет, фильтруем по выбранной категории
   const filteredFunds = useMemo(() => {
     return funds.filter((fund) => {
       const name = fund.name || fund.name_ru || ""
       const description = fund.description || fund.description_ru || ""
-      const searchMatch = debouncedSearchQuery === "" || 
-        name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        description.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       
+      // Если есть поисковый запрос, ищем по имени и описанию во всех категориях
+      if (debouncedSearchQuery.trim() !== "") {
+        const searchLower = debouncedSearchQuery.toLowerCase().trim()
+        const nameMatch = name.toLowerCase().includes(searchLower)
+        const descriptionMatch = description.toLowerCase().includes(searchLower)
+        
+        // Если есть поиск, показываем результаты из всех категорий
+        return nameMatch || descriptionMatch
+      }
+      
+      // Если поискового запроса нет, фильтруем по категории
       const categoryMatch = selectedCategory === "all" || 
         fund.category === selectedCategory ||
         fund.id === "00000000-0000-0000-0000-000000000001"
       
-      return searchMatch && categoryMatch
+      return categoryMatch
     })
   }, [funds, debouncedSearchQuery, selectedCategory])
 
@@ -106,12 +116,16 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
           </TabsList>
 
           {categories.map((cat) => {
-            // Фильтруем по категории (уже отфильтровано в filteredFunds)
-            const categoryFunds = cat.value === "all" 
-              ? filteredFunds 
-              : filteredFunds.filter(
-                  (f) => f.category === cat.value || f.id === "00000000-0000-0000-0000-000000000001"
-                )
+            // Если есть поисковый запрос, показываем результаты поиска во всех вкладках
+            // Если поискового запроса нет, фильтруем по категории
+            const hasSearch = debouncedSearchQuery.trim() !== ""
+            const categoryFunds = hasSearch
+              ? filteredFunds // При поиске показываем все результаты поиска
+              : cat.value === "all"
+                ? filteredFunds
+                : filteredFunds.filter(
+                    (f) => f.category === cat.value || f.id === "00000000-0000-0000-0000-000000000001"
+                  )
             
             return (
               <TabsContent key={cat.value} value={cat.value} className="space-y-4 mt-4">
@@ -130,7 +144,7 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
                   <Card>
                     <CardContent className="pt-6 pb-6 text-center">
                       <p className="text-muted-foreground">
-                        {searchQuery ? "Фонды не найдены по запросу" : `Фонды в категории "${cat.label}" не найдены`}
+                        {hasSearch ? "Фонды не найдены по запросу" : `Фонды в категории "${cat.label}" не найдены`}
                       </p>
                     </CardContent>
                   </Card>
