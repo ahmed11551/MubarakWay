@@ -26,6 +26,7 @@ export function transformCampaign(campaign: Campaign): TransformedCampaign {
   const daysLeft = calculateDaysLeft(campaign.deadline)
   
   // Определяем, является ли кампания срочной (менее 7 дней до дедлайна)
+  // Срочной считается кампания с дедлайном от 1 до 7 дней включительно
   const urgent = daysLeft !== null && daysLeft > 0 && daysLeft <= 7
 
   return {
@@ -37,7 +38,7 @@ export function transformCampaign(campaign: Campaign): TransformedCampaign {
     category: campaign.category || "other",
     imageUrl: campaign.image_url || "/placeholder.svg",
     donorCount: Number(campaign.donor_count || 0),
-    daysLeft: daysLeft ?? 0,
+    daysLeft: daysLeft ?? null, // Сохраняем null вместо 0, чтобы различать "нет дедлайна" и "дедлайн прошел"
     creatorName: campaign.profiles?.display_name || "Неизвестный автор",
     urgent,
   }

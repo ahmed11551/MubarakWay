@@ -36,8 +36,8 @@ export default function HomePage() {
     async function fetchCampaigns() {
       setIsLoadingCampaigns(true)
       try {
-        // Fetch active campaigns
-        const activeResponse = await fetch("/api/campaigns?status=active&limit=10")
+        // Fetch active campaigns - увеличиваем лимит, чтобы найти срочные кампании
+        const activeResponse = await fetch("/api/campaigns?status=active&limit=50")
         if (activeResponse.ok) {
           const activeData = await activeResponse.json()
           const campaigns = (activeData.campaigns || []) as Campaign[]
@@ -46,6 +46,27 @@ export default function HomePage() {
           
           // Filter urgent campaigns (ending within 7 days)
           const urgent = filterUrgentCampaigns(transformed)
+          
+          // Debug logging
+          console.log("[HomePage] Campaigns debug:", {
+            totalCampaigns: campaigns.length,
+            transformedCount: transformed.length,
+            urgentCount: urgent.length,
+            urgentCampaigns: urgent.map(c => ({
+              id: c.id,
+              title: c.title,
+              daysLeft: c.daysLeft,
+              urgent: c.urgent,
+              deadline: campaigns.find(cp => cp.id === c.id)?.deadline
+            })),
+            allCampaigns: transformed.map(c => ({
+              id: c.id,
+              title: c.title,
+              daysLeft: c.daysLeft,
+              urgent: c.urgent
+            }))
+          })
+          
           setUrgentCampaigns(urgent.slice(0, 3)) // Limit to 3 for carousel
         } else {
           console.error("Failed to fetch campaigns:", activeResponse.status, activeResponse.statusText)
@@ -89,7 +110,7 @@ export default function HomePage() {
   const handleRefresh = async () => {
     setIsLoadingCampaigns(true)
     try {
-      const response = await fetch("/api/campaigns?status=active&limit=10")
+      const response = await fetch("/api/campaigns?status=active&limit=50")
       if (response.ok) {
         const data = await response.json()
         const campaigns = (data.campaigns || []) as Campaign[]
@@ -285,9 +306,11 @@ export default function HomePage() {
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           />
-                          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
-                            {campaign.daysLeft} дней
-                          </div>
+                          {campaign.daysLeft !== null && campaign.daysLeft > 0 && (
+                            <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold animate-pulse">
+                              {campaign.daysLeft} {campaign.daysLeft === 1 ? "день" : campaign.daysLeft < 5 ? "дня" : "дней"}
+                            </div>
+                          )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                           <div className="absolute bottom-2 left-3 right-3">
                             <h4 className="text-white font-bold text-base mb-0.5 line-clamp-1 group-hover:text-primary-foreground transition-colors">{campaign.title}</h4>

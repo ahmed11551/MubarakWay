@@ -66,7 +66,8 @@ export default async function FundsPage() {
   
   // Если фонды найдены, убираем ошибку (если она была установлена ранее)
   if (funds.length > 0 && "error" in result) {
-    delete result.error
+    const { error, ...rest } = result
+    result = { ...rest, funds: result.funds }
   }
   
   // Если фонды не найдены, но ошибки нет - возможно проблема с RLS или переменными окружения
@@ -92,10 +93,13 @@ export default async function FundsPage() {
     })
   }
 
+  // Определяем ошибку для передачи в компонент
+  const errorMessage = funds.length > 0 ? undefined : ("error" in result ? result.error : undefined)
+
   return (
     <div className="min-h-screen pb-20">
       <AppHeader />
-      <FundsClient initialFunds={funds} initialError={"error" in result ? result.error : undefined} />
+      <FundsClient initialFunds={funds} initialError={errorMessage} />
       <BottomNav />
     </div>
   )
