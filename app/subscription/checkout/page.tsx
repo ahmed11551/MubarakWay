@@ -2,8 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"

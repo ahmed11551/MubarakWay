@@ -72,9 +72,40 @@ pnpm add @sentry/nextjs
 - **TypeScript** для типобезопасности
 - **Supabase** для базы данных и аутентификации
 - **Zod** для валидации API запросов
+- **Feature-Sliced Design (FSD)** для организации кода
 - **Централизованная обработка ошибок** через `lib/error-handler.ts`
 - **Типы** вынесены в `types/index.ts`
 - **Трансформеры** для данных в `lib/transformers/`
+
+### Feature-Sliced Design (FSD)
+
+Проект организован по методологии FSD в директории `src/`:
+
+```
+src/
+├── shared/      # Переиспользуемый код (типы, утилиты, API схемы)
+├── entities/    # Бизнес-сущности (campaign, donation, fund)
+├── features/    # Бизнес-функции (create-campaign, make-donation)
+└── widgets/     # Крупные составные блоки UI (header, campaign-list)
+```
+
+**Использование FSD импортов:**
+```typescript
+// Entities
+import { CampaignCard } from '@/entities/campaign/ui/campaign-card'
+import { getCampaignById } from '@/entities/campaign/api'
+
+// Features
+import { CreateCampaignForm } from '@/features/create-campaign/ui/create-campaign-form'
+
+// Widgets
+import { AppHeader } from '@/widgets/header/ui/app-header'
+
+// Shared
+import { handleApiError } from '@/shared/lib/error-handler'
+```
+
+Подробнее см. [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## 📝 Лицензия
 

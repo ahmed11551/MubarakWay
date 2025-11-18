@@ -1,5 +1,6 @@
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +10,8 @@ import { Share2, Heart, Calendar, Users, TrendingUp, MessageSquare } from "lucid
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getCampaignById } from "@/lib/actions/campaigns"
+// FSD entities
+import { getCampaignById } from "@/entities/campaign/api"
 import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
 import { ShareButton } from "@/components/share-button"
@@ -97,8 +99,8 @@ export default async function CampaignDetailPage({
       console.error("Error fetching donations:", donationsError)
     }
 
-    // Import transformer
-    const { calculateDaysLeft } = await import("@/lib/transformers/campaign")
+    // Import transformer (FSD)
+    const { calculateDaysLeft } = await import("@/entities/campaign/lib/transformers")
     const daysLeft = calculateDaysLeft(campaignData.deadline)
 
     // Format recent donors from donations

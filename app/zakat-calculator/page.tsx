@@ -1,5 +1,6 @@
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
 import { ZakatCalculatorForm } from "@/components/zakat-calculator-form"
 
 export default function ZakatCalculatorPage() {

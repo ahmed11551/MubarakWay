@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
 
 export default function NotFound() {
   return (

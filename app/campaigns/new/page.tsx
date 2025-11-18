@@ -1,6 +1,8 @@
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
-import { CampaignCreationForm } from "@/components/campaign-creation-form"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
+// FSD features
+import { CampaignCreationForm } from "@/features/create-campaign/ui/create-campaign-form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Info, ExternalLink } from "lucide-react"
 import Link from "next/link"

@@ -1,7 +1,8 @@
 "use client"
 
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Heart, Calculator, Sparkles, HandHeart, Users, ChevronLeft, ChevronRight, Target } from "lucide-react"
@@ -10,15 +11,17 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { QuickDonation } from "@/components/quick-donation"
 import { QuickDonationBlock } from "@/components/quick-donation-block"
-import { PlatformStats } from "@/components/platform-stats"
+// FSD widgets
+import { PlatformStats } from "@/widgets/stats/ui/platform-stats"
 import { UltraQuickDonation } from "@/components/ultra-quick-donation"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import { toast } from "sonner"
 import { SkeletonCampaignCard } from "@/components/skeleton-campaign-card"
 import { PrayerTimesPopup } from "@/components/prayer-times-popup"
 
-import { transformCampaign, filterUrgentCampaigns } from "@/lib/transformers/campaign"
-import type { Campaign, TransformedCampaign } from "@/types"
+// FSD imports
+import { transformCampaign, filterUrgentCampaigns } from "@/entities/campaign/lib/transformers"
+import type { Campaign, TransformedCampaign } from "@/entities/campaign/model/types"
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)

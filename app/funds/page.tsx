@@ -1,6 +1,8 @@
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
-import { getFunds } from "@/lib/actions/funds"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
+// FSD entities
+import { getFunds } from "@/entities/fund/api"
 import { FundsClient } from "./funds-client"
 import type { Metadata } from "next"
 

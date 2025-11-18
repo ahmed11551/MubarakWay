@@ -1,4 +1,5 @@
-import { AppHeader } from "@/components/app-header"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminCampaignsTable } from "@/components/admin/campaigns-table"
@@ -6,7 +7,8 @@ import { AdminFundsTable } from "@/components/admin/funds-table"
 import { AdminDonationsTable } from "@/components/admin/donations-table"
 import { AdminStats } from "@/components/admin/stats"
 import { FundReportsUpload } from "@/components/admin/fund-reports-upload"
-import { getFunds } from "@/lib/actions/funds"
+// FSD entities
+import { getFunds } from "@/entities/fund/api"
 import { Shield } from "lucide-react"
 
 export const dynamic = 'force-dynamic'

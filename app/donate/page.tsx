@@ -1,6 +1,8 @@
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
-import { DonationForm } from "@/components/donation-form"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
+// FSD features
+import { DonationForm } from "@/features/make-donation/ui/donation-form"
 import { Suspense } from "react"
 
 export default function DonatePage() {

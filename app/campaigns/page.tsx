@@ -1,12 +1,15 @@
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
+// FSD widgets
+import { AppHeader } from "@/widgets/header/ui/app-header"
+import { BottomNav } from "@/widgets/navigation/ui/bottom-nav"
+import { CampaignsList } from "@/widgets/campaign-list/ui/campaigns-list"
+// FSD entities
+import { getCampaigns } from "@/entities/campaign/api"
+import { transformCampaigns, filterEndingCampaigns, filterActiveCampaigns } from "@/entities/campaign/lib/transformers"
+// UI components
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { CampaignsList } from "@/components/campaigns-list"
-import { getCampaigns } from "@/lib/actions/campaigns"
-import { transformCampaigns, filterEndingCampaigns, filterActiveCampaigns } from "@/lib/transformers/campaign"
 import type { Metadata } from "next"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mubarakway.app"
