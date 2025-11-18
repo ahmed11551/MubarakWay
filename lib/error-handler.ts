@@ -45,29 +45,46 @@ export function logError(error: unknown, context?: Record<string, unknown>) {
     timestamp: new Date().toISOString(),
   })
 
-  // Send to Sentry if available
+  // Send to Sentry if available (only if package is installed)
+  // Using eval to prevent build-time module resolution errors
   if (typeof window !== "undefined") {
     // Client-side
-    import("@sentry/nextjs").then((Sentry) => {
-      Sentry.captureException(error, {
-        contexts: {
-          custom: context || {},
-        },
-      })
-    }).catch(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const importSentry = new Function('return import("@sentry/nextjs")')
+      importSentry()
+        .then((Sentry: any) => {
+          Sentry.captureException(error, {
+            contexts: {
+              custom: context || {},
+            },
+          })
+        })
+        .catch(() => {
+          // Sentry not available, ignore
+        })
+    } catch {
       // Sentry not available, ignore
-    })
+    }
   } else {
     // Server-side
-    import("@sentry/nextjs").then((Sentry) => {
-      Sentry.captureException(error, {
-        contexts: {
-          custom: context || {},
-        },
-      })
-    }).catch(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const importSentry = new Function('return import("@sentry/nextjs")')
+      importSentry()
+        .then((Sentry: any) => {
+          Sentry.captureException(error, {
+            contexts: {
+              custom: context || {},
+            },
+          })
+        })
+        .catch(() => {
+          // Sentry not available, ignore
+        })
+    } catch {
       // Sentry not available, ignore
-    })
+    }
   }
 }
 

@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
           const fromDate = from ? new Date(from) : null
           const toDate = to ? new Date(to) : null
           
-          filteredDonations = filteredDonations.filter((donation: Donation) => {
+          filteredDonations = filteredDonations.filter((donation) => {
             const donationDate = new Date(donation.created_at)
             if (fromDate && donationDate < fromDate) return false
             if (toDate && donationDate > toDate) return false

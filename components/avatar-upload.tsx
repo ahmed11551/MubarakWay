@@ -56,7 +56,7 @@ export function AvatarUpload({
     if (!file) return
 
     // Проверяем авторизацию перед загрузкой
-    if (isAuthenticated === false) {
+    if (!isAuthenticated) {
       toast.error("Необходимо войти в систему для загрузки аватара. Пожалуйста, обновите страницу.")
       hapticFeedback("error")
       return
@@ -181,7 +181,7 @@ export function AvatarUpload({
         )}
 
         {/* Upload button overlay */}
-        {isAuthenticated !== false && (
+        {isAuthenticated && (
           <div className="absolute bottom-0 right-0">
             <input
               ref={fileInputRef}
@@ -189,21 +189,21 @@ export function AvatarUpload({
               accept="image/*"
               onChange={handleFileSelect}
               className="hidden"
-              disabled={isUploading || isDeleting || isAuthenticated === false}
+              disabled={isUploading || isDeleting || !isAuthenticated}
             />
             <Button
               type="button"
               size="icon"
               className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
               onClick={() => {
-                if (isAuthenticated === false) {
+                if (!isAuthenticated) {
                   toast.error("Необходимо войти в систему для загрузки аватара. Пожалуйста, обновите страницу.")
                   hapticFeedback("error")
                   return
                 }
                 fileInputRef.current?.click()
               }}
-              disabled={isUploading || isDeleting || isAuthenticated === false}
+              disabled={isUploading || isDeleting || !isAuthenticated}
             >
               <Camera className="h-4 w-4" />
             </Button>
@@ -211,7 +211,7 @@ export function AvatarUpload({
         )}
 
         {/* Delete button (only if avatar exists and user is authenticated) */}
-        {avatarUrl && !isUploading && isAuthenticated !== false && (
+        {avatarUrl && !isUploading && isAuthenticated && (
           <div className="absolute top-0 right-0">
             <Button
               type="button"
@@ -219,7 +219,7 @@ export function AvatarUpload({
               variant="destructive"
               className="h-6 w-6 rounded-full shadow-lg"
               onClick={handleDelete}
-              disabled={isDeleting || isAuthenticated === false}
+              disabled={isDeleting || !isAuthenticated}
             >
               {isDeleting ? (
                 <Loader2 className="h-3 w-3 animate-spin" />

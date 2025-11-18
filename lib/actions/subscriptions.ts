@@ -207,7 +207,7 @@ export async function resumeSubscription(subscriptionId: string) {
     // Verify subscription belongs to user
     const { data: subscription, error: fetchError } = await supabase
       .from("subscriptions")
-      .select("user_id")
+      .select("user_id, billing_frequency")
       .eq("id", subscriptionId)
       .single()
 

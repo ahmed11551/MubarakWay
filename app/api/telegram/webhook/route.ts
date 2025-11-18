@@ -215,7 +215,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const periodKey = parts[3]
     const plan = SUBSCRIPTION_PLANS[planKey as keyof typeof SUBSCRIPTION_PLANS]
 
-    if (!plan || plan.free || !plan.prices) {
+    if (!plan || plan.free || !("prices" in plan) || !plan.prices) {
       await answerCallbackQuery(callbackQueryId, { text: "Ошибка выбора периода", show_alert: true })
       return
     }
@@ -233,7 +233,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const paymentUrl = `${webAppUrl}/subscription/checkout?plan=${encodeURIComponent(plan.name)}&period=${encodeURIComponent(priceInfo.period)}`
     
     const keyboard = createPaymentKeyboard(paymentUrl)
-    const bonusText = priceInfo.bonus ? `\n🎁 ${priceInfo.bonus}` : ""
+    const bonusText = "bonus" in priceInfo && priceInfo.bonus ? `\n🎁 ${priceInfo.bonus}` : ""
     const message = `💎 <b>${plan.name}</b> — ${priceInfo.period}\n\n💰 <b>Сумма:</b> ${priceInfo.price} ₽\n💝 <b>В благотворительность:</b> ${priceInfo.charity} ₽${bonusText}\n\nНажмите кнопку ниже для оплаты:`
     
     const result = await editMessageText(chatId, messageId, message, { reply_markup: keyboard })

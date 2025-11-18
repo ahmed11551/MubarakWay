@@ -95,7 +95,6 @@ export function RatingClient({
                           <div className="flex items-center gap-2">
                             {getRankBadge(rank)}
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={avatar.url} alt={avatar.name} />
                               <AvatarFallback>{avatar.emoji}</AvatarFallback>
                             </Avatar>
                           </div>
@@ -145,7 +144,6 @@ export function RatingClient({
                           <div className="flex items-center gap-2">
                             {getRankBadge(rank)}
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={avatar.url} alt={avatar.name} />
                               <AvatarFallback>{avatar.emoji}</AvatarFallback>
                             </Avatar>
                           </div>
@@ -231,7 +229,6 @@ export function RatingClient({
                           <div className="flex items-center gap-2">
                             {getRankBadge(rank)}
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={avatar.url} alt={avatar.name} />
                               <AvatarFallback>{avatar.emoji}</AvatarFallback>
                             </Avatar>
                           </div>
@@ -281,7 +278,6 @@ export function RatingClient({
                           <div className="flex items-center gap-2">
                             {getRankBadge(rank)}
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={avatar.url} alt={avatar.name} />
                               <AvatarFallback>{avatar.emoji}</AvatarFallback>
                             </Avatar>
                           </div>

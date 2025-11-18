@@ -65,7 +65,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{campaign.donorCount} жертвователей</span>
-            <span>{campaign.daysLeft > 0 ? `${campaign.daysLeft} дней осталось` : "Кампания завершена"}</span>
+            <span>{campaign.daysLeft !== null && campaign.daysLeft > 0 ? `${campaign.daysLeft} дней осталось` : "Кампания завершена"}</span>
           </div>
           <div className="text-xs text-muted-foreground pt-1 border-t">от {campaign.creatorName}</div>
         </CardContent>

@@ -65,15 +65,15 @@ export default async function FundsPage() {
   let funds = result.funds || []
   
   // Если фонды не найдены, но ошибки нет - возможно проблема с RLS или переменными окружения
-  if (funds.length === 0 && !result.error) {
+  if (funds.length === 0 && !("error" in result) || !result.error) {
     console.warn("[FundsPage] No funds found but no error. Possible RLS or env vars issue.")
-    result.error = "Фонды не найдены. Возможно проблема с настройками базы данных или переменными окружения."
+    result = { ...result, error: "Фонды не найдены. Возможно проблема с настройками базы данных или переменными окружения." }
   }
   
   // Если есть ошибка, но она связана с переменными окружения, попробуем показать более понятное сообщение
-  if (result.error && (result.error.includes("Missing Supabase") || result.error.includes("environment variables"))) {
+  if ("error" in result && result.error && (result.error.includes("Missing Supabase") || result.error.includes("environment variables"))) {
     console.error("[FundsPage] Environment variables issue detected")
-    result.error = "Ошибка конфигурации: переменные окружения Supabase не установлены. Обратитесь к администратору."
+    result = { ...result, error: "Ошибка конфигурации: переменные окружения Supabase не установлены. Обратитесь к администратору." }
   }
   
   // Additional debug
@@ -88,7 +88,7 @@ export default async function FundsPage() {
   return (
     <div className="min-h-screen pb-20">
       <AppHeader />
-      <FundsClient initialFunds={funds} initialError={result.error} />
+      <FundsClient initialFunds={funds} initialError={"error" in result ? result.error : undefined} />
       <BottomNav />
     </div>
   )

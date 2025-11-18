@@ -57,7 +57,7 @@ export async function initiateCloudPayment(config: CloudPaymentsConfig, callback
     setTimeout(() => {
       console.log("[v0] CloudPayments демо: платёж успешен")
       callbacks.onSuccess?.({ transactionId: `DEMO-${Date.now()}` })
-      callbacks.onComplete?.({ success: true }, config)
+      callbacks.onComplete?.({ success: true })
     }, 1500)
 
     // Раскомментируйте код ниже, когда получите publicId от CloudPayments

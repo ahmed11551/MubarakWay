@@ -74,11 +74,11 @@ export function BottomNav() {
         // Используем requestIdleCallback для неблокирующего haptic feedback
         if ('requestIdleCallback' in window) {
           requestIdleCallback(() => {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light")
           })
         } else {
           setTimeout(() => {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("light")
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light")
           }, 0)
         }
       } catch (error) {

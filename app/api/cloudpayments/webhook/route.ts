@@ -252,8 +252,8 @@ async function handlePaymentSuccess(data: CloudPaymentsWebhookData) {
     }
 
     // Handle subscription payment
-    if (invoiceData.subscription && invoiceData.subscriptionId) {
-      await handleSubscriptionPayment(invoiceData.subscriptionId, data.Model)
+    if (invoiceData.subscription && invoiceData.subscriptionId && typeof invoiceData.subscriptionId === "string") {
+      await handleSubscriptionPayment(invoiceData.subscriptionId, data)
     }
   } catch (error) {
     console.error("[CloudPayments] Payment success handling error:", error)
@@ -292,8 +292,8 @@ async function handlePaymentFailed(data: CloudPaymentsWebhookData) {
     }
 
     // Handle subscription payment failure
-    if (invoiceData.subscription && invoiceData.subscriptionId) {
-      await handleSubscriptionPaymentFailure(invoiceData.subscriptionId, data.Model)
+    if (invoiceData.subscription && invoiceData.subscriptionId && typeof invoiceData.subscriptionId === "string") {
+      await handleSubscriptionPaymentFailure(invoiceData.subscriptionId, data)
     }
   } catch (error) {
     console.error("[CloudPayments] Payment failure handling error:", error)
@@ -360,7 +360,7 @@ async function handleRecurringPayment(data: CloudPaymentsWebhookData) {
       }
     } else if (data.Model?.Status === "Declined" || data.Model?.Status === "Cancelled") {
       // Handle failed recurring payment
-      await handleSubscriptionPaymentFailure(subscription.id, data.Model)
+      await handleSubscriptionPaymentFailure(subscription.id, data)
     }
   } catch (error) {
     console.error("[CloudPayments] Recurring payment handling error:", error)

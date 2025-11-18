@@ -12,6 +12,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 // FSD entities
 import { getFundById } from "@/entities/fund/api"
+import type { Campaign } from "@/entities/campaign/model/types"
+import type { Donation } from "@/entities/donation/model/types"
 import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
 
@@ -318,7 +320,7 @@ export default async function FundDetailPage({
                   <CardTitle>О {fund.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {fund.fullDescription.split("\n\n").map((paragraph, i) => (
+                  {fund.fullDescription.split("\n\n").map((paragraph: string, i: number) => (
                     <p key={i} className="text-sm leading-relaxed">
                       {paragraph}
                     </p>
@@ -649,9 +651,9 @@ export default async function FundDetailPage({
                           const monthName = date.toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
                           
                           if (!acc[monthKey]) {
-                            acc[monthKey] = { month: monthName, amount: 0, count: 0 }
+                            acc[monthKey] = { monthName, total: 0, count: 0 }
                           }
-                          acc[monthKey].amount += Number(donation.amount || 0)
+                          acc[monthKey].total += Number(donation.amount || 0)
                           acc[monthKey].count += 1
                           return acc
                         }, {})

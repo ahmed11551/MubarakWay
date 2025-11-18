@@ -372,12 +372,8 @@ export default function HomePage() {
               activeCampaigns.map((campaign) => {
                 const progress = campaign.goalAmount > 0 ? (campaign.currentAmount / campaign.goalAmount) * 100 : 0
                 return (
-                  <Card
-                    key={campaign.id}
-                    className="overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 border-2 hover:border-primary/30 group cursor-pointer"
-                    asChild
-                  >
-                    <Link href={`/campaigns/${campaign.id}`}>
+                  <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
+                    <Card className="overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 border-2 hover:border-primary/30 group cursor-pointer">
                       <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative overflow-hidden">
                         <Image
                           src={campaign.imageUrl || "/placeholder.svg"}
@@ -417,8 +413,8 @@ export default function HomePage() {
                           </span>
                         </div>
                       </CardContent>
-                    </Link>
-                  </Card>
+                    </Card>
+                  </Link>
                 )
               })
             ) : (

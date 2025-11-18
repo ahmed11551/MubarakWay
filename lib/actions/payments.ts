@@ -67,7 +67,7 @@ export async function initiatePayment(input: PaymentInitiateInput) {
     const returnUrl = input.returnUrl || `${baseUrl}/payment/success?donation_id=${donationResult.donation.id}`
     const cancelUrl = input.cancelUrl || `${baseUrl}/payment/cancel`
 
-    let paymentUrl: string
+    let paymentUrl: string | undefined
 
     // Создаем платеж через выбранного провайдера
     if (provider === "yookassa") {

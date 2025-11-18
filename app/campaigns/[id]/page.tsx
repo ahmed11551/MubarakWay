@@ -12,6 +12,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 // FSD entities
 import { getCampaignById } from "@/entities/campaign/api"
+import type { Campaign } from "@/entities/campaign/model/types"
+import type { Donation } from "@/entities/donation/model/types"
 import { createClient } from "@/lib/supabase/server"
 import type { Metadata } from "next"
 import { ShareButton } from "@/components/share-button"
@@ -104,6 +106,7 @@ export default async function CampaignDetailPage({
     const daysLeft = calculateDaysLeft(campaignData.deadline)
 
     // Format recent donors from donations
+    const now = new Date()
     const formatRelativeTime = (date: Date) => {
       const diffMs = now.getTime() - date.getTime()
       const diffMins = Math.floor(diffMs / 60000)
@@ -150,7 +153,7 @@ export default async function CampaignDetailPage({
       imageUrl: campaignData.image_url || "/placeholder.svg",
       donorCount: Number(campaignData.donor_count || 0),
       daysLeft: daysLeft ?? 0,
-      deadline: deadline?.toISOString().split("T")[0] || null,
+      deadline: campaignData.deadline ? new Date(campaignData.deadline).toISOString().split("T")[0] : null,
       creatorName: (campaignData.profiles as any)?.display_name || "Неизвестный автор",
       creatorAvatar: (campaignData.profiles as any)?.avatar_url || "/placeholder.svg",
       createdAt: new Date(campaignData.created_at).toLocaleDateString("ru-RU"),
@@ -276,7 +279,7 @@ export default async function CampaignDetailPage({
                   </div>
                 </CardHeader>
                 <CardContent className="prose prose-sm max-w-none">
-                  {(campaign.story || "").split("\n\n").filter(p => p.trim()).map((paragraph, i) => (
+                  {(campaign.story || "").split("\n\n").filter((p: string) => p.trim()).map((paragraph: string, i: number) => (
                     <p key={i} className="text-sm leading-relaxed mb-4 last:mb-0">
                       {paragraph}
                     </p>

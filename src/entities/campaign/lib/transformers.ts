@@ -54,7 +54,7 @@ export function transformCampaigns(campaigns: Campaign[]): TransformedCampaign[]
  * Фильтрует срочные кампании (менее 7 дней до дедлайна)
  */
 export function filterUrgentCampaigns(campaigns: TransformedCampaign[]): TransformedCampaign[] {
-  return campaigns.filter((c) => c.urgent && c.daysLeft > 0 && c.daysLeft <= 7)
+  return campaigns.filter((c) => c.urgent && c.daysLeft !== null && c.daysLeft > 0 && c.daysLeft <= 7)
 }
 
 /**
@@ -62,7 +62,7 @@ export function filterUrgentCampaigns(campaigns: TransformedCampaign[]): Transfo
  */
 export function filterActiveCampaigns(campaigns: TransformedCampaign[]): TransformedCampaign[] {
   return campaigns.filter(
-    (c) => c.currentAmount < c.goalAmount && (c.daysLeft === 0 || c.daysLeft > 7)
+    (c) => c.currentAmount < c.goalAmount && (c.daysLeft === null || c.daysLeft === 0 || c.daysLeft > 7)
   )
 }
 
@@ -70,6 +70,6 @@ export function filterActiveCampaigns(campaigns: TransformedCampaign[]): Transfo
  * Фильтрует завершающиеся кампании (менее 7 дней до дедлайна)
  */
 export function filterEndingCampaigns(campaigns: TransformedCampaign[]): TransformedCampaign[] {
-  return campaigns.filter((c) => c.daysLeft > 0 && c.daysLeft <= 7)
+  return campaigns.filter((c) => c.daysLeft !== null && c.daysLeft > 0 && c.daysLeft <= 7)
 }
 

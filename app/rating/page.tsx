@@ -50,28 +50,28 @@ export default async function RatingPage() {
     ])
 
     if (results[0].status === "fulfilled") {
-      allTimeDonors = results[0].value
+      allTimeDonors = { ...results[0].value, error: undefined }
     } else {
       console.error("[RatingPage] Error loading all_time donors:", results[0].reason)
       allTimeDonors = { donors: [], error: results[0].reason?.toString() || "Failed to load" }
     }
 
     if (results[1].status === "fulfilled") {
-      ramadanDonors = results[1].value
+      ramadanDonors = { ...results[1].value, error: undefined }
     } else {
       console.error("[RatingPage] Error loading ramadan donors:", results[1].reason)
       ramadanDonors = { donors: [], error: results[1].reason?.toString() || "Failed to load" }
     }
 
     if (results[2].status === "fulfilled") {
-      allTimeReferrals = results[2].value
+      allTimeReferrals = { ...results[2].value, error: undefined }
     } else {
       console.error("[RatingPage] Error loading all_time referrals:", results[2].reason)
       allTimeReferrals = { referrals: [], error: results[2].reason?.toString() || "Failed to load" }
     }
 
     if (results[3].status === "fulfilled") {
-      ramadanReferrals = results[3].value
+      ramadanReferrals = { ...results[3].value, error: undefined }
     } else {
       console.error("[RatingPage] Error loading ramadan referrals:", results[3].reason)
       ramadanReferrals = { referrals: [], error: results[3].reason?.toString() || "Failed to load" }

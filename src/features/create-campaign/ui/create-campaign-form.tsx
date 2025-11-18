@@ -111,7 +111,7 @@ export function CampaignCreationForm() {
     // Compress and preview image
     const reader = new FileReader()
     reader.onloadend = () => {
-      const img = new Image()
+      const img = document.createElement("img")
       img.onload = () => {
         // Create canvas for compression
         const canvas = document.createElement("canvas")

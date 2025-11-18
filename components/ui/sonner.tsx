@@ -14,7 +14,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       richColors
       closeButton
       duration={4000}
-      maxVisibleToasts={3}
+      visibleToasts={3}
       style={
         {
           '--normal-bg': 'var(--popover)',

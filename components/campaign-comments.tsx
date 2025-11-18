@@ -191,7 +191,6 @@ export function CampaignComments({ campaignId }: CampaignCommentsProps) {
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={null} />
                 <AvatarFallback>
                   {currentUserId ? "Я" : "?"}
                 </AvatarFallback>

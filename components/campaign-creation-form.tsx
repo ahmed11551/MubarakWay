@@ -15,6 +15,7 @@ import { CalendarIcon, Upload, X, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import Image from "next/image"
 import { createCampaign } from "@/lib/actions/campaigns"
 import { uploadImageFromBase64 } from "@/lib/actions/storage"
 import { toast } from "sonner"
@@ -107,7 +108,7 @@ export function CampaignCreationForm() {
     // Compress and preview image
     const reader = new FileReader()
     reader.onloadend = () => {
-      const img = new Image()
+      const img = document.createElement("img")
       img.onload = () => {
         // Create canvas for compression
         const canvas = document.createElement("canvas")
