@@ -27,13 +27,16 @@ export type FondinsanApiResponse = {
  * Fetch programs from Fondinsan API
  */
 export async function fetchFondinsanPrograms(): Promise<FondinsanProgram[] | null> {
-  if (!FONDINSAN_ACCESS_TOKEN) {
+  // Try to get token from environment or use a fallback
+  const token = FONDINSAN_ACCESS_TOKEN || process.env.FONDINSAN_ACCESS_TOKEN
+  
+  if (!token) {
     console.warn("[Fondinsan API] FONDINSAN_ACCESS_TOKEN not configured, skipping fetch")
     return null
   }
   
   try {
-    const url = `${FONDINSAN_API_BASE}/programs?access-token=${FONDINSAN_ACCESS_TOKEN}`
+    const url = `${FONDINSAN_API_BASE}/programs?access-token=${token}`
     
     // Add timeout to prevent hanging
     const controller = new AbortController()
@@ -85,13 +88,15 @@ export async function fetchFondinsanPrograms(): Promise<FondinsanProgram[] | nul
  * Fetch a single program by ID
  */
 export async function fetchFondinsanProgramById(id: number): Promise<FondinsanProgram | null> {
-  if (!FONDINSAN_ACCESS_TOKEN) {
+  const token = FONDINSAN_ACCESS_TOKEN || process.env.FONDINSAN_ACCESS_TOKEN
+  
+  if (!token) {
     console.warn("[Fondinsan API] FONDINSAN_ACCESS_TOKEN not configured, skipping fetch")
     return null
   }
   
   try {
-    const url = `${FONDINSAN_API_BASE}/program/by-id/${id}?access-token=${FONDINSAN_ACCESS_TOKEN}`
+    const url = `${FONDINSAN_API_BASE}/program/by-id/${id}?access-token=${token}`
     
     // Add timeout to prevent hanging
     const controller = new AbortController()

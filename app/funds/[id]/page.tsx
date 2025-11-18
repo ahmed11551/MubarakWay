@@ -119,21 +119,24 @@ export default async function FundDetailPage({
         const { fetchFondinsanPrograms } = await import("@/lib/fondinsan-api")
         const programs = await fetchFondinsanPrograms()
         
-        if (programs && programs.length > 0) {
+        if (programs && Array.isArray(programs) && programs.length > 0) {
           fundProjects = programs.map((program) => ({
             id: `fondinsan_${program.id}`,
             title: program.title,
-            description: program.short || program.description.replace(/<[^>]*>/g, "").substring(0, 200),
-            imageUrl: program.image,
+            description: program.short || (program.description ? program.description.replace(/<[^>]*>/g, "").substring(0, 200) : ""),
+            imageUrl: program.image || "/placeholder.svg",
             url: program.url,
             defaultAmount: program.default_amount,
             created: program.created,
             beneficiaries: 0, // API doesn't provide this
           }))
+        } else {
+          console.log("[FundDetailPage] No programs returned from fondinsan API or empty array")
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
-        console.warn("Error fetching fondinsan programs:", errorMessage)
+        console.error("[FundDetailPage] Error fetching fondinsan programs:", errorMessage)
+        // Don't fail silently - log the error but continue
       }
     }
     
