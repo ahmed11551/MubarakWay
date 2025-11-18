@@ -27,6 +27,7 @@ export function transformCampaign(campaign: Campaign): TransformedCampaign {
   
   // Определяем, является ли кампания срочной (менее 7 дней до дедлайна)
   // Срочной считается кампания с дедлайном от 1 до 7 дней включительно
+  // Но для фильтрации также учитываются кампании до 30 дней, если нет очень срочных
   const urgent = daysLeft !== null && daysLeft > 0 && daysLeft <= 7
 
   return {
@@ -52,10 +53,32 @@ export function transformCampaigns(campaigns: Campaign[]): TransformedCampaign[]
 }
 
 /**
- * Фильтрует срочные кампании (менее 7 дней до дедлайна)
+ * Фильтрует срочные кампании
+ * Сначала ищет кампании с дедлайном до 7 дней
+ * Если таких нет, показывает кампании с дедлайном до 30 дней
  */
 export function filterUrgentCampaigns(campaigns: TransformedCampaign[]): TransformedCampaign[] {
-  return campaigns.filter((c) => c.urgent && c.daysLeft !== null && c.daysLeft > 0 && c.daysLeft <= 7)
+  // Сначала фильтруем кампании с дедлайном до 7 дней
+  const veryUrgent = campaigns.filter(
+    (c) => c.daysLeft !== null && c.daysLeft > 0 && c.daysLeft <= 7
+  )
+  
+  // Если есть очень срочные, возвращаем их
+  if (veryUrgent.length > 0) {
+    return veryUrgent
+  }
+  
+  // Если нет очень срочных, показываем кампании с дедлайном до 30 дней
+  const urgent = campaigns.filter(
+    (c) => c.daysLeft !== null && c.daysLeft > 0 && c.daysLeft <= 30
+  )
+  
+  // Сортируем по дням до дедлайна (ближайшие первыми)
+  return urgent.sort((a, b) => {
+    if (a.daysLeft === null) return 1
+    if (b.daysLeft === null) return -1
+    return a.daysLeft - b.daysLeft
+  })
 }
 
 /**
