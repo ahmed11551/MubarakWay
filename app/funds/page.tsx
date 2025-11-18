@@ -64,16 +64,17 @@ export default async function FundsPage() {
   
   let funds = result.funds || []
   
-  // Если фонды не найдены, но ошибки нет - возможно проблема с RLS или переменными окружения
-  // Показываем ошибку только если действительно нет фондов И нет ошибки в результате
-  if (funds.length === 0 && (!("error" in result) || !result.error)) {
-    console.warn("[FundsPage] No funds found but no error. Possible RLS or env vars issue.")
-    result = { ...result, error: "Фонды не найдены. Возможно проблема с настройками базы данных или переменными окружения." }
-  }
-  
   // Если фонды найдены, убираем ошибку (если она была установлена ранее)
   if (funds.length > 0 && "error" in result) {
     delete result.error
+  }
+  
+  // Если фонды не найдены, но ошибки нет - возможно проблема с RLS или переменными окружения
+  // Показываем ошибку только если действительно нет фондов И нет ошибки в результате
+  // И только если это не было исправлено выше
+  if (funds.length === 0 && (!("error" in result) || !result.error)) {
+    console.warn("[FundsPage] No funds found but no error. Possible RLS or env vars issue.")
+    result = { ...result, error: "Фонды не найдены. Возможно проблема с настройками базы данных или переменными окружения." }
   }
   
   // Если есть ошибка, но она связана с переменными окружения, попробуем показать более понятное сообщение
