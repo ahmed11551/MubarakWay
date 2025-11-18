@@ -141,7 +141,7 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
         </Tabs>
       </div>
 
-      {error && (
+      {error && funds.length === 0 && (
         <Card>
           <CardContent className="pt-6 pb-6 text-center space-y-3">
             <p className="text-muted-foreground font-medium">Ошибка загрузки фондов</p>
