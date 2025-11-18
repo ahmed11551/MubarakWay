@@ -103,12 +103,12 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
       {/* Category Tabs */}
       <div className="w-full">
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <TabsList className="w-full flex flex-wrap h-auto p-1 gap-1.5 bg-muted/50">
+          <TabsList className="w-full flex flex-wrap h-auto p-1.5 gap-1.5 bg-muted/50">
             {categories.map((cat) => (
               <TabsTrigger 
                 key={cat.value} 
                 value={cat.value} 
-                className="text-xs px-2.5 py-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all flex-shrink-0"
+                className="text-xs px-3 py-2 rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground transition-all flex-shrink-0 whitespace-normal min-w-fit"
               >
                 {cat.label}
               </TabsTrigger>
