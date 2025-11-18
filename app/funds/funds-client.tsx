@@ -91,7 +91,7 @@ export function FundsClient({ initialFunds, initialError }: FundsClientProps) {
       </div>
 
       {/* Category Tabs */}
-      <div className="w-full overflow-x-auto -mx-4 px-4">
+      <div className="w-full overflow-x-auto">
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
           <TabsList className="w-full justify-start flex-nowrap h-auto p-1.5 gap-2 bg-muted/50 min-w-max">
             {categories.map((cat) => (
