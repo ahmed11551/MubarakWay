@@ -27,6 +27,10 @@ declare global {
   }
 }
 
+/**
+ * Загрузка виджета CloudPayments
+ * Требует NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID в переменных окружения
+ */
 export function loadCloudPaymentsWidget(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined" || typeof document === "undefined") {
@@ -48,20 +52,25 @@ export function loadCloudPaymentsWidget(): Promise<void> {
   })
 }
 
+/**
+ * Инициализация платежа через CloudPayments Widget
+ * Требует настроенный NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID
+ */
 export async function initiateCloudPayment(config: CloudPaymentsConfig, callbacks: CloudPaymentsCallbacks = {}) {
+  // Проверяем наличие publicId
+  const publicId = config.publicId || process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID
+  
+  if (!publicId) {
+    const error = new Error(
+      "CloudPayments не настроен: отсутствует NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID. " +
+      "Получите публичный ключ в личном кабинете CloudPayments."
+    )
+    console.error("[CloudPayments]", error.message)
+    callbacks.onFail?.("Платёжная система временно недоступна. Обратитесь в поддержку.", {})
+    throw error
+  }
+
   try {
-    // Временно используем демо-режим без реального publicId
-    console.log("[v0] CloudPayments демо-режим:", config)
-
-    // Имитация успешной оплаты для демонстрации
-    setTimeout(() => {
-      console.log("[v0] CloudPayments демо: платёж успешен")
-      callbacks.onSuccess?.({ transactionId: `DEMO-${Date.now()}` })
-      callbacks.onComplete?.({ success: true })
-    }, 1500)
-
-    // Раскомментируйте код ниже, когда получите publicId от CloudPayments
-    /*
     await loadCloudPaymentsWidget()
 
     if (!window.cp) {
@@ -73,7 +82,7 @@ export async function initiateCloudPayment(config: CloudPaymentsConfig, callback
     widget.pay(
       "charge",
       {
-        publicId: config.publicId, // Здесь будет ваш publicId
+        publicId: publicId,
         description: config.description,
         amount: config.amount,
         currency: config.currency,
@@ -85,22 +94,21 @@ export async function initiateCloudPayment(config: CloudPaymentsConfig, callback
       },
       {
         onSuccess: (options: any) => {
-          console.log("[v0] CloudPayments успех:", options)
+          console.log("[CloudPayments] Платёж успешен:", options)
           callbacks.onSuccess?.(options)
         },
         onFail: (reason: string, options: any) => {
-          console.error("[v0] CloudPayments ошибка:", reason, options)
+          console.error("[CloudPayments] Ошибка платежа:", reason, options)
           callbacks.onFail?.(reason, options)
         },
         onComplete: (paymentResult: any, options: any) => {
-          console.log("[v0] CloudPayments завершено:", paymentResult, options)
+          console.log("[CloudPayments] Платёж завершён:", paymentResult, options)
           callbacks.onComplete?.(paymentResult, options)
         },
       },
     )
-    */
   } catch (error) {
-    console.error("[v0] Ошибка CloudPayments:", error)
+    console.error("[CloudPayments] Ошибка инициализации:", error)
     throw error
   }
 }

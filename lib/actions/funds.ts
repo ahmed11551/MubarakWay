@@ -137,51 +137,14 @@ export async function getFunds(category?: string) {
     }
   }
 
-  // Approach 3: Try direct client creation as last resort (only if both approaches failed)
+  // Approach 3: Финальная проверка - если оба подхода не сработали
+  // Убраны hardcoded credentials - они должны быть в переменных окружения
   if (funds.length === 0) {
-    try {
-      console.log("[v0] Trying direct client creation as last resort...")
-      // Use hardcoded values as fallback if env vars not available
-      const directUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://fvxkywczuqincnjilgzd.supabase.co"
-      const directKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2eGt5d2N6dXFpbmNuamlsZ3pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNDgwNTYsImV4cCI6MjA3NzkyNDA1Nn0.jBvLDl0T2u-slvf4Uu4oZj7yRWMQCKmiln0mXRU0q54"
-      
-      console.log("[v0] Direct client: Using URL:", directUrl.substring(0, 30) + "...")
-      console.log("[v0] Direct client: Key available:", !!directKey)
-      
-      const directClient = createSupabaseClient(directUrl, directKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      })
-      
-      let query = directClient
-        .from("funds")
-        .select("*")
-        .eq("is_active", true)
-        .order("total_raised", { ascending: false })
-
-      if (category && category !== "all") {
-        query = query.or(`category.eq.${category},id.eq.00000000-0000-0000-0000-000000000001`)
-      }
-      
-      const { data: directData, error: directError } = await query
-      
-      if (directError) {
-        console.error("[v0] Direct client error:", directError)
-        console.error("[v0] Error code:", directError.code)
-        console.error("[v0] Error message:", directError.message)
-        lastError = lastError || directError.message || `Error code: ${directError.code}`
-      } else if (directData) {
-        if (directData.length > 0) {
-          console.log("[v0] Funds loaded via direct client:", directData.length)
-          funds = directData
-        } else {
-          console.warn("[v0] Direct client returned empty array")
-          lastError = lastError || "No funds found in database"
-        }
-      }
-    } catch (directError: any) {
-      console.error("[v0] Direct client exception:", directError)
-      lastError = lastError || directError?.message || "All approaches failed"
-    }
+    console.error("[Funds] Все попытки загрузки фондов не удались.")
+    console.error("[Funds] Убедитесь, что переменные окружения настроены:")
+    console.error("[Funds] - NEXT_PUBLIC_SUPABASE_URL")
+    console.error("[Funds] - NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    console.error("[Funds] Последняя ошибка:", lastError)
   }
 
   // If both approaches failed, return error
