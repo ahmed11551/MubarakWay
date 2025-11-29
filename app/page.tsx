@@ -47,16 +47,17 @@ export default function HomePage() {
           // Filter urgent campaigns (ending within 7 days)
           const urgent = filterUrgentCampaigns(transformed)
           
-          // Debug logging
-          console.log("[HomePage] Campaigns debug:", {
-            totalCampaigns: campaigns.length,
-            transformedCount: transformed.length,
-            urgentCount: urgent.length,
-            urgentCampaigns: urgent.map(c => ({
-              id: c.id,
-              title: c.title,
-              daysLeft: c.daysLeft,
-              urgent: c.urgent,
+          // Debug logging (development only)
+          if (process.env.NODE_ENV === "development") {
+            console.log("[HomePage] Campaigns debug:", {
+              totalCampaigns: campaigns.length,
+              transformedCount: transformed.length,
+              urgentCount: urgent.length,
+              urgentCampaigns: urgent.map(c => ({
+                id: c.id,
+                title: c.title,
+                daysLeft: c.daysLeft,
+                urgent: c.urgent,
               deadline: campaigns.find(cp => cp.id === c.id)?.deadline
             })),
             allCampaigns: transformed.map(c => ({
@@ -65,7 +66,8 @@ export default function HomePage() {
               daysLeft: c.daysLeft,
               urgent: c.urgent
             }))
-          })
+            })
+          }
           
           setUrgentCampaigns(urgent.slice(0, 3)) // Limit to 3 for carousel
         } else {

@@ -39,7 +39,9 @@ export function isBotApiConfigured(): boolean {
  */
 export async function fetchBotApiStats(): Promise<BotApiStats | null> {
   if (!BOT_API_TOKEN) {
-    console.debug("[Bot API] Пропуск запроса статистики - токен не настроен")
+    if (process.env.NODE_ENV === "development") {
+      console.debug("[Bot API] Пропуск запроса статистики - токен не настроен")
+    }
     return null
   }
   
@@ -107,7 +109,9 @@ export async function fetchBotApi(endpoint: string, options: RequestInit = {}): 
   const timeoutId = setTimeout(() => controller.abort(), BOT_API_TIMEOUT)
   
   try {
-    console.debug("[Bot API] Запрос:", endpoint)
+    if (process.env.NODE_ENV === "development") {
+      console.debug("[Bot API] Запрос:", endpoint)
+    }
     
     const response = await fetch(url, {
       ...options,
@@ -123,7 +127,7 @@ export async function fetchBotApi(endpoint: string, options: RequestInit = {}): 
     clearTimeout(timeoutId)
     
     // Логируем статус для отладки
-    if (!response.ok) {
+    if (!response.ok && process.env.NODE_ENV === "development") {
       console.warn(`[Bot API] Запрос ${endpoint} вернул статус ${response.status}`)
     }
     
@@ -148,7 +152,9 @@ export async function fetchBotApi(endpoint: string, options: RequestInit = {}): 
  */
 export async function fetchBotApiFunds(category?: string): Promise<any[] | null> {
   if (!isBotApiConfigured()) {
-    console.debug("[Bot API] Пропуск запроса фондов - токен не настроен")
+    if (process.env.NODE_ENV === "development") {
+      console.debug("[Bot API] Пропуск запроса фондов - токен не настроен")
+    }
     return null
   }
   
@@ -175,7 +181,9 @@ export async function fetchBotApiFunds(category?: string): Promise<any[] | null>
       return null
     }
     
-    console.debug(`[Bot API] Получено фондов: ${funds.length}`)
+    if (process.env.NODE_ENV === "development") {
+      console.debug(`[Bot API] Получено фондов: ${funds.length}`)
+    }
     return funds
     
   } catch (error: any) {
@@ -190,7 +198,9 @@ export async function fetchBotApiFunds(category?: string): Promise<any[] | null>
  */
 export async function fetchBotApiCampaigns(status?: string, limit?: number): Promise<any[] | null> {
   if (!isBotApiConfigured()) {
-    console.debug("[Bot API] Пропуск запроса кампаний - токен не настроен")
+    if (process.env.NODE_ENV === "development") {
+      console.debug("[Bot API] Пропуск запроса кампаний - токен не настроен")
+    }
     return null
   }
   
@@ -218,7 +228,9 @@ export async function fetchBotApiCampaigns(status?: string, limit?: number): Pro
       return null
     }
     
-    console.debug(`[Bot API] Получено кампаний: ${campaigns.length}`)
+    if (process.env.NODE_ENV === "development") {
+      console.debug(`[Bot API] Получено кампаний: ${campaigns.length}`)
+    }
     return campaigns
     
   } catch (error: any) {

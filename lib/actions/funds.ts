@@ -44,7 +44,9 @@ export async function getFunds(category?: string) {
       return { funds: [], error: "Timeout loading funds" }
     }
     
-    console.log("[v0] Trying regular client first...")
+    if (process.env.NODE_ENV === "development") {
+      console.log("[v0] Trying regular client first...")
+    }
     const supabase = await createClient()
     let query = supabase
       .from("funds")
@@ -66,7 +68,9 @@ export async function getFunds(category?: string) {
       lastError = error.message || `Error code: ${error.code}`
     } else if (data) {
       if (data.length > 0) {
-        console.log("[v0] Funds loaded successfully via regular client:", data.length)
+        if (process.env.NODE_ENV === "development") {
+          console.log("[v0] Funds loaded successfully via regular client:", data.length)
+        }
         funds = data
         // Ранний возврат при успехе - не пытаемся дальше
         return { funds: funds || [] }
@@ -97,7 +101,9 @@ export async function getFunds(category?: string) {
         return { funds: [], error: "Timeout loading funds" }
       }
       
-      console.log("[v0] Trying public client as fallback...")
+      if (process.env.NODE_ENV === "development") {
+        console.log("[v0] Trying public client as fallback...")
+      }
       const supabase = createPublicClient()
       
       if (!supabase) {
@@ -123,7 +129,9 @@ export async function getFunds(category?: string) {
           lastError = lastError || error.message || `Error code: ${error.code}`
         } else if (data) {
           if (data.length > 0) {
-            console.log("[v0] Funds loaded successfully via public client:", data.length)
+            if (process.env.NODE_ENV === "development") {
+              console.log("[v0] Funds loaded successfully via public client:", data.length)
+            }
             funds = data
           } else {
             console.warn("[v0] Public client returned empty array")
@@ -155,11 +163,13 @@ export async function getFunds(category?: string) {
     return { funds: [], error: lastError ? `Failed to fetch funds: ${lastError}` : "No funds found" }
   }
 
-  // Debug logging
-  console.log("[v0] Funds query result:", {
-    count: funds?.length || 0,
-    funds: funds?.map((f: any) => ({ id: f.id, name: f.name, is_active: f.is_active, category: f.category })),
-  })
+  // Debug logging (development only)
+  if (process.env.NODE_ENV === "development") {
+    console.log("[v0] Funds query result:", {
+      count: funds?.length || 0,
+      funds: funds?.map((f: any) => ({ id: f.id, name: f.name, is_active: f.is_active, category: f.category })),
+    })
+  }
 
   // Ensure we have at least the Insan fund
   const insanFund = funds.find((f: any) => f.id === "00000000-0000-0000-0000-000000000001")

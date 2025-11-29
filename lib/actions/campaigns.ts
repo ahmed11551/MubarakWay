@@ -19,6 +19,123 @@ export type CampaignInput = {
   linkedProjectIds?: string[] // ID связанных проектов (кампаний)
 }
 
+// Validation constants
+const MIN_TITLE_LENGTH = 3
+const MAX_TITLE_LENGTH = 200
+const MIN_DESCRIPTION_LENGTH = 10
+const MAX_DESCRIPTION_LENGTH = 500
+const MIN_STORY_LENGTH = 20
+const MAX_STORY_LENGTH = 10000
+const MIN_GOAL_AMOUNT = 1
+const MAX_GOAL_AMOUNT = 100000000 // 100 million
+const VALID_CURRENCIES = ["RUB", "USD", "EUR"]
+const VALID_CATEGORIES = ["medical", "education", "emergency", "family", "community", "other"]
+
+/**
+ * Validate campaign input data
+ */
+function validateCampaignInput(input: CampaignInput): string | null {
+  // Validate title
+  if (!input.title || typeof input.title !== "string") {
+    return "Название кампании обязательно"
+  }
+  const titleTrimmed = input.title.trim()
+  if (titleTrimmed.length < MIN_TITLE_LENGTH) {
+    return `Название кампании должно содержать минимум ${MIN_TITLE_LENGTH} символа`
+  }
+  if (titleTrimmed.length > MAX_TITLE_LENGTH) {
+    return `Название кампании не должно превышать ${MAX_TITLE_LENGTH} символов`
+  }
+
+  // Validate description
+  if (!input.description || typeof input.description !== "string") {
+    return "Описание кампании обязательно"
+  }
+  const descTrimmed = input.description.trim()
+  if (descTrimmed.length < MIN_DESCRIPTION_LENGTH) {
+    return `Описание должно содержать минимум ${MIN_DESCRIPTION_LENGTH} символов`
+  }
+  if (descTrimmed.length > MAX_DESCRIPTION_LENGTH) {
+    return `Описание не должно превышать ${MAX_DESCRIPTION_LENGTH} символов`
+  }
+
+  // Validate story
+  if (!input.story || typeof input.story !== "string") {
+    return "История кампании обязательна"
+  }
+  const storyTrimmed = input.story.trim()
+  if (storyTrimmed.length < MIN_STORY_LENGTH) {
+    return `История должна содержать минимум ${MIN_STORY_LENGTH} символов`
+  }
+  if (storyTrimmed.length > MAX_STORY_LENGTH) {
+    return `История не должна превышать ${MAX_STORY_LENGTH} символов`
+  }
+
+  // Validate goal amount
+  if (typeof input.goalAmount !== "number" || Number.isNaN(input.goalAmount)) {
+    return "Целевая сумма должна быть числом"
+  }
+  if (input.goalAmount < MIN_GOAL_AMOUNT) {
+    return `Целевая сумма должна быть не менее ${MIN_GOAL_AMOUNT} ${input.currency || "RUB"}`
+  }
+  if (input.goalAmount > MAX_GOAL_AMOUNT) {
+    return `Целевая сумма не должна превышать ${MAX_GOAL_AMOUNT.toLocaleString("ru-RU")} ${input.currency || "RUB"}`
+  }
+
+  // Validate currency
+  if (!input.currency || !VALID_CURRENCIES.includes(input.currency)) {
+    return `Неверная валюта. Допустимые валюты: ${VALID_CURRENCIES.join(", ")}`
+  }
+
+  // Validate category
+  if (!input.category || !VALID_CATEGORIES.includes(input.category)) {
+    return `Неверная категория. Допустимые категории: ${VALID_CATEGORIES.join(", ")}`
+  }
+
+  // Validate deadline if provided
+  if (input.deadline) {
+    const deadlineDate = new Date(input.deadline)
+    if (isNaN(deadlineDate.getTime())) {
+      return "Неверный формат даты дедлайна"
+    }
+    if (deadlineDate < new Date()) {
+      return "Дедлайн не может быть в прошлом"
+    }
+  }
+
+  // Validate fundId format (UUID) if provided
+  if (input.fundId) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(input.fundId)) {
+      return "Неверный формат ID фонда"
+    }
+  }
+
+  // Validate linkedProjectIds if provided
+  if (input.linkedProjectIds && Array.isArray(input.linkedProjectIds)) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    for (const linkedId of input.linkedProjectIds) {
+      if (typeof linkedId !== "string" || !uuidRegex.test(linkedId)) {
+        return "Неверный формат ID связанного проекта"
+      }
+    }
+  }
+
+  // Validate imageUrl format if provided
+  if (input.imageUrl) {
+    try {
+      const url = new URL(input.imageUrl)
+      if (!url.protocol.startsWith("http")) {
+        return "URL изображения должен использовать протокол HTTP или HTTPS"
+      }
+    } catch {
+      return "Неверный формат URL изображения"
+    }
+  }
+
+  return null
+}
+
 export async function createCampaign(input: CampaignInput) {
   const supabase = await createClient()
 
@@ -29,6 +146,12 @@ export async function createCampaign(input: CampaignInput) {
 
   if (authError || !user) {
     return { error: "You must be logged in to create a campaign" }
+  }
+
+  // Validate input data
+  const validationError = validateCampaignInput(input)
+  if (validationError) {
+    return { error: validationError }
   }
 
   try {
