@@ -166,71 +166,92 @@ export default function HomePage() {
           </Card>
         </section>
 
-        {/* Quick Actions Section - moved to top */}
+        {/* Quick Actions Section - Premium Design */}
         <section className="space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
-            <div className="h-1 w-1 rounded-full bg-primary" />
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             Быстрые действия
           </h3>
           <div className="grid grid-cols-2 gap-3">
-            <Link href="/subscription">
-              <Card className="hover:bg-primary/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer h-full border-2 group">
-                <CardHeader className="pb-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
-                    <Sparkles className="h-6 w-6 text-primary" />
+            {/* Садака-подписка - Изумрудный градиент */}
+            <Link href="/subscription" className="group">
+              <div className="btn-quick-action btn-quick-action-primary h-full min-h-[100px] flex flex-col items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <Sparkles className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base">Садака-подписка</CardTitle>
-                  <CardDescription className="text-xs">Регулярная милостыня</CardDescription>
-                </CardHeader>
-              </Card>
+                  <div>
+                    <div className="font-bold text-sm">Садака-подписка</div>
+                    <div className="text-xs opacity-80">Регулярная милостыня</div>
+                  </div>
+                </div>
+              </div>
             </Link>
 
-            <Link href="/campaigns/new">
-              <Card className="hover:bg-accent/5 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/10 transition-all duration-200 cursor-pointer h-full border-2 group">
-                <CardHeader className="pb-3">
-                  <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3 group-hover:bg-accent/20 group-hover:scale-110 transition-all duration-200">
-                    <Heart className="h-6 w-6 text-accent" />
+            {/* Создать кампанию - Тёплый градиент */}
+            <Link href="/campaigns/new" className="group">
+              <div className="btn-quick-action btn-quick-action-warm h-full min-h-[100px] flex flex-col items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <Heart className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base">Создать кампанию</CardTitle>
-                  <CardDescription className="text-xs">Запустите свой сбор</CardDescription>
-                </CardHeader>
-              </Card>
+                  <div>
+                    <div className="font-bold text-sm">Создать кампанию</div>
+                    <div className="text-xs opacity-80">Запустите свой сбор</div>
+                  </div>
+                </div>
+              </div>
             </Link>
 
-            <Link href="/zakat-calculator">
-              <Card className="hover:bg-primary/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer h-full border-2 group">
-                <CardHeader className="pb-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
-                    <Calculator className="h-6 w-6 text-primary" />
+            {/* Калькулятор закята - Голубой градиент */}
+            <Link href="/zakat-calculator" className="group">
+              <div className="btn-quick-action btn-quick-action-cool h-full min-h-[100px] flex flex-col items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <Calculator className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base">Калькулятор закята</CardTitle>
-                  <CardDescription className="text-xs">Рассчитайте закят</CardDescription>
-                </CardHeader>
-              </Card>
+                  <div>
+                    <div className="font-bold text-sm">Калькулятор закята</div>
+                    <div className="text-xs opacity-80">Рассчитайте закят</div>
+                  </div>
+                </div>
+              </div>
             </Link>
 
-            <Link href="/funds">
-              <Card className="hover:bg-accent/5 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/10 transition-all duration-200 cursor-pointer h-full border-2 group">
-                <CardHeader className="pb-3">
-                  <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3 group-hover:bg-accent/20 group-hover:scale-110 transition-all duration-200">
-                    <Users className="h-6 w-6 text-accent" />
+            {/* Фонды-партнёры - Золотой градиент */}
+            <Link href="/funds" className="group">
+              <div className="btn-quick-action btn-quick-action-gold h-full min-h-[100px] flex flex-col items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <Users className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base">Фонды-партнёры</CardTitle>
-                  <CardDescription className="text-xs">Проверенные фонды</CardDescription>
-                </CardHeader>
-              </Card>
+                  <div>
+                    <div className="font-bold text-sm">Фонды-партнёры</div>
+                    <div className="text-xs opacity-80">Проверенные фонды</div>
+                  </div>
+                </div>
+              </div>
             </Link>
 
-            <Link href="/campaigns">
-              <Card className="hover:bg-primary/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer h-full border-2 group col-span-2">
-                <CardHeader className="pb-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
-                    <Target className="h-6 w-6 text-primary" />
+            {/* Целевая поддержка - Фиолетовый градиент, на всю ширину */}
+            <Link href="/campaigns" className="group col-span-2">
+              <div className="btn-quick-action btn-quick-action-purple h-full min-h-[80px] flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <Target className="h-6 w-6" />
                   </div>
-                  <CardTitle className="text-base">Целевая поддержка</CardTitle>
-                  <CardDescription className="text-xs">Выберите конкретную кампанию для помощи</CardDescription>
-                </CardHeader>
-              </Card>
+                  <div>
+                    <div className="font-bold">Целевая поддержка</div>
+                    <div className="text-sm opacity-80">Выберите конкретную кампанию для помощи</div>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-1 text-sm opacity-80">
+                  <span>Открыть</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
             </Link>
           </div>
         </section>

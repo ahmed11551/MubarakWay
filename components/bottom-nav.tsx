@@ -89,14 +89,17 @@ export function BottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-[100] border-t-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-t from-card via-card to-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/90 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] safe-area-bottom border-t border-primary/10"
       style={{ 
         touchAction: "manipulation",
         WebkitTapHighlightColor: "transparent",
         pointerEvents: "auto",
       }}
     >
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
+      {/* Декоративная линия сверху */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent rounded-full" />
+      
+      <div className="flex items-center justify-around h-18 max-w-lg mx-auto px-2 pt-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           const Icon = item.icon
@@ -108,10 +111,12 @@ export function BottomNav() {
               prefetch={true}
               onClick={(e) => handleClick(e, item.href)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 flex-1 h-full",
-                "focus:outline-none rounded-lg select-none",
-                "transition-colors duration-0",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                "flex flex-col items-center justify-center gap-1 flex-1 py-2 px-1",
+                "focus:outline-none rounded-2xl select-none",
+                "transition-all duration-200",
+                isActive 
+                  ? "text-primary" 
+                  : "text-muted-foreground hover:text-foreground",
               )}
               aria-label={item.name}
               style={{ 
@@ -124,8 +129,28 @@ export function BottomNav() {
                 cursor: "pointer",
               }}
             >
-              <Icon className={cn("h-5 w-5 pointer-events-none transition-none", isActive && "drop-shadow-[0_0_8px_oklch(0.6_0.18_160/0.5)]")} />
-              <span className="text-xs font-medium pointer-events-none">{item.name}</span>
+              {/* Иконка с подсветкой */}
+              <div className={cn(
+                "relative p-2 rounded-xl transition-all duration-200",
+                isActive 
+                  ? "bg-primary/15 shadow-lg shadow-primary/20" 
+                  : "hover:bg-muted/50"
+              )}>
+                <Icon className={cn(
+                  "h-5 w-5 pointer-events-none transition-transform duration-200", 
+                  isActive && "scale-110 drop-shadow-[0_0_12px_oklch(0.6_0.18_160/0.6)]"
+                )} />
+                {/* Индикатор активной вкладки */}
+                {isActive && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary shadow-lg shadow-primary/50" />
+                )}
+              </div>
+              <span className={cn(
+                "text-[10px] font-medium pointer-events-none transition-all duration-200",
+                isActive && "font-semibold"
+              )}>
+                {item.name}
+              </span>
             </Link>
           )
         })}
