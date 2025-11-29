@@ -18,7 +18,7 @@ export interface CloudPaymentsConfig {
 export interface CloudPaymentsCallbacks {
   onSuccess?: (options: any) => void
   onFail?: (reason: string, options: any) => void
-  onComplete?: (paymentResult: any) => void
+  onComplete?: (paymentResult: any, options?: any) => void
 }
 
 declare global {
