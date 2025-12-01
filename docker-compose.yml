@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    environment:
+      # Режим работы
+      - NODE_ENV=production
+      
+      # Supabase (обязательно)
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      
+      # Bot API - Backend Владимира
+      - BOT_API_BASE_URL=${BOT_API_BASE_URL:-https://bot.e-replika.ru}
+      - BOT_API_TOKEN=${BOT_API_TOKEN}
+      
+      # Платежные системы
+      - YOOKASSA_SHOP_ID=${YOOKASSA_SHOP_ID}
+      - YOOKASSA_SECRET_KEY=${YOOKASSA_SECRET_KEY}
+      - NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=${NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID}
+      - CLOUDPAYMENTS_API_PASSWORD=${CLOUDPAYMENTS_API_PASSWORD}
+      - PAYMENT_API_URL=${PAYMENT_API_URL}
+      - PAYMENT_API_TOKEN=${PAYMENT_API_TOKEN}
+      
+      # Fondinsan API
+      - FONDINSAN_API_BASE_URL=${FONDINSAN_API_BASE_URL:-https://fondinsan.ru/api/v1}
+      - FONDINSAN_ACCESS_TOKEN=${FONDINSAN_ACCESS_TOKEN}
+      
+      # Telegram
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_SECRET_TOKEN=${TELEGRAM_SECRET_TOKEN}
+      - NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=${NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}
+      
+      # Приложение
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - API_AUTH_TOKEN=${API_AUTH_TOKEN}
+      
+      # Sentry (опционально)
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+      
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Логирование
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+

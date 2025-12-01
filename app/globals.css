@@ -1,0 +1,530 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Enhanced Islamic-themed color palette with rich emerald green and gold accents */
+  --background: oklch(0.99 0.005 120);
+  --foreground: oklch(0.15 0.02 120);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 120);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 120);
+  /* Rich emerald green for Islamic aesthetic */
+  --primary: oklch(0.45 0.15 160);
+  --primary-foreground: oklch(0.99 0.005 120);
+  /* Warm gold accent */
+  --secondary: oklch(0.92 0.02 85);
+  --secondary-foreground: oklch(0.15 0.02 120);
+  --muted: oklch(0.96 0.01 120);
+  --muted-foreground: oklch(0.5 0.02 120);
+  /* Golden accent color */
+  --accent: oklch(0.72 0.14 75);
+  --accent-foreground: oklch(0.15 0.02 120);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0.005 120);
+  --border: oklch(0.92 0.01 120);
+  --input: oklch(0.92 0.01 120);
+  --ring: oklch(0.45 0.15 160);
+  --chart-1: oklch(0.45 0.15 160);
+  --chart-2: oklch(0.72 0.14 75);
+  --chart-3: oklch(0.55 0.12 200);
+  --chart-4: oklch(0.6 0.13 140);
+  --chart-5: oklch(0.65 0.11 50);
+  --radius: 1rem;
+  --sidebar: oklch(0.99 0.005 120);
+  --sidebar-foreground: oklch(0.15 0.02 120);
+  --sidebar-primary: oklch(0.45 0.15 160);
+  --sidebar-primary-foreground: oklch(0.99 0.005 120);
+  --sidebar-accent: oklch(0.96 0.01 120);
+  --sidebar-accent-foreground: oklch(0.15 0.02 120);
+  --sidebar-border: oklch(0.92 0.01 120);
+  --sidebar-ring: oklch(0.45 0.15 160);
+}
+
+.dark {
+  /* Dark mode with deep emerald and warm gold for premium Islamic aesthetic */
+  --background: oklch(0.12 0.02 160);
+  --foreground: oklch(0.97 0.005 120);
+  --card: oklch(0.16 0.025 160);
+  --card-foreground: oklch(0.97 0.005 120);
+  --popover: oklch(0.16 0.025 160);
+  --popover-foreground: oklch(0.97 0.005 120);
+  /* Bright emerald for dark mode */
+  --primary: oklch(0.6 0.18 160);
+  --primary-foreground: oklch(0.12 0.02 160);
+  --secondary: oklch(0.22 0.025 160);
+  --secondary-foreground: oklch(0.97 0.005 120);
+  --muted: oklch(0.22 0.025 160);
+  --muted-foreground: oklch(0.65 0.02 120);
+  /* Warm gold accent for dark mode */
+  --accent: oklch(0.78 0.16 75);
+  --accent-foreground: oklch(0.12 0.02 160);
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.97 0.005 120);
+  --border: oklch(0.25 0.025 160);
+  --input: oklch(0.25 0.025 160);
+  --ring: oklch(0.6 0.18 160);
+  --chart-1: oklch(0.6 0.18 160);
+  --chart-2: oklch(0.78 0.16 75);
+  --chart-3: oklch(0.6 0.14 200);
+  --chart-4: oklch(0.65 0.15 140);
+  --chart-5: oklch(0.7 0.13 50);
+  --sidebar: oklch(0.16 0.025 160);
+  --sidebar-foreground: oklch(0.97 0.005 120);
+  --sidebar-primary: oklch(0.6 0.18 160);
+  --sidebar-primary-foreground: oklch(0.12 0.02 160);
+  --sidebar-accent: oklch(0.22 0.025 160);
+  --sidebar-accent-foreground: oklch(0.97 0.005 120);
+  --sidebar-border: oklch(0.25 0.025 160);
+  --sidebar-ring: oklch(0.6 0.18 160);
+}
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
+/* Added Islamic geometric pattern overlay for enhanced thematic design */
+@layer base {
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle at 20% 50%, oklch(0.6 0.18 160 / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, oklch(0.78 0.16 75 / 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Telegram WebApp scroll fix - prevent pull-to-close */
+@layer base {
+  html.telegram-webapp {
+    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
+    overflow-x: hidden;
+    /* Don't set overflow-y here - let body handle it */
+  }
+
+  html.telegram-webapp body {
+    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto; /* Single scrollable container */
+    touch-action: pan-y; /* Allow vertical scrolling - critical for smooth scroll */
+    min-height: 100vh;
+    width: 100%;
+    /* Ensure smooth scrolling */
+    scroll-behavior: smooth;
+    /* Optimize for smooth scrolling without stuttering */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent pull-to-close on scrollable containers */
+  html.telegram-webapp main,
+  html.telegram-webapp [role="main"],
+  html.telegram-webapp .scrollable {
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure main content is NOT scrollable - body handles scrolling */
+  html.telegram-webapp main {
+    overflow: visible;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y; /* Explicitly allow vertical scrolling */
+    /* Ensure content can be scrolled fully */
+    min-height: calc(100vh - 4rem); /* Account for header */
+  }
+
+  /* Fix for page wrappers - ensure they don't interfere with body scrolling */
+  html.telegram-webapp [class*="min-h-screen"] {
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+    /* Don't create nested scroll containers */
+    position: relative;
+    overflow: visible;
+  }
+
+  /* Ensure content is not cut off by fixed bottom nav - apply to all pages */
+  html.telegram-webapp [class*="pb-20"],
+  html.telegram-webapp [class*="pb-28"] {
+    padding-bottom: 7.5rem !important; /* 120px - safe padding for bottom nav (64px) + safe area + extra space */
+  }
+
+  /* Prevent pull-to-close on all scrollable areas */
+  html.telegram-webapp * {
+    overscroll-behavior-y: contain;
+  }
+
+  /* Optimize scrolling performance */
+  html.telegram-webapp body {
+    /* Use passive scrolling optimizations */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent layout shifts during scroll */
+    scroll-padding-bottom: 7rem; /* Space for bottom nav */
+  }
+}
+
+/* Mobile UX Enhancements */
+@layer base {
+  /* Smooth scrolling for better mobile experience */
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    height: 100%;
+  }
+
+  /* Optimize scrolling performance for all devices */
+  body {
+    /* Use GPU acceleration for smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure all pages have enough bottom padding */
+  [class*="min-h-screen"] {
+    padding-bottom: 7.5rem; /* 120px - safe space for bottom nav */
+  }
+
+
+  /* Better touch targets for mobile */
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Optimize Link elements for fast clicks */
+  a[href],
+  Link {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  /* Optimize clickable cards wrapped in links - remove transitions for instant response */
+  a[href] > [data-card],
+  a[href] > [data-slot="card"] {
+    transition-duration: 0ms !important;
+    transition-property: none !important;
+    touch-action: manipulation;
+  }
+  
+  /* Instant navigation - no delays */
+  a[href] {
+    transition: none !important;
+  }
+
+  /* Fix for bottom navigation - ensure clicks work immediately */
+  nav[class*="fixed"][class*="bottom-0"] {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: auto !important;
+  }
+  
+  nav[class*="fixed"][class*="bottom-0"] a,
+  nav[class*="fixed"][class*="bottom-0"] button {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    pointer-events: auto !important;
+    -webkit-touch-callout: none !important;
+    cursor: pointer !important;
+    /* Убираем все transitions для мгновенной реакции */
+    transition: none !important;
+    /* Мгновенная визуальная обратная связь через CSS */
+    will-change: opacity, transform;
+  }
+  
+  /* Убраны все :active эффекты для предотвращения мигания */
+  nav[class*="fixed"][class*="bottom-0"] a:active,
+  nav[class*="fixed"][class*="bottom-0"] button:active {
+    /* Никаких визуальных изменений при нажатии */
+  }
+  
+  /* Дополнительная оптимизация для touch - убираем все задержки */
+  @supports (-webkit-touch-callout: none) {
+    nav[class*="fixed"][class*="bottom-0"] a,
+    nav[class*="fixed"][class*="bottom-0"] button {
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+      tap-highlight-color: rgba(0, 0, 0, 0) !important;
+    }
+  }
+  
+  /* Отключаем transitions для навигации */
+  nav[class*="fixed"][class*="bottom-0"] a *,
+  nav[class*="fixed"][class*="bottom-0"] button * {
+    transition: none !important;
+    pointer-events: none !important;
+  }
+
+  /* Improved tap feedback - fixed to prevent sticking */
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    transition: transform 0.1s ease-out;
+    transform: scale(1);
+    will-change: transform;
+  }
+
+  button:active,
+  a:active,
+  [role="button"]:active,
+  input[type="button"]:active,
+  input[type="submit"]:active {
+    transform: scale(0.98);
+  }
+
+  /* Fix for touch devices - ensure buttons reset properly */
+  @media (hover: none) and (pointer: coarse) {
+    button,
+    a,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"] {
+      /* Force reset on touch devices */
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus,
+    a:focus,
+    [role="button"]:focus,
+    input[type="button"]:focus,
+    input[type="submit"]:focus {
+      transform: scale(1);
+    }
+
+    /* Ensure disabled buttons don't stick */
+    button:disabled:active,
+    a:disabled:active,
+    [role="button"]:disabled:active {
+      transform: scale(1);
+    }
+  }
+
+  /* Better form inputs on mobile */
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    touch-action: manipulation;
+  }
+
+  /* Safe area insets for iOS */
+  @supports (padding: max(0px)) {
+    .safe-area-top {
+      padding-top: max(env(safe-area-inset-top), 0px);
+    }
+    .safe-area-bottom {
+      padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    }
+    .safe-area-left {
+      padding-left: max(env(safe-area-inset-left), 0px);
+    }
+    .safe-area-right {
+      padding-right: max(env(safe-area-inset-right), 0px);
+    }
+  }
+
+  /* Improved card interactions */
+  [data-card] {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    touch-action: pan-y;
+  }
+
+  [data-card]:active {
+    transform: scale(0.98);
+  }
+
+  /* Better list interactions */
+  [data-list-item] {
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  [data-list-item]:active {
+    background-color: hsl(var(--muted));
+    transform: scale(0.99);
+  }
+
+  /* Pull to refresh indicator */
+  .pull-to-refresh {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pull-to-refresh-indicator {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    transition: transform 0.3s ease;
+    z-index: 10;
+  }
+
+  .pull-to-refresh-indicator.active {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Swipe gestures */
+  .swipeable {
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  /* Improved animations for mobile */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-slide-up {
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .animate-slide-down {
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.2s ease-out;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Better focus states for accessibility */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Improved loading states */
+  .skeleton {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
