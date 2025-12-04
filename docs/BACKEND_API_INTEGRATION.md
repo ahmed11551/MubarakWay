@@ -391,27 +391,7 @@ Content-Type: application/json
 
 ## 5. Требования к Backend Владимира
 
-### 5.1 Обязательные эндпоинты
-
-| Эндпоинт | Статус | Описание |
-|----------|--------|----------|
-| `GET /api/stats` | Требуется проверка | Статистика платформы |
-| `GET /api/funds` | Требуется проверка | Список фондов |
-| `GET /api/campaigns` | Требуется проверка | Список кампаний |
-| `POST /api/payments/initiate` | Требуется реализация | Инициализация платежа CloudPayments |
-
-### 5.2 Необходимые доработки
-
-#### A) Эндпоинт `/api/payments/initiate`
-**Требуется реализовать** для интеграции с CloudPayments без демо-режима.
-
-**Функционал:**
-1. Создание платёжной сессии в CloudPayments
-2. Возврат URL для редиректа пользователя
-3. Сохранение связи transaction_id ↔ donation_id
-
-#### B) Webhook обработчик
-Нужен endpoint на стороне Payment API для приёма webhook от CloudPayments.
+Полный список требований к API и необходимых эндпоинтов см. в `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`.
 
 ---
 
