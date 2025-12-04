@@ -66,12 +66,12 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 API_AUTH_TOKEN=random_secure_token
 ```
 
-### Backend API (Владимира)
+### Backend API
 
 ```env
 # Bot API - основной backend для статистики и данных
 BOT_API_BASE_URL=https://bot.e-replika.ru
-BOT_API_TOKEN=токен_от_владимира
+BOT_API_TOKEN=токен_от_backend
 
 # Payment API - для обработки платежей
 PAYMENT_API_URL=https://api.payment-service.com
@@ -113,14 +113,14 @@ Frontend интегрируется с несколькими backend-систе
 
 | Система | Назначение | Документация |
 |---------|------------|--------------|
-| Bot API (Владимира) | Статистика, кампании, фонды | `docs/BACKEND_API_INTEGRATION.md` |
+| Bot API | Статистика, кампании, фонды | `docs/BACKEND_API_INTEGRATION.md` |
 | Payment API | Обработка платежей CloudPayments | `docs/BACKEND_API_INTEGRATION.md` |
 | Fondinsan API | Программы фонда Инсан | `docs/BACKEND_API_INTEGRATION.md` |
 | Supabase | Fallback база данных | [Supabase Docs](https://supabase.com/docs) |
 
-### Для Владимира (Backend разработчик)
+### Для Backend разработчика
 
-Требования к API см. в `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`
+Требования к API см. в `docs/BACKEND_REQUIREMENTS.md`
 
 Критичные эндпоинты, которые должны быть реализованы:
 - `POST /api/payments/initiate` - инициализация платежа

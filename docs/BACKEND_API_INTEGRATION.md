@@ -4,14 +4,14 @@
 
 Frontend SadakaPass интегрируется с несколькими backend-системами:
 
-1. **Bot API (bot.e-replika.ru)** — основной backend Владимира для статистики, кампаний и фондов
+1. **Bot API (bot.e-replika.ru)** — основной backend для статистики, кампаний и фондов
 2. **Fondinsan API (fondinsan.ru)** — API для программ благотворительности фонда Инсан
 3. **Payment API** — внешний сервис обработки платежей
 4. **Supabase** — fallback база данных (используется при недоступности Bot API)
 
 ---
 
-## 1. Bot API (Backend Владимира)
+## 1. Bot API
 
 ### Базовый URL
 ```
@@ -389,19 +389,19 @@ Content-Type: application/json
 
 ---
 
-## 5. Требования к Backend Владимира
+## 5. Требования к Backend API
 
-Полный список требований к API и необходимых эндпоинтов см. в `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`.
+Полный список требований к API и необходимых эндпоинтов см. в `docs/BACKEND_REQUIREMENTS.md`.
 
 ---
 
 ## 6. Переменные окружения
 
-### Обязательные для работы с Backend Владимира:
+### Обязательные для работы с Bot API:
 ```env
-# Bot API (Backend Владимира)
+# Bot API
 BOT_API_BASE_URL=https://bot.e-replika.ru
-BOT_API_TOKEN=ваш_токен_от_владимира
+BOT_API_TOKEN=ваш_токен
 
 # Payment API
 PAYMENT_API_URL=https://api.payment.service
