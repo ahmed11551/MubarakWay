@@ -4,9 +4,9 @@ Next.js приложение для управления благотворит�
 
 ## Быстрый старт
 
-### Вариант 1: Docker (рекомендуется) 🐳
+### Вариант 1: Docker (рекомендуется)
 
-**Запуск одной командой:**
+Запуск одной командой:
 
 ```bash
 # 1. Скопируйте и настройте переменные окружения
@@ -19,7 +19,7 @@ docker-compose up --build
 
 Приложение будет доступно по адресу `http://localhost:3000`
 
-**Команды управления:**
+Команды управления:
 ```bash
 # Запуск в фоне
 docker-compose up -d
@@ -103,7 +103,7 @@ FONDINSAN_ACCESS_TOKEN=access_token
 NEXT_PUBLIC_SENTRY_DSN=sentry_dsn
 ```
 
-📚 **Полный список переменных:** см. файл `env.example`
+Полный список переменных см. в файле `env.example`
 
 ---
 
@@ -120,7 +120,7 @@ Frontend интегрируется с несколькими backend-систе
 
 ### Для Владимира (Backend разработчик)
 
-📋 **Требования к API:** см. `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`
+Требования к API см. в `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`
 
 Критичные эндпоинты, которые должны быть реализованы:
 - `POST /api/payments/initiate` - инициализация платежа
@@ -144,21 +144,21 @@ Frontend корректно обрабатывает все типы ошибо�
 
 #### 1. Выполнение SQL миграций
 
-Все SQL скрипты миграций находятся в папке `scripts/` и должны быть выполнены в Supabase SQL Editor **строго по порядку**:
+Все SQL скрипты миграций находятся в папке `scripts/` и должны быть выполнены в Supabase SQL Editor строго по порядку:
 
-**Пошаговая инструкция:**
+Пошаговая инструкция:
 
 1. Откройте https://supabase.com/dashboard
 2. Выберите ваш проект
-3. Перейдите в **SQL Editor** (в боковом меню слева)
+3. Перейдите в SQL Editor (в боковом меню слева)
 4. Откройте файл `scripts/001_create_profiles.sql` в вашем редакторе
 5. Скопируйте весь содержимый файла
 6. Вставьте в SQL Editor в Supabase
-7. Нажмите **Run** (или `Ctrl+Enter`)
+7. Нажмите Run (или `Ctrl+Enter`)
 8. Убедитесь, что скрипт выполнен успешно
 9. Повторите для следующего скрипта
 
-**Список миграций в порядке выполнения:**
+Список миграций в порядке выполнения:
 
 Обязательные миграции (выполнить все):
 - 001_create_profiles.sql
@@ -182,10 +182,7 @@ Frontend корректно обрабатывает все типы ошибо�
 - 011_cleanup_funds.sql - очистка фондов
 - 012_create_insan_fund_only.sql - альтернативный вариант создания фонда
 
-**Важно:**
-- Выполняйте скрипты строго по порядку, так как они зависят друг от друга
-- Если скрипт уже был выполнен ранее, некоторые могут выдать ошибку - это нормально (используется `CREATE TABLE IF NOT EXISTS`)
-- После выполнения всех миграций переходите к следующему шагу
+Важно: выполнять скрипты строго по порядку, так как они зависят друг от друга. Если скрипт уже был выполнен ранее, некоторые могут выдать ошибку - это нормально (используется `CREATE TABLE IF NOT EXISTS`).
 
 #### 2. Создание фонда Инсан
 
@@ -200,9 +197,7 @@ node scripts/run-create-insan-fund.js
 - Деактивирует другие фонды (если нужно)
 - Проверяет результат
 
-**Требования:** Убедитесь, что в `.env.local` заполнены:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+Требования: убедитесь, что в `.env.local` заполнены `NEXT_PUBLIC_SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY`.
 
 ### Установка Sentry (опционально)
 
@@ -214,17 +209,62 @@ pnpm add @sentry/nextjs
 
 Конфигурация Sentry уже настроена в проекте. Просто добавьте `NEXT_PUBLIC_SENTRY_DSN` в `.env.local`.
 
+## Module Federation (Микрофронтенд)
+
+Проект настроен как микрофронтенд с использованием Module Federation для Next.js. Это позволяет использовать компоненты и функциональность проекта в других приложениях.
+
+Полная документация см. в `docs/MODULE_FEDERATION.md`
+
+### Быстрый старт для host-приложения
+
+1. Настройте `next.config.mjs` в вашем host-приложении:
+```javascript
+const NextFederationPlugin = require('@module-federation/nextjs-mf')
+
+const nextConfig = {
+  webpack: (config) => {
+    config.plugins.push(
+      new NextFederationPlugin({
+        name: 'host',
+        remotes: {
+          mubarakway: `mubarakway@http://localhost:3000/_next/static/chunks/remoteEntry.js`,
+        },
+      })
+    )
+    return config
+  },
+}
+```
+
+2. Используйте компоненты:
+```typescript
+import dynamic from 'next/dynamic'
+
+const PlatformStats = dynamic(
+  () => import('mubarakway/PlatformStats'),
+  { ssr: false }
+)
+```
+
+### Доступные модули
+
+- Widgets: `AppHeader`, `BottomNav`, `PlatformStats`, `CampaignsList`
+- Features: `CreateCampaignForm`, `DonationForm`, `CampaignsSearch`
+- Components: `QuickDonationBlock`, `UltraQuickDonation`, `ZakatCalculatorForm`
+- Utilities: `ErrorHandler`, `BotApi`
+
 ## Архитектура
 
 Проект использует:
-- **Next.js 16** с App Router
-- **TypeScript** для типобезопасности
-- **Supabase** для базы данных и аутентификации
-- **Zod** для валидации API запросов
-- **Feature-Sliced Design (FSD)** для организации кода
-- **Централизованная обработка ошибок** через `lib/error-handler.ts`
-- **Типы** вынесены в `types/index.ts`
-- **Трансформеры** для данных в `lib/transformers/`
+- Next.js 16 с App Router
+- TypeScript для типобезопасности
+- Supabase для базы данных и аутентификации
+- Zod для валидации API запросов
+- Feature-Sliced Design (FSD) для организации кода
+- Module Federation для микрофронтенд архитектуры
+- Централизованная обработка ошибок через `lib/error-handler.ts`
+- Типы вынесены в `types/index.ts`
+- Трансформеры для данных в `lib/transformers/`
 
 ### Feature-Sliced Design (FSD)
 
@@ -238,7 +278,7 @@ src/
 └── widgets/     # Крупные составные блоки UI (header, campaign-list)
 ```
 
-**Использование FSD импортов:**
+Использование FSD импортов:
 ```typescript
 // Entities
 import { CampaignCard } from '@/entities/campaign/ui/campaign-card'

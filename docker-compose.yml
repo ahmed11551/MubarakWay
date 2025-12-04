@@ -1,5 +1,8 @@
 version: '3.8'
 
+# MubarakWay - Module Federation Microfrontend
+# Remote Entry доступен по адресу: http://localhost:3000/_next/static/chunks/remoteEntry.js
+
 services:
   app:
     build:
