@@ -14,11 +14,11 @@ const nextConfig = {
   },
   // Enable standalone output for Docker
   output: 'standalone',
-  webpack: (config, options) => {
+  webpack: async (config, options) => {
     const { isServer } = options
     
-    // Dynamic import for Module Federation
-    const NextFederationPlugin = require('@module-federation/nextjs-mf')
+    // Dynamic import for Module Federation (ES modules)
+    const { default: NextFederationPlugin } = await import('@module-federation/nextjs-mf')
     
     // Module Federation configuration
     config.plugins.push(
