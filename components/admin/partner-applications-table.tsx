@@ -105,7 +105,7 @@ export function AdminPartnerApplicationsTable() {
       console.error("Rejection error:", error)
       toast.error("Не удалось отклонить заявку")
     } finally {
-      setIsRejecting(false)
+      setIsRejecting(null)
     }
   }
 
