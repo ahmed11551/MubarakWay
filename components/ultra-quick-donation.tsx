@@ -23,10 +23,12 @@ export function UltraQuickDonation() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [campaigns, setCampaigns] = useState<any[]>([])
+  const [funds, setFunds] = useState<any[]>([])
+  const [selectedFund, setSelectedFund] = useState<string | null>(null)
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false)
 
-  // Load campaigns for step 1
-  const loadCampaigns = async () => {
+  // Load campaigns and funds for step 1
+  const loadCampaignsAndFunds = async () => {
     setIsLoadingCampaigns(true)
     
     // Таймаут для предотвращения зависания
@@ -34,24 +36,30 @@ export function UltraQuickDonation() {
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 секунд
     
     try {
-      const response = await fetch("/api/campaigns?status=active&limit=5", {
-        signal: controller.signal,
-      })
+      // Загружаем кампании и фонды параллельно
+      const [campaignsResponse, fundsResponse] = await Promise.all([
+        fetch("/api/campaigns?status=active&limit=5", { signal: controller.signal }),
+        fetch("/api/partners/funds", { signal: controller.signal }),
+      ])
+      
       clearTimeout(timeoutId)
       
-      if (response.ok) {
-        const data = await response.json()
-        setCampaigns(data.campaigns || [])
-      } else {
-        toast.error("Не удалось загрузить кампании. Попробуйте позже.")
+      if (campaignsResponse.ok) {
+        const campaignsData = await campaignsResponse.json()
+        setCampaigns(campaignsData.campaigns || [])
+      }
+      
+      if (fundsResponse.ok) {
+        const fundsData = await fundsResponse.json()
+        setFunds(fundsData.funds || [])
       }
     } catch (error: any) {
       clearTimeout(timeoutId)
-      console.error("Failed to load campaigns:", error)
+      console.error("Failed to load campaigns/funds:", error)
       if (error.name === "AbortError") {
         toast.error("Превышено время ожидания. Проверьте интернет-соединение.")
       } else {
-        toast.error("Не удалось загрузить кампании. Попробуйте позже.")
+        toast.error("Не удалось загрузить данные. Попробуйте позже.")
       }
     } finally {
       setIsLoadingCampaigns(false)
@@ -61,16 +69,26 @@ export function UltraQuickDonation() {
   const handleStart = () => {
     setIsDialogOpen(true)
     setStep(1)
-    loadCampaigns()
+    setSelectedCampaign(null)
+    setSelectedFund(null)
+    loadCampaignsAndFunds()
   }
 
   const handleSkipCampaign = () => {
     setSelectedCampaign(null)
+    setSelectedFund(null)
     setStep(2)
   }
 
   const handleSelectCampaign = (campaignId: string) => {
     setSelectedCampaign(campaignId)
+    setSelectedFund(null) // Сбрасываем выбор фонда при выборе кампании
+    setStep(2)
+  }
+
+  const handleSelectFund = (fundId: string) => {
+    setSelectedFund(fundId)
+    setSelectedCampaign(null) // Сбрасываем выбор кампании при выборе фонда
     setStep(2)
   }
 
@@ -107,6 +125,7 @@ export function UltraQuickDonation() {
     setStep(1)
     setAmount("")
     setSelectedCampaign(null)
+    setSelectedFund(null)
     router.push("/profile")
   }
 
@@ -144,7 +163,7 @@ export function UltraQuickDonation() {
               {step === 3 && "3. ПОМОГАЙ!"}
             </DialogTitle>
             <DialogDescription>
-              {step === 1 && "Выберите кампанию или пропустите этот шаг"}
+              {step === 1 && "Выберите кампанию, фонд или пропустите этот шаг"}
               {step === 2 && "Введите сумму пожертвования"}
               {step === 3 && "Подтвердите платеж"}
             </DialogDescription>
@@ -161,21 +180,63 @@ export function UltraQuickDonation() {
                 ) : (
                   <>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {campaigns.map((campaign) => (
-                        <Button
-                          key={campaign.id}
-                          variant={selectedCampaign === campaign.id ? "default" : "outline"}
-                          className="w-full justify-start text-left h-auto py-3"
-                          onClick={() => handleSelectCampaign(campaign.id)}
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium">{campaign.title}</p>
-                            <p className="text-xs text-muted-foreground line-clamp-1">
-                              {campaign.description}
-                            </p>
-                          </div>
-                        </Button>
-                      ))}
+                      {/* Кампании */}
+                      {campaigns.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Кампании</p>
+                          {campaigns.map((campaign) => (
+                            <Button
+                              key={`campaign-${campaign.id}`}
+                              variant={selectedCampaign === campaign.id ? "default" : "outline"}
+                              className="w-full justify-start text-left h-auto py-3"
+                              onClick={() => handleSelectCampaign(campaign.id)}
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium">{campaign.title}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {campaign.description}
+                                </p>
+                              </div>
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Фонды-партнёры */}
+                      {funds.length > 0 && (
+                        <div className="space-y-2">
+                          {campaigns.length > 0 && <div className="h-2" />}
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Фонды-партнёры</p>
+                          {funds.map((fund) => (
+                            <Button
+                              key={`fund-${fund.id}`}
+                              variant={selectedFund === fund.id ? "default" : "outline"}
+                              className="w-full justify-start text-left h-auto py-3"
+                              onClick={() => handleSelectFund(fund.id)}
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{fund.name}</p>
+                                  {fund.verified && (
+                                    <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">Проверено</span>
+                                  )}
+                                </div>
+                                {fund.short_desc && (
+                                  <p className="text-xs text-muted-foreground line-clamp-1">
+                                    {fund.short_desc}
+                                  </p>
+                                )}
+                              </div>
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {campaigns.length === 0 && funds.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Нет доступных кампаний или фондов
+                        </p>
+                      )}
                     </div>
                     <Button variant="outline" className="w-full" onClick={handleSkipCampaign}>
                       Пропустить (общее пожертвование)
@@ -234,6 +295,11 @@ export function UltraQuickDonation() {
                       Кампания: {campaigns.find((c) => c.id === selectedCampaign)?.title || "Выбранная кампания"}
                     </p>
                   )}
+                  {selectedFund && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Фонд: {funds.find((f) => f.id === selectedFund)?.name || "Выбранный фонд"}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -249,6 +315,7 @@ export function UltraQuickDonation() {
                   donationData={{
                     category: "sadaqah",
                     campaignId: selectedCampaign || undefined,
+                    fundId: selectedFund || undefined,
                   }}
                   onSuccess={handlePaymentSuccess}
                   onFail={handlePaymentFail}
