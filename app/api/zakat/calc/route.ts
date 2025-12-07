@@ -90,8 +90,9 @@ export async function POST(req: NextRequest) {
     // Check if above nisab
     const aboveNisab = netWealth >= nisab_value
 
-    // Calculate zakat (2.5% of net wealth above nisab)
-    const zakatDue = aboveNisab ? netWealth * (rate_percent / 100) : 0
+    // Calculate zakat (2.5% of net wealth ABOVE nisab, not total)
+    // Formula: zakat = (netWealth - nisab_value) * rate_percent / 100
+    const zakatDue = aboveNisab ? (netWealth - nisab_value) * (rate_percent / 100) : 0
 
     // Save calculation if user is authenticated
     let calculationId: string | null = null
