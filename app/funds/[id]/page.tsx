@@ -269,7 +269,11 @@ export default async function FundDetailPage({
                   <TrendingUp className="h-4 w-4 text-primary" />
                   <div>
                     <p className="text-xs text-muted-foreground">Всего собрано</p>
-                    <p className="text-lg font-bold">{(fund.totalRaised / 1000).toFixed(0)}k ₽</p>
+                    <p className="text-lg font-bold">
+                      {fund.totalRaised >= 1000 
+                        ? `${(fund.totalRaised / 1000).toFixed(0)}k ₽`
+                        : `${fund.totalRaised.toLocaleString("ru-RU")} ₽`}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -380,7 +384,9 @@ export default async function FundDetailPage({
 
             <TabsContent value="projects" className="space-y-3 mt-4">
               {/* Show projects from API (for Insan fund) or campaigns */}
-              {fundProjects.length > 0 ? (
+              {fundProjects.length > 0 || fundCampaigns.length > 0 ? (
+                <>
+              {fundProjects.length > 0 && (
                 fundProjects.map((project) => {
                   // Determine icon based on project title/description
                   const getProjectIcon = (title: string, description: string) => {
@@ -464,7 +470,8 @@ export default async function FundDetailPage({
                     </Card>
                   )
                 })
-              ) : fundCampaigns.length > 0 ? (
+              )}
+              {fundCampaigns.length > 0 && (
                 fundCampaigns.map((campaign) => {
                   const getCampaignIcon = (title: string, description: string) => {
                     const text = (title + " " + description).toLowerCase()
@@ -541,10 +548,17 @@ export default async function FundDetailPage({
                     </Card>
                   )
                 })
+              )}
+                </>
               ) : (
                 <Card>
-                  <CardContent className="pt-6 pb-6 text-center">
+                  <CardContent className="pt-6 pb-6 text-center space-y-2">
                     <p className="text-muted-foreground">Нет проектов, связанных с этим фондом</p>
+                    {id === "00000000-0000-0000-0000-000000000001" && (
+                      <p className="text-xs text-muted-foreground">
+                        Проекты загружаются из внешнего API. Если они не отображаются, проверьте настройки FONDINSAN_ACCESS_TOKEN.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               )}
