@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { isAdmin } from "@/lib/utils/admin"
 import { sendEmail, getDonationConfirmationEmail, getCampaignDonationNotificationEmail } from "@/lib/email"
 import { sendTelegramMessage, getCampaignDonationNotificationMessage } from "@/lib/telegram"
+import { trackDonation } from "@/lib/analytics"
 
 export type DonationInput = {
   amount: number
@@ -129,6 +130,16 @@ export async function createDonation(input: DonationInput) {
 
     // NOTE: Email confirmation will be sent in webhook after successful payment
     // This prevents sending emails for failed or cancelled payments
+
+    // Track donation initiated
+    await trackDonation("initiated", donation.id, {
+      userId: user.id,
+      amount: input.amount,
+      currency: input.currency,
+      fundId: input.fundId,
+      campaignId: input.campaignId,
+      provider: "pending",
+    })
 
     return { success: true, donation }
   } catch (error) {

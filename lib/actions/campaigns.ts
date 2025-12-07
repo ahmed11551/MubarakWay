@@ -204,7 +204,7 @@ export async function createCampaign(input: CampaignInput) {
   }
 }
 
-export async function getCampaigns(status?: string) {
+export async function getCampaigns(status?: string, page: number = 0, pageSize: number = 20) {
   try {
     const supabase = await createClient()
 
@@ -222,14 +222,22 @@ export async function getCampaigns(status?: string) {
       query = query.eq("status", status)
     }
 
-    const { data: campaigns, error } = await query
+    // Add pagination
+    const from = page * pageSize
+    const to = from + pageSize - 1
+    query = query.range(from, to)
+
+    const { data: campaigns, error, count } = await query
 
     if (error) {
       console.error("[v0] Get campaigns error:", error)
-      return { campaigns: [], error: "Failed to fetch campaigns" }
+      return { campaigns: [], error: "Failed to fetch campaigns", total: 0, hasMore: false }
     }
 
-    return { campaigns: campaigns || [] }
+    const total = count || 0
+    const hasMore = total > to + 1
+
+    return { campaigns: campaigns || [], total, hasMore }
   } catch (error) {
     console.error("[v0] Get campaigns exception:", error)
     return { campaigns: [], error: "Failed to fetch campaigns" }

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { handleApiError } from "@/lib/error-handler"
 import { rateLimitRequest } from "@/lib/utils/rate-limit-redis"
 import { logger } from "@/lib/logger"
+import { trackZakat } from "@/lib/analytics"
 import { z } from "zod"
 
 const zakatCalcSchema = z.object({
@@ -121,6 +122,14 @@ export async function POST(req: NextRequest) {
 
       if (!calcError && calculation) {
         calculationId = calculation.id
+        
+        // Track zakat calculation
+        await trackZakat("calc_submitted", {
+          userId: user.id,
+          calculationId: calculation.id,
+          zakatDue: zakatDue,
+          aboveNisab: aboveNisab,
+        })
       }
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { handleApiError } from "@/lib/error-handler"
+import { trackDonation, trackCampaign } from "@/lib/analytics"
 import crypto from "crypto"
 
 interface CloudPaymentsWebhookData {
@@ -264,6 +265,7 @@ async function handlePaymentSuccess(data: CloudPaymentsWebhookData) {
  * Обработать неудачный платеж
  */
 async function handlePaymentFailed(data: CloudPaymentsWebhookData) {
+  const { trackDonation } = await import("@/lib/analytics")
   const supabase = await createClient()
   const transactionId = data.Model?.TransactionId
   const invoiceId = data.Model?.InvoiceId
@@ -280,6 +282,12 @@ async function handlePaymentFailed(data: CloudPaymentsWebhookData) {
 
     // Update donation status
     if (invoiceData.donationId) {
+      const { data: donation } = await supabase
+        .from("donations")
+        .select("donor_id, amount, fund_id, campaign_id")
+        .eq("id", invoiceData.donationId)
+        .single()
+
       await supabase
         .from("donations")
         .update({
@@ -289,6 +297,19 @@ async function handlePaymentFailed(data: CloudPaymentsWebhookData) {
         })
         .eq("id", invoiceData.donationId)
         .eq("status", "pending")
+
+      // Track failed donation
+      if (donation) {
+        await trackDonation("failed", invoiceData.donationId as string, {
+          userId: donation.donor_id,
+          amount: Number(donation.amount),
+          currency: "RUB",
+          fundId: donation.fund_id,
+          campaignId: donation.campaign_id,
+          provider: "cloudpayments",
+          error: data.Model?.Reason || "Payment declined",
+        })
+      }
     }
 
     // Handle subscription payment failure
