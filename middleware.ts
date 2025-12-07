@@ -1,23 +1,12 @@
-import createMiddleware from "next-intl/middleware"
 import { updateSession } from "@/lib/supabase/middleware"
-import { locales, defaultLocale } from "./i18n"
+import type { NextRequest } from "next/server"
 
-const intlMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: "as-needed", // Don't prefix default locale (ru)
-})
-
-export async function middleware(request: any) {
-  // First, handle Supabase session
+// Simplified middleware - i18n will be handled client-side for now
+// Full i18n routing requires app/[locale] structure which we'll implement gradually
+export async function middleware(request: NextRequest) {
+  // Handle Supabase session
   const supabaseResponse = await updateSession(request)
-  
-  // Then, handle i18n routing
-  const intlResponse = intlMiddleware(request)
-  
-  // Return the appropriate response
-  // If Supabase middleware returned a redirect, use it; otherwise use intl response
-  return supabaseResponse || intlResponse
+  return supabaseResponse
 }
 
 export const config = {

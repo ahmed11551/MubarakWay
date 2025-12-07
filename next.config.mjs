@@ -1,6 +1,7 @@
-import createNextIntlPlugin from 'next-intl/plugin';
-
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
+// Temporarily disable next-intl plugin to avoid build errors
+// Will be enabled after full migration to [locale] structure
+// import createNextIntlPlugin from 'next-intl/plugin';
+// const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -78,4 +79,5 @@ const nextConfig = {
   },
 }
 
-export default withNextIntl(nextConfig)
+export default nextConfig
+// Temporarily disabled: export default withNextIntl(nextConfig)
