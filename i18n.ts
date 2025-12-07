@@ -1,6 +1,3 @@
-import { notFound } from "next/navigation"
-import { getRequestConfig } from "next-intl/server"
-
 // Поддерживаемые языки
 export const locales = ["ru", "en", "ar"] as const
 export type Locale = (typeof locales)[number]
@@ -25,14 +22,7 @@ export function getTextDirection(locale: Locale): "ltr" | "rtl" {
   return isRTL(locale) ? "rtl" : "ltr"
 }
 
-export default getRequestConfig(async ({ locale }) => {
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as Locale)) {
-    notFound()
-  }
-
-  return {
-    messages: (await import(`./messages/${locale}.json`)).default,
-  }
-})
+// Note: getRequestConfig export removed to avoid build errors
+// It will be re-enabled when next-intl plugin is properly configured
+// For now, i18n works via client-side hooks in lib/i18n-client.ts
 
