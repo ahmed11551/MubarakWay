@@ -43,7 +43,7 @@ export function DonationForm() {
 
   // Prefill from query params
   useEffect(() => {
-    const typeParam = search.get("type") // project | target
+    const typeParam = search.get("type") // project | target | zakat
     const amountParam = search.get("amount")
     const categoryParam = search.get("category")
     const fundParam = search.get("fundId")
@@ -51,14 +51,19 @@ export function DonationForm() {
 
     if (amountParam) {
       const val = Number(amountParam)
-      if (!Number.isNaN(val) && val > 0) setAmount(val)
+      if (!Number.isNaN(val) && val > 0) {
+        setAmount(val)
+        setCustomAmount(val.toString())
+      }
     }
     if (categoryParam) setCategory(categoryParam)
     if (fundParam) setFundId(fundParam)
     if (campaignParam) setCampaignId(campaignParam)
 
-    // Map project/target to sensible defaults
-    if (typeParam === "project") {
+    // Map project/target/zakat to sensible defaults
+    if (typeParam === "zakat" || categoryParam === "zakat") {
+      setCategory("zakat")
+    } else if (typeParam === "project") {
       setCategory("general")
     } else if (typeParam === "target") {
       // keep provided category if any, else default to sadaqah
