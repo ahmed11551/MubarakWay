@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { handleApiError } from "@/lib/error-handler"
+import { rateLimitRequest } from "@/lib/utils/rate-limit-redis"
 import { z } from "zod"
 
 const telegramAuthBodySchema = z.object({
@@ -19,6 +20,28 @@ const telegramAuthBodySchema = z.object({
  * ВАЖНО: Для работы нужна переменная окружения SUPABASE_SERVICE_ROLE_KEY
  */
 export async function POST(req: NextRequest) {
+  // Rate limiting: 10 requests per minute per IP (более строгий лимит для авторизации)
+  // Redis-based with in-memory fallback
+  const rateLimitResult = await rateLimitRequest(req, { max: 10, window: 60 })
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      {
+        error: "Too many requests",
+        message: `Rate limit exceeded. Maximum ${rateLimitResult.limit} requests per minute.`,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+          "Retry-After": Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+        },
+      }
+    )
+  }
   try {
     const body = await req.json()
     
@@ -108,7 +131,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       userId,
       telegramId,
@@ -116,6 +139,11 @@ export async function POST(req: NextRequest) {
       accessToken: tokenData.properties?.hashed_token,
       actionLink: tokenData.properties?.action_link,
     })
+    // Add rate limit headers
+    response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString())
+    response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString())
+    response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString())
+    return response
   } catch (error) {
     const apiError = handleApiError(error)
     return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })

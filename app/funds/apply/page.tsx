@@ -17,10 +17,45 @@ import { useState } from "react"
 
 export default function FundApplicationPage() {
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSubmitted(true)
+    setIsSubmitting(true)
+    setError(null)
+
+    const formData = new FormData(e.currentTarget)
+    const formValues = {
+      org_name: formData.get("name") as string,
+      country_code: formData.get("country") as string,
+      categories: formData.get("categories") ? [formData.get("categories") as string] : [],
+      website: formData.get("website") as string,
+      contact_name: formData.get("contact_name") as string || formData.get("name") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string || undefined,
+      telegram_username: formData.get("telegram") as string || undefined,
+      about: formData.get("description") as string || undefined,
+    }
+
+    try {
+      const response = await fetch("/api/partners/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formValues),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Ошибка при отправке заявки")
+      }
+
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось отправить заявку. Попробуйте позже.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -76,18 +111,23 @@ export default function FundApplicationPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">
                   Название организации <span className="text-red-500">*</span>
                 </Label>
-                <Input id="name" placeholder="Исламский благотворительный фонд" required />
+                <Input id="name" name="name" placeholder="Исламский благотворительный фонд" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="country">
                   Страна <span className="text-red-500">*</span>
                 </Label>
-                <Select required>
+                <Select name="country" required>
                   <SelectTrigger id="country">
                     <SelectValue placeholder="Выберите страну" />
                   </SelectTrigger>
@@ -107,20 +147,33 @@ export default function FundApplicationPage() {
                 <Label htmlFor="website">
                   Веб-сайт <span className="text-red-500">*</span>
                 </Label>
-                <Input id="website" type="url" placeholder="https://example.org" required />
+                <Input id="website" name="website" type="url" placeholder="https://example.org" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contact_name">
+                  Контактное лицо <span className="text-red-500">*</span>
+                </Label>
+                <Input id="contact_name" name="contact_name" placeholder="Иван Иванов" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">
                   Email для связи <span className="text-red-500">*</span>
                 </Label>
-                <Input id="email" type="email" placeholder="info@example.org" required />
+                <Input id="email" name="email" type="email" placeholder="info@example.org" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Телефон (опционально)</Label>
+                <Input id="phone" name="phone" type="tel" placeholder="+7 999 123-45-67" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="description">Описание деятельности</Label>
                 <Textarea
                   id="description"
+                  name="description"
                   placeholder="Расскажите о вашей организации, её миссии и основных направлениях работы..."
                   rows={5}
                 />
@@ -128,7 +181,7 @@ export default function FundApplicationPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="categories">Категории деятельности</Label>
-                <Select>
+                <Select name="categories">
                   <SelectTrigger id="categories">
                     <SelectValue placeholder="Выберите категорию" />
                   </SelectTrigger>
@@ -146,12 +199,12 @@ export default function FundApplicationPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="telegram">Ник в Telegram (опционально)</Label>
-                <Input id="telegram" placeholder="@username" />
+                <Input id="telegram" name="telegram" placeholder="@username" />
               </div>
 
               <div className="pt-4 space-y-3">
-                <Button type="submit" className="w-full h-12 text-base font-semibold">
-                  Отправить заявку
+                <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={isSubmitting}>
+                  {isSubmitting ? "Отправка..." : "Отправить заявку"}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
                   Отправляя заявку, вы соглашаетесь с нашими условиями партнёрства и политикой конфиденциальности

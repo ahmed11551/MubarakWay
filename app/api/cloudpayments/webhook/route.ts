@@ -357,6 +357,46 @@ async function handleRecurringPayment(data: CloudPaymentsWebhookData) {
             last_payment_transaction_id: transactionId?.toString(),
           })
           .eq("id", subscription.id)
+
+        // Автоотчисления в благотворительность (5% от Pro, 10% от Premium)
+        // Фонд Инсан: 00000000-0000-0000-0000-000000000001
+        const INSAN_FUND_ID = "00000000-0000-0000-0000-000000000001"
+        let charityPercent = 0
+        let charityAmount = 0
+
+        if (subscription.tier === "mutahsin_pro") {
+          charityPercent = 0.05 // 5%
+          charityAmount = subscription.amount * charityPercent
+        } else if (subscription.tier === "sahib_al_waqf_premium") {
+          charityPercent = 0.10 // 10%
+          charityAmount = subscription.amount * charityPercent
+        }
+
+        if (charityAmount > 0) {
+          // Создаем донат на автоотчисление
+          const { data: charityDonation, error: charityError } = await supabase
+            .from("donations")
+            .insert({
+              donor_id: subscription.user_id,
+              fund_id: INSAN_FUND_ID,
+              amount: charityAmount,
+              currency: subscription.currency,
+              donation_type: "sadaqah",
+              category: "general",
+              is_anonymous: false,
+              status: "completed",
+              message: `Автоматическое отчисление ${(charityPercent * 100).toFixed(0)}% от подписки ${subscription.tier}`,
+              payment_transaction_id: `charity_${transactionId?.toString() || "auto"}`,
+            })
+            .select()
+            .single()
+
+          if (charityError) {
+            console.error("[CloudPayments] Failed to create charity donation:", charityError)
+          } else {
+            console.log(`[CloudPayments] Created charity donation: ${charityAmount} ${subscription.currency} (${(charityPercent * 100).toFixed(0)}% from subscription ${subscription.tier})`)
+          }
+        }
       }
     } else if (data.Model?.Status === "Declined" || data.Model?.Status === "Cancelled") {
       // Handle failed recurring payment
@@ -396,10 +436,52 @@ async function handleSubscriptionPayment(subscriptionId: string, paymentData: Cl
         status: "active",
         next_billing_date: nextBillingDate.toISOString(),
         last_payment_date: new Date().toISOString(),
-        last_payment_transaction_id: paymentData.TransactionId?.toString(),
-        recurring_id: paymentData.RecurringId?.toString() || subscription.recurring_id,
+        last_payment_transaction_id: paymentData.Model?.TransactionId?.toString(),
+        recurring_id: paymentData.Model?.RecurringId?.toString() || subscription.recurring_id,
       })
       .eq("id", subscriptionId)
+
+    // Автоотчисления в благотворительность (5% от Pro, 10% от Premium)
+    // Фонд Инсан: 00000000-0000-0000-0000-000000000001
+    const INSAN_FUND_ID = "00000000-0000-0000-0000-000000000001"
+    let charityPercent = 0
+    let charityAmount = 0
+
+    if (subscription.tier === "mutahsin_pro") {
+      charityPercent = 0.05 // 5%
+      charityAmount = subscription.amount * charityPercent
+    } else if (subscription.tier === "sahib_al_waqf_premium") {
+      charityPercent = 0.10 // 10%
+      charityAmount = subscription.amount * charityPercent
+    }
+
+    if (charityAmount > 0) {
+      const transactionId = paymentData.Model?.TransactionId?.toString() || "auto"
+      
+      // Создаем донат на автоотчисление
+      const { data: charityDonation, error: charityError } = await supabase
+        .from("donations")
+        .insert({
+          donor_id: subscription.user_id,
+          fund_id: INSAN_FUND_ID,
+          amount: charityAmount,
+          currency: subscription.currency,
+          donation_type: "sadaqah",
+          category: "general",
+          is_anonymous: false,
+          status: "completed",
+          message: `Автоматическое отчисление ${(charityPercent * 100).toFixed(0)}% от подписки ${subscription.tier}`,
+          payment_transaction_id: `charity_${transactionId}`,
+        })
+        .select()
+        .single()
+
+      if (charityError) {
+        console.error("[CloudPayments] Failed to create charity donation:", charityError)
+      } else {
+        console.log(`[CloudPayments] Created charity donation: ${charityAmount} ${subscription.currency} (${(charityPercent * 100).toFixed(0)}% from subscription ${subscription.tier})`)
+      }
+    }
   } catch (error) {
     console.error("[CloudPayments] Subscription payment handling error:", error)
   }

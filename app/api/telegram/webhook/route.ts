@@ -55,7 +55,7 @@ const SUBSCRIPTION_PLANS = {
     ],
     prices: {
       "1month": { price: 260, charity: 13, period: "1 месяц" },
-      "3months": { price: 780, charity: 39, period: "3 месяца" },
+      "3months": { price: 870, charity: 43.5, period: "3 месяца" },
       "6months": { price: 1300, charity: 65, period: "6 месяцев", bonus: "+1 мес в подарок" },
       "12months": { price: 2340, charity: 234, period: "12 месяцев", bonus: "+3 мес в подарок" },
     },
@@ -160,14 +160,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const result = await editMessageText(
       chatId,
       messageId,
-      "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
+      "<b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
       { reply_markup: keyboard }
     )
     
     if (!result.success) {
       await sendTelegramMessage(
         chatId,
-        "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
+        "<b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
         { reply_markup: keyboard }
       )
     }
@@ -193,7 +193,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const keyboard = createSubscriptionPeriodsKeyboard(planKey)
     
     const featuresText = plan.features.map((f) => `✓ ${f}`).join("\n")
-    const message = `💎 <b>${plan.name}</b> — ${plan.subtitle}\n\n${plan.description}\n\n<b>Преимущества:</b>\n${featuresText}\n\nВыберите период подписки:`
+    const message = `<b>${plan.name}</b> — ${plan.subtitle}\n\n${plan.description}\n\n<b>Преимущества:</b>\n${featuresText}\n\nВыберите период подписки:`
     
     const result = await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
     
@@ -233,8 +233,8 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const paymentUrl = `${webAppUrl}/subscription/checkout?plan=${encodeURIComponent(plan.name)}&period=${encodeURIComponent(priceInfo.period)}`
     
     const keyboard = createPaymentKeyboard(paymentUrl)
-    const bonusText = "bonus" in priceInfo && priceInfo.bonus ? `\n🎁 ${priceInfo.bonus}` : ""
-    const message = `💎 <b>${plan.name}</b> — ${priceInfo.period}\n\n💰 <b>Сумма:</b> ${priceInfo.price} ₽\n💝 <b>В благотворительность:</b> ${priceInfo.charity} ₽${bonusText}\n\nНажмите кнопку ниже для оплаты:`
+    const bonusText = "bonus" in priceInfo && priceInfo.bonus ? `\nПодарок: ${priceInfo.bonus}` : ""
+    const message = `<b>${plan.name}</b> — ${priceInfo.period}\n\n<b>Сумма:</b> ${priceInfo.price} ₽\n<b>В благотворительность:</b> ${priceInfo.charity} ₽${bonusText}\n\nНажмите кнопку ниже для оплаты:`
     
     const result = await editMessageText(chatId, messageId, message, { reply_markup: keyboard })
     
@@ -251,14 +251,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const result = await editMessageText(
       chatId,
       messageId,
-      "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
+      "<b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
       { reply_markup: keyboard }
     )
     
     if (!result.success) {
       await sendTelegramMessage(
         chatId,
-        "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
+        "<b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
         { reply_markup: keyboard }
       )
     }
@@ -281,7 +281,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
       const result = await editMessageText(
         chatId,
         messageId,
-        "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+        "<b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
         { reply_markup: keyboard }
       )
       
@@ -289,7 +289,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
         // If edit fails, send new message
         await sendTelegramMessage(
           chatId,
-          "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+          "<b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
           { reply_markup: keyboard }
         )
       }
@@ -316,7 +316,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
       const result = await editMessageText(
         chatId,
         messageId,
-        "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+        "<b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
         { reply_markup: keyboard }
       )
       
@@ -324,7 +324,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
         // If edit fails, send new message
         await sendTelegramMessage(
           chatId,
-          "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+          "<b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
           { reply_markup: keyboard }
         )
       }
@@ -351,14 +351,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
       const result = await editMessageText(
         chatId,
         messageId,
-        "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+        "<b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
         { reply_markup: keyboard }
       )
       
       if (!result.success) {
         await sendTelegramMessage(
           chatId,
-          "🏛️ <b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
+          "<b>Выберите фонд</b>\n\nВыберите фонд, которому хотите помочь:",
           { reply_markup: keyboard }
         )
       }
@@ -385,14 +385,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
       const result = await editMessageText(
         chatId,
         messageId,
-        "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+        "<b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
         { reply_markup: keyboard }
       )
       
       if (!result.success) {
         await sendTelegramMessage(
           chatId,
-          "🎯 <b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
+          "<b>Выберите проект</b>\n\nВыберите проект, которому хотите помочь:",
           { reply_markup: keyboard }
         )
       }
@@ -419,14 +419,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const result = await editMessageText(
       chatId,
       messageId,
-      "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+      "<b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
       { reply_markup: keyboard }
     )
     
     if (!result.success) {
       await sendTelegramMessage(
         chatId,
-        "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+        "<b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
         { reply_markup: keyboard }
       )
     }
@@ -449,14 +449,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const result = await editMessageText(
       chatId,
       messageId,
-      "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+      "<b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
       { reply_markup: keyboard }
     )
     
     if (!result.success) {
       await sendTelegramMessage(
         chatId,
-        "💰 <b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
+        "<b>Выберите сумму пожертвования</b>\n\nИли укажите другую сумму:",
         { reply_markup: keyboard }
       )
     }
@@ -512,14 +512,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const result = await editMessageText(
       chatId,
       messageId,
-      `💰 <b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
+      `<b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
       { reply_markup: keyboard }
     )
     
     if (!result.success) {
       await sendTelegramMessage(
         chatId,
-        `💰 <b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
+        `<b>Пожертвование</b>\n\n<b>Сумма:</b> ${amount} ₽\n\nНажмите кнопку ниже для оплаты:`,
         { reply_markup: keyboard }
       )
     }
@@ -553,7 +553,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     // For now, we'll just send instructions
     await sendTelegramMessage(
       chatId,
-      `💰 <b>Введите сумму пожертвования</b>\n\nОтправьте число в следующем сообщении (например: 1500)\n\nМинимум: 1 ₽\nМаксимум: 10 000 000 ₽\n\n⚠️ <i>Примечание: функция произвольной суммы будет реализована позже. Пока используйте кнопки с фиксированными суммами.</i>`,
+      `<b>Введите сумму пожертвования</b>\n\nОтправьте число в следующем сообщении (например: 1500)\n\nМинимум: 1 ₽\nМаксимум: 10 000 000 ₽\n\n<i>Примечание: функция произвольной суммы будет реализована позже. Пока используйте кнопки с фиксированными суммами.</i>`,
       { reply_markup: createMainMenuKeyboard() }
     )
     return
@@ -566,14 +566,14 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     const result = await editMessageText(
       chatId,
       messageId,
-      "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
+      "<b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
       { reply_markup: keyboard }
     )
     
     if (!result.success) {
       await sendTelegramMessage(
         chatId,
-        "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
+        "<b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
         { reply_markup: keyboard }
       )
     }
@@ -594,7 +594,7 @@ async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery) {
     await answerCallbackQuery(callbackQueryId, { text: "Загрузка статистики..." })
     try {
       const stats = await getPlatformStats()
-      const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
+      const formatted = `<b>Статистика платформы</b>\n\nВсего собрано: ${Math.round(stats.totalCollected)} ₽\nАктивных доноров: ${stats.activeDonors}\nАктивных кампаний: ${stats.activeCampaigns}\nСредний чек: ${Math.round(stats.averageCheck)} ₽`
       
       const keyboard = createMainMenuKeyboard()
       const result = await editMessageText(chatId, messageId, formatted, { reply_markup: keyboard })
@@ -652,11 +652,11 @@ async function handleMessage(message: TelegramMessage) {
           const deepLink = `${webAppUrl}/campaigns/${campaignId}`
           await sendTelegramMessage(
             chatId,
-            `🎯 <b>Открываю кампанию...</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
-            { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
+            `<b>Открываю кампанию...</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
+            { reply_markup: { inline_keyboard: [[{ text: "Открыть Mini App", web_app: { url: deepLink } }]] } }
           )
         } else {
-          await sendTelegramMessage(chatId, "❌ Неверный формат ID кампании", { reply_markup: createMainMenuKeyboard() })
+          await sendTelegramMessage(chatId, "Неверный формат ID кампании", { reply_markup: createMainMenuKeyboard() })
         }
         return
       } else if (params.startsWith("donate_")) {
@@ -667,11 +667,11 @@ async function handleMessage(message: TelegramMessage) {
           const deepLink = `${webAppUrl}/donate?campaignId=${donationId}`
           await sendTelegramMessage(
             chatId,
-            `💰 <b>Быстрое пожертвование</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
-            { reply_markup: { inline_keyboard: [[{ text: "🌐 Открыть Mini App", web_app: { url: deepLink } }]] } }
+            `<b>Быстрое пожертвование</b>\n\nПерейдите по ссылке: ${deepLink}\n\nИли откройте в Telegram Mini App.`,
+            { reply_markup: { inline_keyboard: [[{ text: "Открыть Mini App", web_app: { url: deepLink } }]] } }
           )
         } else {
-          await sendTelegramMessage(chatId, "❌ Неверный формат ID", { reply_markup: createMainMenuKeyboard() })
+          await sendTelegramMessage(chatId, "Неверный формат ID", { reply_markup: createMainMenuKeyboard() })
         }
         return
       }
@@ -692,7 +692,7 @@ async function handleMessage(message: TelegramMessage) {
     const keyboard = createSubscriptionPlansKeyboard()
     await sendTelegramMessage(
       chatId,
-      "💎 <b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
+      "<b>Садака-подписка</b>\n\nПриобретая подписку, вы делаете садака-джария на развитие глобального проекта.\n\nВыберите тариф:",
       { reply_markup: keyboard }
     )
     return
@@ -703,7 +703,7 @@ async function handleMessage(message: TelegramMessage) {
     const keyboard = createDonationTypeKeyboard()
     await sendTelegramMessage(
       chatId,
-      "💰 <b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
+      "<b>Пожертвование</b>\n\nВыберите, кому вы хотите помочь:",
       { reply_markup: keyboard }
     )
     return
@@ -718,8 +718,8 @@ async function handleMessage(message: TelegramMessage) {
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: "🌐 Открыть пожертвование", web_app: { url: donateUrl } }],
-            [{ text: "◀️ Главное меню", callback_data: "menu:main" }],
+            [{ text: "Открыть пожертвование", web_app: { url: donateUrl } }],
+            [{ text: "Главное меню", callback_data: "menu:main" }],
           ],
         },
       }
@@ -732,7 +732,7 @@ async function handleMessage(message: TelegramMessage) {
     const keyboard = createQuickSupportKeyboard()
     await sendTelegramMessage(
       chatId,
-      "💝 <b>Быстрая садака</b>\n\nВыберите сумму для быстрого пожертвования:",
+      "<b>Быстрая садака</b>\n\nВыберите сумму для быстрого пожертвования:",
       { reply_markup: keyboard }
     )
     return
@@ -743,12 +743,12 @@ async function handleMessage(message: TelegramMessage) {
     const partnersUrl = `${webAppUrl}/funds`
     await sendTelegramMessage(
       chatId,
-      "🏛️ <b>Фонды-партнёры</b>\n\nОткройте каталог фондов:",
+      "<b>Фонды-партнёры</b>\n\nОткройте каталог фондов:",
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: "🌐 Открыть каталог фондов", web_app: { url: partnersUrl } }],
-            [{ text: "◀️ Главное меню", callback_data: "menu:main" }],
+            [{ text: "Открыть каталог фондов", web_app: { url: partnersUrl } }],
+            [{ text: "Главное меню", callback_data: "menu:main" }],
           ],
         },
       }
@@ -761,7 +761,7 @@ async function handleMessage(message: TelegramMessage) {
     const keyboard = createZakatCalculatorKeyboard()
     await sendTelegramMessage(
       chatId,
-      "🧮 <b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
+      "<b>Калькулятор закята</b>\n\nРассчитайте свою обязанность по закяту на основе исламских принципов.\n\nНажмите кнопку ниже для открытия калькулятора:",
       { reply_markup: keyboard }
     )
     return
@@ -771,12 +771,12 @@ async function handleMessage(message: TelegramMessage) {
   if (text.startsWith("/stats") || text.startsWith("/статистика")) {
     try {
       const stats = await getPlatformStats()
-      const formatted = `📊 <b>Статистика платформы</b>\n\n💰 Всего собрано: ${Math.round(stats.totalCollected)} ₽\n👥 Активных доноров: ${stats.activeDonors}\n🎯 Активных кампаний: ${stats.activeCampaigns}\n💵 Средний чек: ${Math.round(stats.averageCheck)} ₽`
+      const formatted = `<b>Статистика платформы</b>\n\nВсего собрано: ${Math.round(stats.totalCollected)} ₽\nАктивных доноров: ${stats.activeDonors}\nАктивных кампаний: ${stats.activeCampaigns}\nСредний чек: ${Math.round(stats.averageCheck)} ₽`
       const keyboard = createMainMenuKeyboard()
       await sendTelegramMessage(chatId, formatted, { reply_markup: keyboard })
     } catch (error) {
       console.error("[Telegram Webhook] Error loading stats:", error)
-      await sendTelegramMessage(chatId, "❌ Ошибка загрузки статистики. Попробуйте позже.", { reply_markup: createMainMenuKeyboard() })
+      await sendTelegramMessage(chatId, "Ошибка загрузки статистики. Попробуйте позже.", { reply_markup: createMainMenuKeyboard() })
     }
     return
   }

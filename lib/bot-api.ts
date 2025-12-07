@@ -22,7 +22,7 @@ export type BotApiError = {
 
 // Логирование предупреждения при запуске
 if (!BOT_API_TOKEN) {
-  console.warn("[Bot API] ⚠️ BOT_API_TOKEN не настроен. Bot API недоступен, будет использоваться Supabase fallback.")
+  console.warn("[Bot API] BOT_API_TOKEN не настроен. Bot API недоступен, будет использоваться Supabase fallback.")
   console.warn("[Bot API] Для настройки добавьте BOT_API_TOKEN в переменные окружения.")
 }
 

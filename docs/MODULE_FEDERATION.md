@@ -309,5 +309,5 @@ headers: [
 ## Дополнительная документация
 
 - `docs/BACKEND_API_INTEGRATION.md` - интеграция с backend
-- `docs/BACKEND_REQUIREMENTS.md` - требования к API
+- `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md` - требования к API
 

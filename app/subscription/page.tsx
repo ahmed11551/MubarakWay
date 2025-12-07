@@ -39,7 +39,7 @@ export default function SubscriptionPage() {
       ],
       prices: [
         { period: "1 месяц", price: 260, charity: 13 },
-        { period: "3 месяца", price: 780, charity: 39 },
+        { period: "3 месяца", price: 870, charity: 43.5 },
         {
           period: "6 месяцев",
           price: 1300,
@@ -182,7 +182,7 @@ export default function SubscriptionPage() {
                           <Link href={`/subscription/checkout?plan=${plan.name}&period=${price.period}`}>
                             <div className="flex flex-col items-start gap-0.5">
                               <span className="font-semibold">{price.period}</span>
-                              {price.bonus && <span className="text-xs text-accent font-medium">🎁 {price.bonus}</span>}
+                              {price.bonus && <span className="text-xs text-accent font-medium">Подарок: {price.bonus}</span>}
                               {price.discount && (
                                 <span className="text-xs text-green-600 font-medium">{price.discount}</span>
                               )}

@@ -1,102 +1,155 @@
 /**
- * Простой кэш в памяти для статических данных
+ * Caching utility for API responses
+ * Uses Next.js cache and Redis (if available)
  */
 
-interface CacheEntry<T> {
-  data: T
-  timestamp: number
-  ttl: number // Time to live в миллисекундах
+import { unstable_cache } from 'next/cache'
+import { getRedisClient } from './redis'
+
+export interface CacheOptions {
+  /**
+   * Cache duration in seconds
+   * @default 300 (5 minutes)
+   */
+  revalidate?: number
+  /**
+   * Cache tags for invalidation
+   */
+  tags?: string[]
 }
 
-class SimpleCache {
-  private cache = new Map<string, CacheEntry<any>>()
+/**
+ * Cache key generator
+ */
+function getCacheKey(prefix: string, ...parts: (string | number | undefined)[]): string {
+  const keyParts = parts.filter(Boolean).map(String)
+  return `${prefix}:${keyParts.join(':')}`
+}
 
-  /**
-   * Получить данные из кэша
-   */
-  get<T>(key: string): T | null {
-    const entry = this.cache.get(key)
-    
-    if (!entry) {
-      return null
-    }
-
-    // Проверяем, не истек ли срок действия
-    const now = Date.now()
-    if (now - entry.timestamp > entry.ttl) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.data as T
+/**
+ * Get cached value from Redis
+ */
+async function getFromRedis(key: string): Promise<any | null> {
+  const redis = getRedisClient()
+  if (!redis) {
+    return null
   }
 
-  /**
-   * Сохранить данные в кэш
-   */
-  set<T>(key: string, data: T, ttl: number = 60000): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl,
-    })
+  try {
+    const value = await redis.get(key)
+    return value
+  } catch (error) {
+    console.error('[Cache] Redis get error:', error)
+    return null
+  }
+}
+
+/**
+ * Set cached value in Redis
+ */
+async function setInRedis(key: string, value: any, ttl: number): Promise<void> {
+  const redis = getRedisClient()
+  if (!redis) {
+    return
   }
 
-  /**
-   * Удалить данные из кэша
-   */
-  delete(key: string): void {
-    this.cache.delete(key)
+  try {
+    await redis.set(key, value, { ex: ttl })
+  } catch (error) {
+    console.error('[Cache] Redis set error:', error)
+  }
+}
+
+/**
+ * Invalidate cache by tag
+ */
+export async function invalidateCache(tag: string): Promise<void> {
+  const redis = getRedisClient()
+  if (!redis) {
+    return
   }
 
-  /**
-   * Очистить весь кэш
-   */
-  clear(): void {
-    this.cache.clear()
+  try {
+    // Redis doesn't have built-in tag support, so we use a pattern
+    // In production, you might want to maintain a tag->keys mapping
+    const pattern = `tag:${tag}:*`
+    // Note: Upstash Redis REST API doesn't support KEYS command
+    // You would need to maintain a separate index for tags
+    console.warn('[Cache] Tag invalidation not fully implemented for Redis. Consider maintaining a tag index.')
+  } catch (error) {
+    console.error('[Cache] Cache invalidation error:', error)
   }
+}
 
-  /**
-   * Очистить устаревшие записи
-   */
-  cleanup(): void {
-    const now = Date.now()
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > entry.ttl) {
-        this.cache.delete(key)
+/**
+ * Cached function wrapper
+ * Uses Next.js cache with Redis fallback
+ */
+export function cached<T>(
+  fn: () => Promise<T>,
+  key: string,
+  options: CacheOptions = {}
+): () => Promise<T> {
+  const { revalidate = 300, tags = [] } = options
+
+  // Use Next.js unstable_cache for server-side caching
+  const cachedFn = unstable_cache(
+    async () => {
+      // Try Redis first for distributed caching
+      const redisKey = `cache:${key}`
+      const cached = await getFromRedis(redisKey)
+      
+      if (cached !== null) {
+        return cached as T
       }
+
+      // Execute function and cache result
+      const result = await fn()
+      await setInRedis(redisKey, result, revalidate)
+      
+      return result
+    },
+    [key],
+    {
+      revalidate,
+      tags,
     }
-  }
+  )
+
+  return cachedFn
 }
 
-// Создаем глобальный экземпляр кэша
-export const cache = new SimpleCache()
+/**
+ * Simple cache wrapper for API responses
+ */
+export async function getCachedOrFetch<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+  options: CacheOptions = {}
+): Promise<T> {
+  const { revalidate = 300 } = options
 
-// Очищаем устаревшие записи каждые 5 минут
-// Сохраняем ссылку на interval для очистки при необходимости
-let cleanupInterval: NodeJS.Timeout | null = null
-
-if (typeof window !== "undefined") {
-  cleanupInterval = setInterval(() => {
-    cache.cleanup()
-  }, 5 * 60 * 1000)
+  // Try Redis first
+  const redisKey = `cache:${key}`
+  const cached = await getFromRedis(redisKey)
   
-  // Очистка при размонтировании (для SSR/SSG)
-  if (typeof window !== "undefined" && window.addEventListener) {
-    window.addEventListener("beforeunload", () => {
-      if (cleanupInterval) {
-        clearInterval(cleanupInterval)
-        cleanupInterval = null
-      }
-    })
+  if (cached !== null) {
+    return cached as T
   }
+
+  // Fetch and cache
+  const result = await fetchFn()
+  await setInRedis(redisKey, result, revalidate)
+  
+  return result
 }
 
-// Функция для ручной очистки интервала (для тестов или явной очистки)
-export function clearCacheCleanupInterval() {
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval)
-    cleanupInterval = null
-  }
-}
-
+/**
+ * Cache keys constants
+ */
+export const CacheKeys = {
+  campaigns: (status?: string) => getCacheKey('campaigns', status || 'all'),
+  funds: (category?: string) => getCacheKey('funds', category || 'all'),
+  stats: () => getCacheKey('stats'),
+  donation: (id: string) => getCacheKey('donation', id),
+} as const

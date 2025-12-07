@@ -3,8 +3,33 @@ import { getCampaigns } from "@/lib/actions/campaigns"
 import { fetchBotApiCampaigns } from "@/lib/bot-api"
 import { handleApiError } from "@/lib/error-handler"
 import { getCampaignsQuerySchema } from "@/lib/schemas/api"
+import { rateLimitRequest } from "@/lib/utils/rate-limit-redis"
+import { getCachedOrFetch, CacheKeys } from "@/lib/cache"
+import { logger } from "@/lib/logger"
 
 export async function GET(req: NextRequest) {
+  const startTime = Date.now()
+  // Rate limiting: 100 requests per minute per IP (Redis-based with in-memory fallback)
+  const rateLimitResult = await rateLimitRequest(req, { max: 100, window: 60 })
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      {
+        error: "Too many requests",
+        message: `Rate limit exceeded. Maximum ${rateLimitResult.limit} requests per minute.`,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+          "Retry-After": Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+        },
+      }
+    )
+  }
   try {
     const searchParams = req.nextUrl.searchParams
     
@@ -54,13 +79,37 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ campaigns: campaigns || [] })
     }
 
-    // Try to fetch from bot.e-replika.ru API first
-    const botApiCampaigns = await fetchBotApiCampaigns(status, limit)
-    if (botApiCampaigns && Array.isArray(botApiCampaigns) && botApiCampaigns.length > 0) {
-      return NextResponse.json({ campaigns: botApiCampaigns })
+    // Try to fetch from bot.e-replika.ru API first (with caching)
+    const cacheKey = CacheKeys.campaigns(status)
+    const campaigns = await getCachedOrFetch(
+      cacheKey,
+      async () => {
+        const botApiCampaigns = await fetchBotApiCampaigns(status, limit)
+        if (botApiCampaigns && Array.isArray(botApiCampaigns) && botApiCampaigns.length > 0) {
+          logger.cache('set', cacheKey)
+          return botApiCampaigns
+        }
+
+        // Fallback to Supabase
+        const result = await getCampaigns(status)
+        if (result.error) {
+          throw new Error(result.error)
+        }
+        return result.campaigns || []
+      },
+      { revalidate: 300 } // 5 minutes cache
+    )
+
+    if (campaigns && Array.isArray(campaigns) && campaigns.length > 0) {
+      const response = NextResponse.json({ campaigns: campaigns.slice(0, limit) })
+      response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString())
+      response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString())
+      response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString())
+      logger.apiRequest('GET', '/api/campaigns', 200, Date.now() - startTime)
+      return response
     }
 
-    // Fallback to Supabase
+    // Fallback if cache returned empty
     const result = await getCampaigns(status)
     
     if (result.error) {
@@ -69,11 +118,18 @@ export async function GET(req: NextRequest) {
     }
 
     // Limit results
-    const campaigns = (result.campaigns || []).slice(0, limit)
+    const fallbackCampaigns = (result.campaigns || []).slice(0, limit)
 
-    return NextResponse.json({ campaigns })
+    const response = NextResponse.json({ campaigns: fallbackCampaigns })
+    // Add rate limit headers
+    response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString())
+    response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString())
+    response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString())
+    logger.apiRequest('GET', '/api/campaigns', 200, Date.now() - startTime)
+    return response
   } catch (err) {
     const apiError = handleApiError(err)
+    logger.apiError('GET', '/api/campaigns', err)
     return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }

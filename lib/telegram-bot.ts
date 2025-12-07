@@ -199,15 +199,15 @@ export function createMainMenuKeyboard(): TelegramInlineKeyboard {
   return {
     inline_keyboard: [
       [
-        { text: "💎 Подписка", callback_data: "menu:subscription" },
-        { text: "💰 Пожертвовать", callback_data: "menu:donate" },
+        { text: "Подписка", callback_data: "menu:subscription" },
+        { text: "Пожертвовать", callback_data: "menu:donate" },
       ],
       [
-        { text: "🧮 Калькулятор закята", callback_data: "menu:zakat" },
+        { text: "Калькулятор закята", callback_data: "menu:zakat" },
       ],
       [
-        { text: "📊 Статистика", callback_data: "menu:stats" },
-        { text: "🌐 Открыть Mini App", web_app: { url: webAppUrl } },
+        { text: "Статистика", callback_data: "menu:stats" },
+        { text: "Открыть Mini App", web_app: { url: webAppUrl } },
       ],
     ],
   }
@@ -222,16 +222,16 @@ export function createSubscriptionPlansKeyboard(): TelegramInlineKeyboard {
   return {
     inline_keyboard: [
       [
-        { text: "⭐ Муслим (Бесплатно)", callback_data: "subscription:plan:muslim" },
+        { text: "Муслим (Бесплатно)", callback_data: "subscription:plan:muslim" },
       ],
       [
-        { text: "✨ Мутахсин (Pro)", callback_data: "subscription:plan:mutahsin" },
+        { text: "Мутахсин (Pro)", callback_data: "subscription:plan:mutahsin" },
       ],
       [
-        { text: "👑 Сахиб аль-Вакф (Premium)", callback_data: "subscription:plan:premium" },
+        { text: "Сахиб аль-Вакф (Premium)", callback_data: "subscription:plan:premium" },
       ],
       [
-        { text: "◀️ Назад", callback_data: "menu:main" },
+        { text: "Назад", callback_data: "menu:main" },
       ],
     ],
   }
@@ -261,7 +261,7 @@ export function createSubscriptionPeriodsKeyboard(plan: string): TelegramInlineK
         { text: "12 месяцев", callback_data: `subscription:period:${plan}:12months` },
       ],
       [
-        { text: "◀️ Назад к тарифам", callback_data: "menu:subscription" },
+        { text: "Назад к тарифам", callback_data: "menu:subscription" },
       ],
     ],
   }
@@ -274,11 +274,11 @@ export function createDonationTypeKeyboard(): TelegramInlineKeyboard {
   return {
     inline_keyboard: [
       [
-        { text: "🏛️ Фонд", callback_data: "donate:type:fund" },
-        { text: "🎯 Проект", callback_data: "donate:type:campaign" },
+        { text: "Фонд", callback_data: "donate:type:fund" },
+        { text: "Проект", callback_data: "donate:type:campaign" },
       ],
       [
-        { text: "◀️ Назад", callback_data: "menu:main" },
+        { text: "Назад", callback_data: "menu:main" },
       ],
     ],
   }
@@ -300,7 +300,7 @@ export function createQuickSupportKeyboard(): TelegramInlineKeyboard {
         { text: "2500 ₽", web_app: { url: `${webAppUrl}/donate?amount=2500&type=project` } },
       ],
       [
-        { text: "◀️ Главное меню", callback_data: "menu:main" },
+        { text: "Главное меню", callback_data: "menu:main" },
       ],
     ],
   }
@@ -321,10 +321,10 @@ export function createFundsKeyboard(funds: Array<{ id: string; name: string }>, 
   // Pagination buttons
   const navButtons: TelegramInlineKeyboardButton[] = []
   if (page > 0) {
-    navButtons.push({ text: "◀️ Предыдущие", callback_data: `donate:funds:page:${page - 1}` })
+    navButtons.push({ text: "Предыдущие", callback_data: `donate:funds:page:${page - 1}` })
   }
   if (end < funds.length) {
-    navButtons.push({ text: "Следующие ▶️", callback_data: `donate:funds:page:${page + 1}` })
+    navButtons.push({ text: "Следующие", callback_data: `donate:funds:page:${page + 1}` })
   }
   
   if (navButtons.length > 0) {
@@ -332,7 +332,7 @@ export function createFundsKeyboard(funds: Array<{ id: string; name: string }>, 
   }
   
   buttons.push([
-    { text: "◀️ Назад", callback_data: "menu:donate" },
+    { text: "Назад", callback_data: "menu:donate" },
   ])
   
   return {
@@ -355,10 +355,10 @@ export function createCampaignsKeyboard(campaigns: Array<{ id: string; title: st
   // Pagination buttons
   const navButtons: TelegramInlineKeyboardButton[] = []
   if (page > 0) {
-    navButtons.push({ text: "◀️ Предыдущие", callback_data: `donate:campaigns:page:${page - 1}` })
+    navButtons.push({ text: "Предыдущие", callback_data: `donate:campaigns:page:${page - 1}` })
   }
   if (end < campaigns.length) {
-    navButtons.push({ text: "Следующие ▶️", callback_data: `donate:campaigns:page:${page + 1}` })
+    navButtons.push({ text: "Следующие", callback_data: `donate:campaigns:page:${page + 1}` })
   }
   
   if (navButtons.length > 0) {
@@ -366,7 +366,7 @@ export function createCampaignsKeyboard(campaigns: Array<{ id: string; title: st
   }
   
   buttons.push([
-    { text: "◀️ Назад", callback_data: "menu:donate" },
+    { text: "Назад", callback_data: "menu:donate" },
   ])
   
   return {
@@ -389,7 +389,7 @@ export function createDonationAmountKeyboard(targetId: string, targetType: "fund
         { text: "💵 Другая сумма", callback_data: `donate:custom:${targetType}:${targetId}` },
       ],
       [
-        { text: "◀️ Назад", callback_data: targetType === "fund" ? "donate:type:fund" : "donate:type:campaign" },
+        { text: "Назад", callback_data: targetType === "fund" ? "donate:type:fund" : "donate:type:campaign" },
       ],
     ],
   }
@@ -405,7 +405,7 @@ export function createPaymentKeyboard(paymentUrl: string): TelegramInlineKeyboar
         { text: "💳 Оплатить", web_app: { url: paymentUrl } },
       ],
       [
-        { text: "◀️ Отмена", callback_data: "menu:main" },
+        { text: "Отмена", callback_data: "menu:main" },
       ],
     ],
   }
@@ -420,13 +420,13 @@ export function createZakatCalculatorKeyboard(): TelegramInlineKeyboard {
   return {
     inline_keyboard: [
       [
-        { text: "🧮 Рассчитать закят", web_app: { url: `${webAppUrl}/zakat-calculator` } },
+        { text: "Рассчитать закят", web_app: { url: `${webAppUrl}/zakat-calculator` } },
       ],
       [
-        { text: "ℹ️ О закяте", callback_data: "zakat:info" },
+        { text: "О закяте", callback_data: "zakat:info" },
       ],
       [
-        { text: "◀️ Назад", callback_data: "menu:main" },
+        { text: "Назад", callback_data: "menu:main" },
       ],
     ],
   }

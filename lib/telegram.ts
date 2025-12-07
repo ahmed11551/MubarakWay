@@ -203,13 +203,13 @@ export function getDonationNotificationMessage(donation: {
   const donor = donation.isAnonymous ? "Анонимный донор" : donation.donorName || "Пользователь"
   
   return `
-🎉 <b>Новое пожертвование!</b>
+<b>Новое пожертвование!</b>
 
-💰 <b>Сумма:</b> ${donation.amount} ${donation.currency}
-👤 <b>Донор:</b> ${donor}
-🎯 <b>Получатель:</b> ${recipient}
+<b>Сумма:</b> ${donation.amount} ${donation.currency}
+<b>Донор:</b> ${donor}
+<b>Получатель:</b> ${recipient}
 
-Благодарим за вашу поддержку! 🙏
+Благодарим за вашу поддержку!
   `.trim()
 }
 
@@ -223,13 +223,13 @@ export function getCampaignDonationNotificationMessage(campaign: {
   const donorName = campaign.isAnonymous ? "Анонимный донор" : campaign.donorName
   
   return `
-🎉 <b>Новое пожертвование в вашу кампанию!</b>
+<b>Новое пожертвование в вашу кампанию!</b>
 
-📋 <b>Кампания:</b> ${campaign.title}
-👤 <b>Донор:</b> ${donorName}
-💰 <b>Сумма:</b> ${campaign.amount} ${campaign.currency}
+<b>Кампания:</b> ${campaign.title}
+<b>Донор:</b> ${donorName}
+<b>Сумма:</b> ${campaign.amount} ${campaign.currency}
 
-Продолжайте делиться вашей кампанией! 🚀
+Продолжайте делиться вашей кампанией!
   `.trim()
 }
 
@@ -237,13 +237,13 @@ export function getCampaignModerationNotificationMessage(campaign: {
   title: string
   approved: boolean
 }): string {
-  const status = campaign.approved ? "✅ одобрена" : "❌ отклонена"
+  const status = campaign.approved ? "одобрена" : "отклонена"
   const message = campaign.approved
     ? "Ваша кампания была одобрена и теперь доступна для пожертвований!"
     : "К сожалению, ваша кампания не прошла модерацию. Пожалуйста, проверьте требования и попробуйте снова."
   
   return `
-📋 <b>Статус модерации кампании</b>
+<b>Статус модерации кампании</b>
 
 <b>Кампания:</b> ${campaign.title}
 <b>Статус:</b> ${status}

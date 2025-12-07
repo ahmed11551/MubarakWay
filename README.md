@@ -99,11 +99,27 @@ NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=BotUsername
 # Fondinsan API
 FONDINSAN_ACCESS_TOKEN=access_token
 
+# Redis / Upstash (для rate limiting и кеширования)
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=xxx
+# Или стандартный Redis
+# REDIS_URL=redis://localhost:6379
+
 # Sentry (мониторинг ошибок)
 NEXT_PUBLIC_SENTRY_DSN=sentry_dsn
 ```
 
 Полный список переменных см. в файле `env.example`
+
+### Redis для Rate Limiting и Кеширования
+
+Для production рекомендуется настроить Redis (Upstash или стандартный):
+- **Rate Limiting** - защита от злоупотреблений
+- **Кеширование** - улучшение производительности
+
+Без Redis приложение использует in-memory fallback (работает только на одном инстансе).
+
+Подробная инструкция: `docs/REDIS_SETUP.md`
 
 ---
 
@@ -120,7 +136,7 @@ Frontend интегрируется с несколькими backend-систе
 
 ### Для Backend разработчика
 
-Требования к API см. в `docs/BACKEND_REQUIREMENTS.md`
+Требования к API см. в `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`
 
 Критичные эндпоинты, которые должны быть реализованы:
 - `POST /api/payments/initiate` - инициализация платежа

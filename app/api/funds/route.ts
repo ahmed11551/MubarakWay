@@ -4,8 +4,33 @@ import { fetchBotApiFunds } from "@/lib/bot-api"
 import { createClient } from "@/lib/supabase/server"
 import { handleApiError } from "@/lib/error-handler"
 import { getFundsQuerySchema } from "@/lib/schemas/api"
+import { rateLimitRequest } from "@/lib/utils/rate-limit-redis"
+import { getCachedOrFetch, CacheKeys } from "@/lib/cache"
+import { logger } from "@/lib/logger"
 
 export async function GET(req: NextRequest) {
+  const startTime = Date.now()
+  // Rate limiting: 100 requests per minute per IP (Redis-based with in-memory fallback)
+  const rateLimitResult = await rateLimitRequest(req, { max: 100, window: 60 })
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      {
+        error: "Too many requests",
+        message: `Rate limit exceeded. Maximum ${rateLimitResult.limit} requests per minute.`,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": rateLimitResult.limit.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.reset.toString(),
+          "Retry-After": Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+        },
+      }
+    )
+  }
   try {
     const searchParams = req.nextUrl.searchParams
     const category = searchParams.get("category") || undefined
@@ -21,8 +46,12 @@ export async function GET(req: NextRequest) {
         )
       }
     }
-    // Direct Supabase query for debugging
+    // Debug endpoint - только в development режиме
     if (debug) {
+      if (process.env.NODE_ENV !== "development") {
+        return NextResponse.json({ error: "Debug mode is only available in development" }, { status: 403 })
+      }
+      
       try {
         const supabase = await createClient()
         
@@ -76,23 +105,37 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Try to fetch from bot.e-replika.ru API first
-    const botApiFunds = await fetchBotApiFunds(category)
-    if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
-      return NextResponse.json({ funds: botApiFunds })
-    }
+    // Try to fetch from bot.e-replika.ru API first (with caching)
+    const cacheKey = CacheKeys.funds(category)
+    const funds = await getCachedOrFetch(
+      cacheKey,
+      async () => {
+        const botApiFunds = await fetchBotApiFunds(category)
+        if (botApiFunds && Array.isArray(botApiFunds) && botApiFunds.length > 0) {
+          logger.cache('set', cacheKey)
+          return botApiFunds
+        }
 
-    // Fallback to Supabase
-    const result = await getFunds(category)
-    
-    if (result.error) {
-      const apiError = handleApiError(new Error(result.error))
-      return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
-    }
+        // Fallback to Supabase
+        const result = await getFunds(category)
+        if (result.error) {
+          throw new Error(result.error)
+        }
+        return result.funds || []
+      },
+      { revalidate: 600 } // 10 minutes cache for funds
+    )
 
-    return NextResponse.json({ funds: result.funds || [] })
+    const response = NextResponse.json({ funds })
+    // Add rate limit headers
+    response.headers.set("X-RateLimit-Limit", rateLimitResult.limit.toString())
+    response.headers.set("X-RateLimit-Remaining", rateLimitResult.remaining.toString())
+    response.headers.set("X-RateLimit-Reset", rateLimitResult.reset.toString())
+    logger.apiRequest('GET', '/api/funds', 200, Date.now() - startTime)
+    return response
   } catch (err) {
     const apiError = handleApiError(err)
+    logger.apiError('GET', '/api/funds', err)
     return NextResponse.json({ error: apiError.message }, { status: apiError.statusCode })
   }
 }

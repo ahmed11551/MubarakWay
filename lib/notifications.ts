@@ -155,7 +155,7 @@ export async function notifyDonor(
     // Telegram уведомление
     if (user.telegram_id) {
       const targetName = donation.campaignName || donation.fundName || "благотворительность"
-      const message = `✅ Пожертвование успешно!\n\nСумма: ${donation.amount} ${donation.currency}\nПолучатель: ${targetName}\n\nСпасибо за вашу поддержку!`
+      const message = `Пожертвование успешно!\n\nСумма: ${donation.amount} ${donation.currency}\nПолучатель: ${targetName}\n\nСпасибо за вашу поддержку!`
 
       await sendTelegramMessage(user.telegram_id, message)
     }

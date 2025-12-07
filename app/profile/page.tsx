@@ -144,38 +144,46 @@ export default function ProfilePage() {
     setFilteredTransactions(filtered)
   }, [transactions, filterType, filterStatus])
 
-  // Export to CSV
-  const handleExport = () => {
-    const dataToExport = filterType !== "all" || filterStatus !== "all" ? filteredTransactions : transactions
-    
-    if (dataToExport.length === 0) {
-      alert("Нет данных для экспорта")
+  // Export to CSV using API
+  const handleExport = async (format: "csv" | "pdf" = "csv") => {
+    if (transactions.length === 0) {
+      toast.error("Нет данных для экспорта")
       return
     }
 
-    const csv = [
-      ["ID", "Дата", "Тип", "Сумма", "Фонд/Кампания", "Статус"],
-      ...dataToExport.map((t) => [
-        t.id,
-        t.date,
-        t.type,
-        t.amount.toString(),
-        t.fund,
-        t.status,
-      ]),
-    ]
-      .map((row) => row.map((cell) => `"${cell}"`).join(","))
-      .join("\n")
+    try {
+      const params = new URLSearchParams({
+        format,
+        ...(filterType !== "all" && { type: filterType }),
+        ...(filterStatus !== "all" && { status: filterStatus }),
+      })
 
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-    link.setAttribute("href", url)
-    link.setAttribute("download", `transactions_${new Date().toISOString().split("T")[0]}.csv`)
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      const response = await fetch(`/api/export/history?${params.toString()}`)
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Ошибка при экспорте")
+      }
+
+      if (format === "csv") {
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `donations_${new Date().toISOString().split("T")[0]}.csv`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        toast.success("Экспорт выполнен успешно")
+      } else {
+        // PDF export would require client-side generation
+        toast.info("PDF экспорт будет доступен в следующей версии")
+      }
+    } catch (error) {
+      console.error("Export error:", error)
+      toast.error(error instanceof Error ? error.message : "Ошибка при экспорте")
+    }
   }
 
   // Reset filters
@@ -348,7 +356,7 @@ export default function ProfilePage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={handleExport} 
+                  onClick={() => handleExport("csv")} 
                   disabled={transactions.length === 0}
                   title={transactions.length === 0 ? "Нет данных для экспорта" : "Экспортировать в CSV"}
                   className="flex-1 sm:flex-initial"
@@ -422,12 +430,12 @@ export default function ProfilePage() {
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: "🌟", title: "Первое пожертвование", unlocked: true },
-                { icon: "💎", title: "10 пожертвований", unlocked: true },
-                { icon: "👑", title: "Топ донор месяца", unlocked: false },
-                { icon: "🎯", title: "Регулярный донор", unlocked: true },
-                { icon: "🏆", title: "50 000 ₽ отдано", unlocked: true },
-                { icon: "⭐", title: "Создатель кампании", unlocked: false },
+                { icon: "★", title: "Первое пожертвование", unlocked: true },
+                { icon: "◆", title: "10 пожертвований", unlocked: true },
+                { icon: "▲", title: "Топ донор месяца", unlocked: false },
+                { icon: "●", title: "Регулярный донор", unlocked: true },
+                { icon: "■", title: "50 000 ₽ отдано", unlocked: true },
+                { icon: "★", title: "Создатель кампании", unlocked: false },
               ].map((achievement, i) => (
                 <div
                   key={i}

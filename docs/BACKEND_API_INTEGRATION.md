@@ -391,7 +391,7 @@ Content-Type: application/json
 
 ## 5. Требования к Backend API
 
-Полный список требований к API и необходимых эндпоинтов см. в `docs/BACKEND_REQUIREMENTS.md`.
+Полный список требований к API и необходимых эндпоинтов см. в `docs/BACKEND_REQUIREMENTS_FOR_VLADIMIR.md`.
 
 ---
 
