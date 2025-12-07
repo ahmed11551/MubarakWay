@@ -59,7 +59,10 @@ export async function POST(req: NextRequest) {
 
         if (checkError && checkError.code !== "PGRST116") {
           // Table might not exist, create it
-          logger.warn("Reports", "fund_reports table might not exist, skipping report creation")
+          logger.warn({
+            message: "fund_reports table might not exist, skipping report creation",
+            fundId,
+          })
         } else if (!existingReport) {
           // Create report record
           const { error: reportError } = await supabase
@@ -73,9 +76,12 @@ export async function POST(req: NextRequest) {
             })
 
           if (reportError) {
-            logger.error("Reports", "Failed to create report record", { error: reportError })
+            logger.error("Failed to create report record", reportError, { fundId, reportUrl })
           } else {
-            logger.info("Reports", `Created report record for fund ${fundId}`)
+            logger.info({
+              message: `Created report record for fund ${fundId}`,
+              fundId,
+            })
           }
         }
       }
@@ -122,11 +128,15 @@ export async function POST(req: NextRequest) {
           })
         }
       } catch (error) {
-        logger.error("Reports", `Failed to sync fund ${fund.id}`, { error })
+        logger.error(`Failed to sync fund ${fund.id}`, error, { fundId: fund.id, fundName: fund.name })
       }
     }
 
-    logger.info("Reports", `Sync completed for ${syncedReports.length}/${funds?.length || 0} funds`)
+    logger.info({
+      message: `Sync completed for ${syncedReports.length}/${funds?.length || 0} funds`,
+      syncedCount: syncedReports.length,
+      totalCount: funds?.length || 0,
+    })
 
     return NextResponse.json({
       success: true,

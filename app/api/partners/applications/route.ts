@@ -74,7 +74,11 @@ export async function POST(req: NextRequest) {
     } else {
       // For production, require CAPTCHA
       // For now, we'll just log a warning
-      logger.warn("Partner Application", "CAPTCHA not provided", { email: data.email })
+      logger.warn({
+        message: "Попытка отправить заявку партнёра без CAPTCHA",
+        email: data.email,
+        userAgent: req.headers.get("user-agent") || "unknown",
+      })
     }
 
     // Insert application
