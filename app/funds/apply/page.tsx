@@ -14,11 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Building2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import { CaptchaInput } from "@/components/captcha-input"
 
 export default function FundApplicationPage() {
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string>("")
+  const [captchaAnswer, setCaptchaAnswer] = useState<number>(0)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -36,6 +39,8 @@ export default function FundApplicationPage() {
       phone: formData.get("phone") as string || undefined,
       telegram_username: formData.get("telegram") as string || undefined,
       about: formData.get("description") as string || undefined,
+      captcha_token: captchaToken,
+      captcha_answer: captchaAnswer,
     }
 
     try {
@@ -201,6 +206,14 @@ export default function FundApplicationPage() {
                 <Label htmlFor="telegram">Ник в Telegram (опционально)</Label>
                 <Input id="telegram" name="telegram" placeholder="@username" />
               </div>
+
+              <CaptchaInput
+                onVerify={(token, answer) => {
+                  setCaptchaToken(token)
+                  setCaptchaAnswer(answer)
+                }}
+                onError={(err) => setError(err)}
+              />
 
               <div className="pt-4 space-y-3">
                 <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={isSubmitting}>

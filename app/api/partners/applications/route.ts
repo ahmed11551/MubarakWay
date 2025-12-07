@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { handleApiError } from "@/lib/error-handler"
 import { rateLimitRequest } from "@/lib/utils/rate-limit-redis"
 import { logger } from "@/lib/logger"
+import { getCaptcha, storeCaptcha } from "@/lib/utils/captcha"
 import { z } from "zod"
 
 const partnerApplicationSchema = z.object({
@@ -15,6 +16,8 @@ const partnerApplicationSchema = z.object({
   phone: z.string().optional(),
   telegram_username: z.string().optional(),
   about: z.string().max(1000).optional(),
+  captcha_token: z.string().optional(),
+  captcha_answer: z.number().optional(),
 })
 
 /**
@@ -58,6 +61,21 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient()
     const data = validationResult.data
+
+    // Verify CAPTCHA if provided
+    if (data.captcha_token && data.captcha_answer !== undefined) {
+      const stored = getCaptcha(data.captcha_token)
+      if (!stored || stored.answer !== data.captcha_answer) {
+        return NextResponse.json(
+          { error: "CAPTCHA verification failed. Please try again." },
+          { status: 400 }
+        )
+      }
+    } else {
+      // For production, require CAPTCHA
+      // For now, we'll just log a warning
+      logger.warn("Partner Application", "CAPTCHA not provided", { email: data.email })
+    }
 
     // Insert application
     const { data: application, error: applicationError } = await supabase
