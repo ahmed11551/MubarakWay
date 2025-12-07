@@ -1,6 +1,5 @@
 "use client"
 
-import { useLocale, useTranslations } from "next-intl"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Globe } from "lucide-react"
 import { locales, type Locale } from "@/i18n"
+import { useState, useEffect } from "react"
 
 const localeNames: Record<Locale, string> = {
   ru: "Русский",
@@ -19,10 +19,19 @@ const localeNames: Record<Locale, string> = {
 }
 
 export function LanguageSwitcher() {
-  const locale = useLocale() as Locale
   const router = useRouter()
   const pathname = usePathname()
-  const t = useTranslations("common")
+  const [locale, setLocale] = useState<Locale>("ru")
+  
+  // Get locale from pathname or default to 'ru'
+  useEffect(() => {
+    const pathLocale = pathname.split("/")[1]
+    if (locales.includes(pathLocale as Locale)) {
+      setLocale(pathLocale as Locale)
+    } else {
+      setLocale("ru")
+    }
+  }, [pathname])
 
   const switchLocale = (newLocale: Locale) => {
     // Remove current locale from pathname if present
@@ -42,7 +51,7 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9">
           <Globe className="h-4 w-4" />
-          <span className="sr-only">{t("changeLanguage")}</span>
+          <span className="sr-only">Изменить язык</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
