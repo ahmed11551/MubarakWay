@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "prebuild": "npm run typecheck",
+    "vercel-build": "npm run prebuild && npm run build"
   },
   "dependencies": {
     "@module-federation/nextjs-mf": "^8.8.49",
