@@ -39,16 +39,32 @@ class Logger {
 
   /**
    * Info log
+   * Supports both: info(message, context) and info({ message, ...context })
    */
-  info(message: string, context?: LogContext): void {
-    console.log(this.format('info', message, context))
+  info(messageOrContext: string | LogContext, context?: LogContext): void {
+    if (typeof messageOrContext === 'string') {
+      // Old style: info(message, context)
+      console.log(this.format('info', messageOrContext, context))
+    } else {
+      // New style: info({ message, ...context })
+      const { message, ...rest } = messageOrContext
+      console.log(this.format('info', message || 'Info', rest))
+    }
   }
 
   /**
    * Warning log
+   * Supports both: warn(message, context) and warn({ message, ...context })
    */
-  warn(message: string, context?: LogContext): void {
-    console.warn(this.format('warn', message, context))
+  warn(messageOrContext: string | LogContext, context?: LogContext): void {
+    if (typeof messageOrContext === 'string') {
+      // Old style: warn(message, context)
+      console.warn(this.format('warn', messageOrContext, context))
+    } else {
+      // New style: warn({ message, ...context })
+      const { message, ...rest } = messageOrContext
+      console.warn(this.format('warn', message || 'Warning', rest))
+    }
   }
 
   /**

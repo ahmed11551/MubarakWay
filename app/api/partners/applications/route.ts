@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
       logger.warn({
         message: "Попытка отправить заявку партнёра без CAPTCHA",
         email: data.email,
+        ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
         userAgent: req.headers.get("user-agent") || "unknown",
       })
     }
