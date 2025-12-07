@@ -268,13 +268,19 @@ export function ZakatCalculatorForm() {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-primary mt-0.5" />
             <div className="space-y-1">
-              <CardTitle className="text-base">Нисаб</CardTitle>
+              <CardTitle className="text-base">Нисаб ({MADHAB_NAMES[madhab]})</CardTitle>
               <CardDescription className="text-xs">
                 Минимальный порог облагаемого имущества:{" "}
                 <span className="font-semibold text-primary">
-                  {currency} {nisabThreshold.toLocaleString("ru-RU")}
-                </span>{" "}
-                (на основе {NISAB_GOLD_GRAMS}г золота по цене {GOLD_PRICE_PER_GRAM.toLocaleString("ru-RU")} ₽/г)
+                  {currency} {nisabThreshold.toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+                {madhab === "hanafi" || madhab === "hanbali" ? (
+                  <> (на основе {NISAB_GOLD_GRAMS}г золота по цене {GOLD_PRICE_PER_GRAM.toLocaleString("ru-RU")} ₽/г)</>
+                ) : madhab === "maliki" ? (
+                  <> (на основе {NISAB_SILVER_GRAMS}г серебра по цене {SILVER_PRICE_PER_GRAM.toLocaleString("ru-RU")} ₽/г)</>
+                ) : (
+                  <> (минимум из {NISAB_GOLD_GRAMS}г золота или {NISAB_SILVER_GRAMS}г серебра)</>
+                )}
               </CardDescription>
             </div>
           </div>
