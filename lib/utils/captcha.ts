@@ -30,8 +30,10 @@ export function generateCaptcha(): CaptchaChallenge {
     question = `${num1} × ${num2}`
   }
   
-  // Generate a token for this challenge
-  const token = Buffer.from(`${Date.now()}-${Math.random()}`).toString("base64")
+  // Generate a token for this challenge (server-side compatible)
+  const token = typeof Buffer !== "undefined" 
+    ? Buffer.from(`${Date.now()}-${Math.random()}`).toString("base64")
+    : btoa(`${Date.now()}-${Math.random()}`)
   
   return {
     question,
