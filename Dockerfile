@@ -8,14 +8,16 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 RUN \
-  if [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && pnpm install --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then \
-    npm ci; \
+  if [ -f package-lock.json ]; then \
+    npm install --legacy-peer-deps; \
+  elif [ -f pnpm-lock.yaml ]; then \
+    corepack enable pnpm && pnpm install --no-frozen-lockfile; \
+  elif [ -f yarn.lock ]; then \
+    corepack enable yarn && yarn install --frozen-lockfile; \
   else \
-    echo "Lockfile not found." && exit 1; \
+    npm install --legacy-peer-deps; \
   fi
 
 # Rebuild the source code only when needed
@@ -30,12 +32,14 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN \
-  if [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && pnpm run build; \
-  elif [ -f package-lock.json ]; then \
+  if [ -f package-lock.json ]; then \
     npm run build; \
+  elif [ -f pnpm-lock.yaml ]; then \
+    corepack enable pnpm && pnpm run build; \
+  elif [ -f yarn.lock ]; then \
+    corepack enable yarn && yarn build; \
   else \
-    echo "Lockfile not found." && exit 1; \
+    npm run build; \
   fi
 
 # Production image, copy all the files and run next

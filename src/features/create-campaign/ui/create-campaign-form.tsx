@@ -59,7 +59,7 @@ export function CampaignCreationForm() {
   useEffect(() => {
     async function loadFunds() {
       // Проверяем кэш
-      const { cache } = await import("@/lib/cache")
+      const { cache } = await import("@/lib/cache-client")
       const cached = cache.get<any[]>("funds_cache")
       
       if (cached) {
@@ -75,7 +75,6 @@ export function CampaignCreationForm() {
           const data = await response.json()
           if (data.funds) {
             // Сохраняем в кэш на 5 минут
-            const { cache } = await import("@/lib/cache")
             cache.set("funds_cache", data.funds, 5 * 60 * 1000)
             
             setFunds(data.funds)

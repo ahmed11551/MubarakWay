@@ -102,19 +102,23 @@ export function getClientIdentifier(req: {
   headers: Headers | Record<string, string | string[] | undefined>
 }): string {
   // Try to get IP from headers (for proxies/load balancers)
-  const forwardedFor = req.headers.get?.('x-forwarded-for') || 
-    (typeof req.headers['x-forwarded-for'] === 'string' 
-      ? req.headers['x-forwarded-for'] 
-      : Array.isArray(req.headers['x-forwarded-for'])
-      ? req.headers['x-forwarded-for'][0]
-      : undefined)
+  // Get IP from headers (support both Headers object and plain object)
+  const headersObj = req.headers as Headers | Record<string, string | string[] | undefined>
+  const forwardedFor = (headersObj instanceof Headers 
+    ? headersObj.get('x-forwarded-for')
+    : typeof headersObj['x-forwarded-for'] === 'string' 
+      ? headersObj['x-forwarded-for'] 
+      : Array.isArray(headersObj['x-forwarded-for'])
+      ? headersObj['x-forwarded-for'][0]
+      : undefined) || undefined
   
-  const realIp = req.headers.get?.('x-real-ip') ||
-    (typeof req.headers['x-real-ip'] === 'string'
-      ? req.headers['x-real-ip']
-      : Array.isArray(req.headers['x-real-ip'])
-      ? req.headers['x-real-ip'][0]
-      : undefined)
+  const realIp = (headersObj instanceof Headers
+    ? headersObj.get('x-real-ip')
+    : typeof headersObj['x-real-ip'] === 'string'
+      ? headersObj['x-real-ip']
+      : Array.isArray(headersObj['x-real-ip'])
+      ? headersObj['x-real-ip'][0]
+      : undefined) || undefined
 
   // Use first IP from X-Forwarded-For if available
   if (forwardedFor) {

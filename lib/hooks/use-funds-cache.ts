@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { cache } from "@/lib/cache"
+import { cache } from "@/lib/cache-client"
 
 const FUNDS_CACHE_KEY = "funds_cache"
 const FUNDS_CACHE_TTL = 5 * 60 * 1000 // 5 минут
