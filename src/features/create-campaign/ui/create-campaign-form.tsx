@@ -70,7 +70,8 @@ export function CampaignCreationForm() {
 
       setIsLoadingFunds(true)
       try {
-        const response = await fetch("/api/funds")
+        // Используем API партнерских фондов для выбора в кампании
+        const response = await fetch("/api/partners/funds")
         if (response.ok) {
           const data = await response.json()
           if (data.funds) {
@@ -78,6 +79,15 @@ export function CampaignCreationForm() {
             cache.set("funds_cache", data.funds, 5 * 60 * 1000)
             
             setFunds(data.funds)
+          }
+        } else {
+          // Fallback на обычный API фондов, если партнерские недоступны
+          const fallbackResponse = await fetch("/api/funds")
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json()
+            if (fallbackData.funds) {
+              setFunds(fallbackData.funds)
+            }
           }
         }
       } catch (error) {
