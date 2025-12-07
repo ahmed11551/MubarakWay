@@ -132,11 +132,93 @@ export default async function FundDetailPage({
           }))
         } else {
           console.log("[FundDetailPage] No programs returned from fondinsan API or empty array")
+          // Fallback: Add demo projects for Insan fund if API is not configured
+          if (!process.env.FONDINSAN_ACCESS_TOKEN) {
+            fundProjects = [
+              {
+                id: "demo_orphans",
+                title: "Помощь сиротам",
+                description: "Поддержка детей-сирот: образование, питание, медицинская помощь",
+                imageUrl: "/placeholder.svg",
+                url: "https://fondinsan.ru",
+                defaultAmount: 1000,
+                beneficiaries: 0,
+              },
+              {
+                id: "demo_education",
+                title: "Образовательные программы",
+                description: "Строительство школ, поддержка студентов, программы обучения",
+                imageUrl: "/placeholder.svg",
+                url: "https://fondinsan.ru",
+                defaultAmount: 2000,
+                beneficiaries: 0,
+              },
+              {
+                id: "demo_healthcare",
+                title: "Здравоохранение",
+                description: "Медицинская помощь нуждающимся, строительство больниц",
+                imageUrl: "/placeholder.svg",
+                url: "https://fondinsan.ru",
+                defaultAmount: 1500,
+                beneficiaries: 0,
+              },
+              {
+                id: "demo_water",
+                title: "Водоснабжение",
+                description: "Строительство колодцев и систем водоснабжения в нуждающихся регионах",
+                imageUrl: "/placeholder.svg",
+                url: "https://fondinsan.ru",
+                defaultAmount: 5000,
+                beneficiaries: 0,
+              },
+              {
+                id: "demo_emergency",
+                title: "Экстренная помощь",
+                description: "Быстрая помощь в чрезвычайных ситуациях и стихийных бедствиях",
+                imageUrl: "/placeholder.svg",
+                url: "https://fondinsan.ru",
+                defaultAmount: 1000,
+                beneficiaries: 0,
+              },
+            ]
+          }
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
         console.error("[FundDetailPage] Error fetching fondinsan programs:", errorMessage)
         // Don't fail silently - log the error but continue
+        // Add fallback demo projects if API fails
+        if (!process.env.FONDINSAN_ACCESS_TOKEN) {
+          fundProjects = [
+            {
+              id: "demo_orphans",
+              title: "Помощь сиротам",
+              description: "Поддержка детей-сирот: образование, питание, медицинская помощь",
+              imageUrl: "/placeholder.svg",
+              url: "https://fondinsan.ru",
+              defaultAmount: 1000,
+              beneficiaries: 0,
+            },
+            {
+              id: "demo_education",
+              title: "Образовательные программы",
+              description: "Строительство школ, поддержка студентов, программы обучения",
+              imageUrl: "/placeholder.svg",
+              url: "https://fondinsan.ru",
+              defaultAmount: 2000,
+              beneficiaries: 0,
+            },
+            {
+              id: "demo_healthcare",
+              title: "Здравоохранение",
+              description: "Медицинская помощь нуждающимся, строительство больниц",
+              imageUrl: "/placeholder.svg",
+              url: "https://fondinsan.ru",
+              defaultAmount: 1500,
+              beneficiaries: 0,
+            },
+          ]
+        }
       }
     }
     
@@ -554,9 +636,9 @@ export default async function FundDetailPage({
                 <Card>
                   <CardContent className="pt-6 pb-6 text-center space-y-2">
                     <p className="text-muted-foreground">Нет проектов, связанных с этим фондом</p>
-                    {id === "00000000-0000-0000-0000-000000000001" && (
-                      <p className="text-xs text-muted-foreground">
-                        Проекты загружаются из внешнего API. Если они не отображаются, проверьте настройки FONDINSAN_ACCESS_TOKEN.
+                    {id === "00000000-0000-0000-0000-000000000001" && !process.env.FONDINSAN_ACCESS_TOKEN && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Для загрузки проектов из API fondinsan.ru настройте переменную FONDINSAN_ACCESS_TOKEN в .env.local
                       </p>
                     )}
                   </CardContent>
