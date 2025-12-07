@@ -222,12 +222,15 @@ export async function getCampaigns(status?: string, page: number = 0, pageSize: 
       query = query.eq("status", status)
     }
 
+    // Get total count first
+    const { count } = await query.select("*", { count: "exact", head: true })
+
     // Add pagination
     const from = page * pageSize
     const to = from + pageSize - 1
     query = query.range(from, to)
 
-    const { data: campaigns, error, count } = await query
+    const { data: campaigns, error } = await query
 
     if (error) {
       console.error("[v0] Get campaigns error:", error)
