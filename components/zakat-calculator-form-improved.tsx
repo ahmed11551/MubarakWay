@@ -411,6 +411,23 @@ export function ZakatCalculatorForm() {
                   min="0"
                   step="0.01"
                 />
+                {madhab === "hanafi" && (
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="investments-trade" className="text-sm">
+                        Инвестиции предназначены для торговли
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        По мазхабу Ханафи: закят с инвестиций только если они для торговли
+                      </p>
+                    </div>
+                    <Switch
+                      id="investments-trade"
+                      checked={investmentsForTrade}
+                      onCheckedChange={setInvestmentsForTrade}
+                    />
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="receivables">Взыскаемые дебиторки</Label>
@@ -469,22 +486,45 @@ export function ZakatCalculatorForm() {
             <CardHeader>
               <CardTitle className="text-base">Долги к вычету</CardTitle>
               <CardDescription className="text-xs">
-                Только подтверждённые долги, погашаемые в текущем году
+                {madhab === "shafi" 
+                  ? "По мазхабу Шафии: учитываются только долги, которые точно вернут в этом году"
+                  : "Только подтверждённые долги, погашаемые в текущем году"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="debts">Краткосрочные обязательства</Label>
-                <Input
-                  id="debts"
-                  type="number"
-                  placeholder="0.00"
-                  value={debts}
-                  onChange={(e) => setDebts(e.target.value)}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+              {madhab === "shafi" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="debts-this-year">Долги, которые точно вернут в этом году</Label>
+                  <Input
+                    id="debts-this-year"
+                    type="number"
+                    placeholder="0.00"
+                    value={debtsDueThisYear}
+                    onChange={(e) => setDebtsDueThisYear(e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    По мазхабу Шафии учитываются только долги, которые будут возвращены в текущем году
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="debts">Краткосрочные обязательства</Label>
+                  <Input
+                    id="debts"
+                    type="number"
+                    placeholder="0.00"
+                    value={debts}
+                    onChange={(e) => setDebts(e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Все подтверждённые долги, которые будут погашены в текущем году
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
