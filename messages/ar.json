@@ -1,0 +1,71 @@
+{
+  "common": {
+    "appName": "MubarakWay",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "submit": "إرسال",
+    "search": "بحث",
+    "filter": "تصفية",
+    "all": "الكل",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "donate": "تبرع",
+    "campaigns": "الحملات",
+    "funds": "الصناديق",
+    "subscription": "الاشتراك",
+    "zakat": "الزكاة",
+    "profile": "الملف الشخصي",
+    "history": "السجل",
+    "partners": "الصناديق الشريكة"
+  },
+  "donation": {
+    "title": "تبرع",
+    "amount": "المبلغ",
+    "currency": "العملة",
+    "oneTime": "مرة واحدة",
+    "recurring": "متكرر",
+    "category": "نوع التبرع",
+    "sadaqah": "صدقة (صدقة تطوعية)",
+    "zakat": "زكاة (صدقة واجبة)",
+    "general": "تبرع عام",
+    "fund": "اختر الصندوق",
+    "message": "أضف رسالة",
+    "anonymous": "تبرع مجهول",
+    "success": "شكراً لتبرعك! جزاك الله خيراً.",
+    "error": "خطأ في إنشاء التبرع"
+  },
+  "subscription": {
+    "title": "اشتراك الصدقة",
+    "description": "صدقتك المنتظمة",
+    "plans": {
+      "basic": "مسلم (أساسي)",
+      "pro": "متحسن (Pro)",
+      "premium": "صاحب الوقف (Premium)"
+    },
+    "charity": "جزء من المبلغ يذهب للجمعيات الخيرية"
+  },
+  "zakat": {
+    "title": "حاسبة الزكاة",
+    "calculate": "احسب",
+    "pay": "ادفع الزكاة",
+    "history": "سجل الحسابات"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "donations": "التبرعات",
+    "totalDonated": "إجمالي المتبرع به",
+    "achievements": "الإنجازات"
+  }
+}
+

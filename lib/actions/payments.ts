@@ -138,7 +138,15 @@ export async function initiatePayment(input: PaymentInitiateInput): Promise<Paym
       const secretKey = process.env.YOOKASSA_SECRET_KEY
 
       if (!shopId || !secretKey) {
-        // Если YooKassa не настроен, используем CloudPayments как fallback
+        // Если YooKassa не настроен и был выбран вручную - возвращаем ошибку
+        if (input.provider === "yookassa") {
+          return {
+            success: false,
+            error: "YooKassa не настроен на сервере. Пожалуйста, выберите другой способ оплаты.",
+            errorCode: "PROVIDER_NOT_CONFIGURED",
+          }
+        }
+        // Если был auto - используем CloudPayments как fallback
         console.warn("[Payment] YooKassa не настроен (отсутствует YOOKASSA_SHOP_ID или YOOKASSA_SECRET_KEY), переключаемся на CloudPayments")
         provider = "cloudpayments"
       } else {
@@ -175,7 +183,15 @@ export async function initiatePayment(input: PaymentInitiateInput): Promise<Paym
             
         } catch (yooKassaError) {
           console.error("[Payment] Ошибка YooKassa:", yooKassaError)
-          // Fallback на CloudPayments при ошибке YooKassa
+          // Если YooKassa был выбран вручную - возвращаем ошибку
+          if (input.provider === "yookassa") {
+            return {
+              success: false,
+              error: `Ошибка при создании платежа через YooKassa: ${yooKassaError instanceof Error ? yooKassaError.message : "Неизвестная ошибка"}. Пожалуйста, выберите другой способ оплаты.`,
+              errorCode: "PROVIDER_ERROR",
+            }
+          }
+          // Если был auto - используем CloudPayments как fallback
           console.warn("[Payment] Переключаемся на CloudPayments после ошибки YooKassa")
           provider = "cloudpayments"
         }

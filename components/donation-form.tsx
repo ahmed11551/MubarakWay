@@ -32,6 +32,9 @@ export function DonationForm() {
   const [campaignId, setCampaignId] = useState<string>("")
   const [message, setMessage] = useState("")
   const [isAnonymous, setIsAnonymous] = useState(false)
+  const [selectedProvider, setSelectedProvider] = useState<"auto" | "yookassa" | "cloudpayments">("auto")
+  const [showProviderSelection, setShowProviderSelection] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   const selectedAmount = customAmount ? Number.parseFloat(customAmount) : amount
 
@@ -71,7 +74,18 @@ export function DonationForm() {
   }
 
   const handlePaymentFail = (reason: string) => {
+    setPaymentError(reason)
+    // Если ошибка связана с провайдером, показываем выбор вручную
+    if (reason.includes("провайдер") || reason.includes("provider") || reason.includes("YooKassa") || reason.includes("CloudPayments")) {
+      setShowProviderSelection(true)
+    }
     toast.error(`Платёж не прошёл: ${reason}`)
+  }
+
+  const handleProviderChange = (provider: "auto" | "yookassa" | "cloudpayments") => {
+    setSelectedProvider(provider)
+    setPaymentError(null)
+    setShowProviderSelection(false)
   }
 
   return (
@@ -296,6 +310,66 @@ export function DonationForm() {
         </CardContent>
       </Card>
 
+      {/* Provider Selection (shown on error or manual selection) */}
+      {showProviderSelection && (
+        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+          <CardHeader>
+            <CardTitle className="text-orange-900 dark:text-orange-100">Выберите способ оплаты</CardTitle>
+            <CardDescription className="text-orange-700 dark:text-orange-300">
+              Автоматический выбор не сработал. Пожалуйста, выберите платёжный провайдер вручную.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup value={selectedProvider} onValueChange={(v) => handleProviderChange(v as "auto" | "yookassa" | "cloudpayments")}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="auto" id="provider-auto" />
+                <Label htmlFor="provider-auto" className="flex-1 cursor-pointer">
+                  <div>
+                    <p className="font-medium">Автоматически</p>
+                    <p className="text-xs text-muted-foreground">Система выберет провайдера автоматически</p>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yookassa" id="provider-yookassa" />
+                <Label htmlFor="provider-yookassa" className="flex-1 cursor-pointer">
+                  <div>
+                    <p className="font-medium">YooKassa</p>
+                    <p className="text-xs text-muted-foreground">Для карт российских банков (RUB)</p>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="cloudpayments" id="provider-cloudpayments" />
+                <Label htmlFor="provider-cloudpayments" className="flex-1 cursor-pointer">
+                  <div>
+                    <p className="font-medium">CloudPayments</p>
+                    <p className="text-xs text-muted-foreground">Для международных карт (USD, EUR, другие валюты)</p>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error Message */}
+      {paymentError && !showProviderSelection && (
+        <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="pt-6">
+            <p className="text-sm text-red-900 dark:text-red-100">{paymentError}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => setShowProviderSelection(true)}
+            >
+              Выбрать способ оплаты вручную
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <CloudPaymentsButton
         amount={selectedAmount || 0}
         currency={currency}
@@ -308,6 +382,7 @@ export function DonationForm() {
           campaignId: campaignId || undefined,
           message: message?.trim() || undefined,
           isAnonymous,
+          provider: selectedProvider === "auto" ? undefined : selectedProvider,
         }}
         onSuccess={handlePaymentSuccess}
         onFail={handlePaymentFail}

@@ -528,3 +528,89 @@
     }
   }
 }
+
+/* RTL Support for Arabic */
+@layer base {
+  html[dir="rtl"] {
+    direction: rtl;
+  }
+
+  html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Flip margins and paddings for RTL */
+  html[dir="rtl"] .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  html[dir="rtl"] .mr-auto {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  /* Flip flexbox for RTL */
+  html[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+  }
+
+  /* Flip text alignment */
+  html[dir="rtl"] .text-left {
+    text-align: right;
+  }
+
+  html[dir="rtl"] .text-right {
+    text-align: left;
+  }
+
+  /* Flip positioning */
+  html[dir="rtl"] .left-0 {
+    left: auto;
+    right: 0;
+  }
+
+  html[dir="rtl"] .right-0 {
+    right: auto;
+    left: 0;
+  }
+
+  /* Flip borders */
+  html[dir="rtl"] .border-l {
+    border-left: none;
+    border-right: 1px solid;
+  }
+
+  html[dir="rtl"] .border-r {
+    border-right: none;
+    border-left: 1px solid;
+  }
+
+  /* Flip padding */
+  html[dir="rtl"] .pl-4 {
+    padding-left: 0;
+    padding-right: 1rem;
+  }
+
+  html[dir="rtl"] .pr-4 {
+    padding-right: 0;
+    padding-left: 1rem;
+  }
+
+  /* Flip margins */
+  html[dir="rtl"] .ml-4 {
+    margin-left: 0;
+    margin-right: 1rem;
+  }
+
+  html[dir="rtl"] .mr-4 {
+    margin-right: 0;
+    margin-left: 1rem;
+  }
+
+  /* Flip icons and arrows */
+  html[dir="rtl"] [class*="rotate-"] {
+    transform: scaleX(-1);
+  }
+}

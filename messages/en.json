@@ -1,0 +1,71 @@
+{
+  "common": {
+    "appName": "MubarakWay",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "navigation": {
+    "home": "Home",
+    "donate": "Donate",
+    "campaigns": "Campaigns",
+    "funds": "Funds",
+    "subscription": "Subscription",
+    "zakat": "Zakat",
+    "profile": "Profile",
+    "history": "History",
+    "partners": "Partner Funds"
+  },
+  "donation": {
+    "title": "Donation",
+    "amount": "Amount",
+    "currency": "Currency",
+    "oneTime": "One-time",
+    "recurring": "Recurring",
+    "category": "Donation Type",
+    "sadaqah": "Sadaqah (voluntary charity)",
+    "zakat": "Zakat (obligatory charity)",
+    "general": "General donation",
+    "fund": "Select fund",
+    "message": "Add message",
+    "anonymous": "Anonymous donation",
+    "success": "Thank you for your donation! May Allah reward you with goodness.",
+    "error": "Error creating donation"
+  },
+  "subscription": {
+    "title": "Sadaqah Subscription",
+    "description": "Your regular charity",
+    "plans": {
+      "basic": "Muslim (Basic)",
+      "pro": "Mutahsin (Pro)",
+      "premium": "Sahib al-Waqf (Premium)"
+    },
+    "charity": "Part of the amount goes to charity"
+  },
+  "zakat": {
+    "title": "Zakat Calculator",
+    "calculate": "Calculate",
+    "pay": "Pay Zakat",
+    "history": "Calculation History"
+  },
+  "profile": {
+    "title": "Profile",
+    "donations": "Donations",
+    "totalDonated": "Total Donated",
+    "achievements": "Achievements"
+  }
+}
+

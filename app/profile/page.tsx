@@ -144,28 +144,29 @@ export default function ProfilePage() {
     setFilteredTransactions(filtered)
   }, [transactions, filterType, filterStatus])
 
-  // Export to CSV using API
+  // Export to CSV or PDF
   const handleExport = async (format: "csv" | "pdf" = "csv") => {
-    if (transactions.length === 0) {
+    if (filteredTransactions.length === 0) {
       toast.error("Нет данных для экспорта")
       return
     }
 
     try {
-      const params = new URLSearchParams({
-        format,
-        ...(filterType !== "all" && { type: filterType }),
-        ...(filterStatus !== "all" && { status: filterStatus }),
-      })
-
-      const response = await fetch(`/api/export/history?${params.toString()}`)
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Ошибка при экспорте")
-      }
-
       if (format === "csv") {
+        // Use API for CSV export
+        const params = new URLSearchParams({
+          format: "csv",
+          ...(filterType !== "all" && { type: filterType }),
+          ...(filterStatus !== "all" && { status: filterStatus }),
+        })
+
+        const response = await fetch(`/api/export/history?${params.toString()}`)
+        
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || "Ошибка при экспорте")
+        }
+
         const blob = await response.blob()
         const url = URL.createObjectURL(blob)
         const link = document.createElement("a")
@@ -175,10 +176,23 @@ export default function ProfilePage() {
         link.click()
         document.body.removeChild(link)
         URL.revokeObjectURL(url)
-        toast.success("Экспорт выполнен успешно")
+        toast.success("CSV экспорт выполнен успешно")
       } else {
-        // PDF export would require client-side generation
-        toast.info("PDF экспорт будет доступен в следующей версии")
+        // PDF export using client-side generation
+        const { downloadDonationsPDF } = await import("@/lib/utils/pdf-export")
+        
+        const records = filteredTransactions.map((t) => ({
+          id: t.id,
+          date: t.date,
+          type: t.type,
+          amount: t.amount,
+          currency: "RUB", // Default currency
+          recipient: t.fund,
+          status: t.status,
+        }))
+
+        await downloadDonationsPDF(records, `donations_${new Date().toISOString().split("T")[0]}.pdf`, profile?.display_name)
+        toast.success("PDF экспорт выполнен успешно")
       }
     } catch (error) {
       console.error("Export error:", error)

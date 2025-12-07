@@ -65,6 +65,7 @@ export function CloudPaymentsButton({
         campaignId: donationData?.campaignId,
         message: donationData?.message,
         isAnonymous: donationData?.isAnonymous || false,
+        provider: donationData?.provider || "auto", // Передаем выбранный провайдер
       }
 
       // Вызываем server action для создания платежа и получения ссылки

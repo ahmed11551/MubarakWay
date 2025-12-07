@@ -114,7 +114,7 @@ function setupScrollPrevention(tg: any) {
   }
 }
 
-// Get Telegram user data
+// Get Telegram user data (from initDataUnsafe - for client-side use only)
 export function getTelegramUser() {
   if (typeof window === "undefined" || !window.Telegram?.WebApp) {
     return null
@@ -136,6 +136,21 @@ export function getTelegramUser() {
     photoUrl: initData.user.photo_url,
     isPremium: initData.user.is_premium || false,
   }
+}
+
+/**
+ * Get Telegram initData string for server-side validation
+ * This is the raw initData string that includes the signature (hash)
+ * 
+ * @returns initData string or null if not available
+ */
+export function getTelegramInitData(): string | null {
+  if (typeof window === "undefined" || !window.Telegram?.WebApp) {
+    return null
+  }
+
+  const tg = window.Telegram.WebApp
+  return tg.initData || null
 }
 
 // Get Telegram theme

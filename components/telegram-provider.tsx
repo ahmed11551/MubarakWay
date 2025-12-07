@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect } from "react"
-import { initTelegramApp, getTelegramUser } from "@/lib/telegram"
+import { initTelegramApp, getTelegramUser, getTelegramInitData } from "@/lib/telegram"
 import { createClient } from "@/lib/supabase/client"
 
 export function TelegramProvider({ children }: { children: React.ReactNode }) {
@@ -13,8 +13,10 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
       if (window.Telegram?.WebApp) {
         initTelegramApp()
         
-        // Автоматическая авторизация через Telegram - просто подтягиваем данные
+        // Автоматическая авторизация через Telegram - отправляем initData для серверной валидации
         const telegramUser = getTelegramUser()
+        const initData = getTelegramInitData()
+        
         if (telegramUser?.id) {
           try {
             const supabase = createClient()
@@ -22,16 +24,25 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
 
             // Если пользователь не авторизован, подтягиваем данные из Telegram
             if (!user) {
+              // Send initData string for secure server-side validation
+              // If initData is not available (e.g., in development), fallback to legacy flow
               const response = await fetch("/api/auth/telegram", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  telegramId: telegramUser.id,
-                  firstName: telegramUser.firstName,
-                  lastName: telegramUser.lastName,
-                  username: telegramUser.username,
-                  photoUrl: telegramUser.photoUrl,
-                }),
+                body: JSON.stringify(
+                  initData
+                    ? {
+                        initData, // Secure: server validates signature
+                      }
+                    : {
+                        // Legacy fallback (less secure, for development/testing)
+                        telegramId: telegramUser.id.toString(),
+                        firstName: telegramUser.firstName,
+                        lastName: telegramUser.lastName,
+                        username: telegramUser.username,
+                        photoUrl: telegramUser.photoUrl,
+                      }
+                ),
               })
 
               if (response.ok) {

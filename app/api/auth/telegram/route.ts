@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { handleApiError } from "@/lib/error-handler"
 import { rateLimitRequest } from "@/lib/utils/rate-limit-redis"
+import { validateTelegramInitData } from "@/lib/telegram-validation"
 import { z } from "zod"
 
 const telegramAuthBodySchema = z.object({
-  telegramId: z.string().min(1, "Telegram ID is required"),
+  initData: z.string().min(1, "Telegram initData is required"),
+  // Legacy fields for backward compatibility (will be ignored if initData is provided)
+  telegramId: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   username: z.string().optional(),
@@ -54,7 +57,60 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    const { telegramId, firstName, lastName, username, photoUrl } = validationResult.data
+    const { initData, telegramId: legacyTelegramId, firstName: legacyFirstName, lastName: legacyLastName, username: legacyUsername, photoUrl: legacyPhotoUrl } = validationResult.data
+
+    // Validate Telegram initData signature
+    const botToken = process.env.TELEGRAM_BOT_TOKEN
+    if (!botToken) {
+      console.error("[Telegram Auth] TELEGRAM_BOT_TOKEN not configured")
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      )
+    }
+
+    let telegramId: string
+    let firstName: string | undefined
+    let lastName: string | undefined
+    let username: string | undefined
+    let photoUrl: string | null | undefined
+
+    if (initData) {
+      // New secure flow: validate initData signature
+      const validation = validateTelegramInitData(initData, botToken)
+      
+      if (!validation.valid || !validation.user) {
+        console.warn("[Telegram Auth] Invalid initData", { error: validation.error })
+        return NextResponse.json(
+          { error: "Invalid Telegram authentication data", details: validation.error },
+          { status: 401 }
+        )
+      }
+
+      // Extract user data from validated initData
+      const user = validation.user
+      telegramId = user.id.toString()
+      firstName = user.first_name
+      lastName = user.last_name
+      username = user.username
+      photoUrl = user.photo_url || null
+    } else {
+      // Legacy flow: use provided data (for backward compatibility, but less secure)
+      // In production, this should be removed or require additional verification
+      if (!legacyTelegramId) {
+        return NextResponse.json(
+          { error: "Either initData or telegramId is required" },
+          { status: 400 }
+        )
+      }
+      
+      console.warn("[Telegram Auth] Using legacy authentication flow (initData not provided)")
+      telegramId = legacyTelegramId
+      firstName = legacyFirstName
+      lastName = legacyLastName
+      username = legacyUsername
+      photoUrl = legacyPhotoUrl
+    }
 
     const adminClient = createAdminClient()
 

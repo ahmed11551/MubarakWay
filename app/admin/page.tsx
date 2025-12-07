@@ -7,6 +7,7 @@ import { AdminFundsTable } from "@/components/admin/funds-table"
 import { AdminDonationsTable } from "@/components/admin/donations-table"
 import { AdminStats } from "@/components/admin/stats"
 import { FundReportsUpload } from "@/components/admin/fund-reports-upload"
+import { AdminPartnerApplicationsTable } from "@/components/admin/partner-applications-table"
 // FSD entities
 import { getFunds } from "@/entities/fund/api"
 import { Shield } from "lucide-react"
@@ -42,9 +43,10 @@ export default async function AdminPage() {
 
           {/* Tabs */}
           <Tabs defaultValue="campaigns" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="campaigns">Кампании</TabsTrigger>
               <TabsTrigger value="funds">Фонды</TabsTrigger>
+              <TabsTrigger value="partners">Партнёры</TabsTrigger>
               <TabsTrigger value="donations">Пожертвования</TabsTrigger>
             </TabsList>
 
@@ -72,6 +74,18 @@ export default async function AdminPage() {
               </Card>
               
               <FundReportsUpload funds={funds} />
+            </TabsContent>
+
+            <TabsContent value="partners" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Модерация партнёрских заявок</CardTitle>
+                  <CardDescription>Проверяйте и одобряйте заявки организаций на партнёрство</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AdminPartnerApplicationsTable />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="donations" className="space-y-4">
