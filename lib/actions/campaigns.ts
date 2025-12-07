@@ -222,8 +222,14 @@ export async function getCampaigns(status?: string, page: number = 0, pageSize: 
       query = query.eq("status", status)
     }
 
-    // Get total count first
-    const { count } = await query.select("*", { count: "exact", head: true })
+    // Get total count first (separate query)
+    let countQuery = supabase
+      .from("campaigns")
+      .select("*", { count: "exact", head: true })
+    if (status !== undefined) {
+      countQuery = countQuery.eq("status", status)
+    }
+    const { count } = await countQuery
 
     // Add pagination
     const from = page * pageSize
