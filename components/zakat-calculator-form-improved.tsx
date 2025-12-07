@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Switch } from "@/components/ui/switch"
 import { Calculator, Info, Heart, TrendingUp, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -36,6 +37,8 @@ interface CalculationResult {
   net_wealth: number
   total_assets: number
   nisab_value: number
+  madhab?: string
+  deductible_debts?: number
   calculation_id?: string
 }
 
@@ -61,6 +64,8 @@ export function ZakatCalculatorForm() {
 
   // Обязательства
   const [debts, setDebts] = useState("")
+  const [debtsDueThisYear, setDebtsDueThisYear] = useState("") // Для Шафии
+  const [investmentsForTrade, setInvestmentsForTrade] = useState(false) // Для Ханафи
 
   // Рассчитанные значения (для предпросмотра)
   const [totalAssets, setTotalAssets] = useState(0)
@@ -70,39 +75,68 @@ export function ZakatCalculatorForm() {
   const [zakatDue, setZakatDue] = useState(0)
   const [isAboveNisab, setIsAboveNisab] = useState(false)
 
+  // Функция расчета нисаба по мазхабу
+  const calculateNisabByMadhab = (m: Madhab): number => {
+    const goldNisab = NISAB_GOLD_GRAMS * GOLD_PRICE_PER_GRAM // ≈ 637 500 ₽
+    const silverNisab = NISAB_SILVER_GRAMS * SILVER_PRICE_PER_GRAM // ≈ 47 600 ₽
+
+    switch (m) {
+      case "hanafi":
+      case "hanbali":
+        return goldNisab
+      case "shafi":
+        return Math.min(goldNisab, silverNisab)
+      case "maliki":
+        return silverNisab
+      default:
+        return goldNisab
+    }
+  }
+
   // Пересчёт при изменении полей (предпросмотр)
   useEffect(() => {
     const cashTotal = Number.parseFloat(cash || "0") + Number.parseFloat(bankAccounts || "0") + Number.parseFloat(eWallets || "0")
     const goldValue = Number.parseFloat(goldGrams || "0") * GOLD_PRICE_PER_GRAM
     const silverValue = Number.parseFloat(silverGrams || "0") * SILVER_PRICE_PER_GRAM
     
+    // Для Ханафи: инвестиции только если для торговли
+    let investmentsValue = Number.parseFloat(investments || "0")
+    if (madhab === "hanafi" && !investmentsForTrade) {
+      investmentsValue = 0
+    }
+    
     const assets =
       cashTotal +
       goldValue +
       silverValue +
       Number.parseFloat(businessGoods || "0") +
-      Number.parseFloat(investments || "0") +
+      investmentsValue +
       Number.parseFloat(receivables || "0") +
       Number.parseFloat(propertyValue || "0") +
       Number.parseFloat(otherAssets || "0")
 
-    const liabilities = Number.parseFloat(debts || "0")
-    const net = assets - liabilities
+    // Для Шафии: только долги, которые вернут в этом году
+    // Для остальных: все краткосрочные долги
+    const deductibleDebts = madhab === "shafi" 
+      ? Number.parseFloat(debtsDueThisYear || "0")
+      : Number.parseFloat(debts || "0")
     
-    // Нисаб по золоту (базовый)
-    const nisab = NISAB_GOLD_GRAMS * GOLD_PRICE_PER_GRAM
+    const net = assets - deductibleDebts
+    
+    // Нисаб по мазхабу
+    const nisab = calculateNisabByMadhab(madhab)
     
     // Закят = 2.5% от превышения нисаба (не от всего!)
     const excess = net > nisab ? net - nisab : 0
     const zakat = excess > 0 ? excess * ZAKAT_RATE : 0
 
     setTotalAssets(assets)
-    setTotalLiabilities(liabilities)
+    setTotalLiabilities(deductibleDebts)
     setNetWealth(net)
     setNisabThreshold(nisab)
     setZakatDue(zakat)
     setIsAboveNisab(net >= nisab)
-  }, [cash, bankAccounts, eWallets, goldGrams, silverGrams, businessGoods, investments, receivables, propertyValue, otherAssets, debts])
+  }, [cash, bankAccounts, eWallets, goldGrams, silverGrams, businessGoods, investments, investmentsForTrade, receivables, propertyValue, otherAssets, debts, debtsDueThisYear, madhab])
 
   const handleCalculate = async () => {
     setIsCalculating(true)
@@ -118,13 +152,15 @@ export function ZakatCalculatorForm() {
           silver_g: silverG,
           business_goods_value: Number.parseFloat(businessGoods || "0"),
           investments: Number.parseFloat(investments || "0"),
+          investments_for_trade: investmentsForTrade, // Для Ханафи
           receivables_collectible: Number.parseFloat(receivables || "0"),
           property_value: Number.parseFloat(propertyValue || "0"),
           other_assets: Number.parseFloat(otherAssets || "0"),
         },
         debts_short_term: Number.parseFloat(debts || "0"),
+        debts_due_this_year: Number.parseFloat(debtsDueThisYear || "0"), // Для Шафии
+        madhab: madhab,
         nisab_currency: currency,
-        nisab_value: NISAB_GOLD_GRAMS * GOLD_PRICE_PER_GRAM,
         rate_percent: 2.5,
       }
 
@@ -163,6 +199,8 @@ export function ZakatCalculatorForm() {
     setPropertyValue("")
     setOtherAssets("")
     setDebts("")
+    setDebtsDueThisYear("")
+    setInvestmentsForTrade(false)
     setShowResult(false)
     setCalculationResult(null)
   }
